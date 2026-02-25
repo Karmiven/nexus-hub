@@ -271,6 +271,10 @@ const translations = {
     admin_settings_chat_enable: 'Enable Community Chat',
     admin_settings_chat_max: 'Max Chat Messages',
     admin_settings_save: 'Save Settings',
+    admin_settings_games: 'Games List on Homepage',
+    admin_settings_games_hint: 'Add games that will be displayed on the homepage. Icons are automatically resized to 64x64px.',
+    admin_settings_game_name: 'Game Name',
+    admin_settings_game_icon: 'Icon',
   },
   
   ru: {
@@ -544,6 +548,10 @@ const translations = {
     admin_settings_chat_enable: 'Включить чат сообщества',
     admin_settings_chat_max: 'Макс. сообщений в чате',
     admin_settings_save: 'Сохранить настройки',
+    admin_settings_games: 'Список игр на главной',
+    admin_settings_games_hint: 'Добавьте игры, которые будут отображаться на главной странице. Иконки автоматически сжимаются до 64x64px.',
+    admin_settings_game_name: 'Название игры',
+    admin_settings_game_icon: 'Иконка',
   }
 };
 

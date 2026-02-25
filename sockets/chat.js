@@ -1,5 +1,9 @@
 const db = require('../config/database');
 
+// Store active users in memory
+const activeUsers = new Map(); // socket.id -> username
+const usedNicknames = new Set(); // Set of lowercase usernames
+
 module.exports = function(io) {
   io.on('connection', (socket) => {
 
@@ -9,24 +13,53 @@ module.exports = function(io) {
     ).reverse();
     socket.emit('chat:history', messages);
 
+    // Send current online users
+    socket.emit('chat:online_users', Array.from(usedNicknames));
+
+    // Handle user joining
+    socket.on('chat:join', (username, callback) => {
+      if (!username) return callback({ success: false, error: 'Nickname is required' });
+      
+      const sanitizedUsername = String(username).slice(0, 30).replace(/[<>]/g, '').trim();
+      if (!sanitizedUsername) return callback({ success: false, error: 'Invalid nickname' });
+      
+      const lowerUsername = sanitizedUsername.toLowerCase();
+      
+      if (usedNicknames.has(lowerUsername)) {
+        return callback({ success: false, error: 'Nickname is already taken' });
+      }
+      
+      // Register user
+      activeUsers.set(socket.id, sanitizedUsername);
+      usedNicknames.add(lowerUsername);
+      
+      // Broadcast updated user list
+      io.emit('chat:online_users', Array.from(activeUsers.values()));
+      
+      callback({ success: true, username: sanitizedUsername });
+    });
+
     // Handle new message
     socket.on('chat:message', (data) => {
-      if (!data.username || !data.message) return;
+      // Ensure user is joined and using their registered nickname
+      const registeredUsername = activeUsers.get(socket.id);
+      if (!registeredUsername || registeredUsername !== data.username) return;
+
+      if (!data.message) return;
 
       // Sanitize
-      const username = String(data.username).slice(0, 30).replace(/[<>]/g, '');
       const message = String(data.message).slice(0, 500).replace(/[<>]/g, '');
 
       if (!message.trim()) return;
 
       const result = db.run(
         'INSERT INTO chat_messages (username, message, channel) VALUES (?, ?, ?)',
-        [username, message, 'general']
+        [registeredUsername, message, 'general']
       );
 
       const msg = {
         id: result.lastInsertRowid,
-        username,
+        username: registeredUsername,
         message,
         channel: 'general',
         created_at: new Date().toISOString()
@@ -48,9 +81,19 @@ module.exports = function(io) {
 
     // Handle typing indicator
     socket.on('chat:typing', (data) => {
-      socket.broadcast.emit('chat:typing', { username: data.username });
+      const registeredUsername = activeUsers.get(socket.id);
+      if (registeredUsername) {
+        socket.broadcast.emit('chat:typing', { username: registeredUsername });
+      }
     });
 
-    socket.on('disconnect', () => {});
+    socket.on('disconnect', () => {
+      const username = activeUsers.get(socket.id);
+      if (username) {
+        activeUsers.delete(socket.id);
+        usedNicknames.delete(username.toLowerCase());
+        io.emit('chat:online_users', Array.from(activeUsers.values()));
+      }
+    });
   });
 };

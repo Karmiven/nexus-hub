@@ -170,28 +170,27 @@
   <% } %>
 </section>
 
-<section class="section section-dark">
+<% if (gamesList && gamesList.length > 0) { %>
+<section class="section section-dark" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
   <div class="container">
-    <h2 class="section-title"><span class="accent">&#127918;</span> <span data-i18n="hosted_games">Hosted Games</span></h2>
-    <div class="games-showcase">
-      <div class="game-badge">
-        <div class="game-icon">&#9876;</div>
-        <span>World of Warcraft</span>
-      </div>
-      <div class="game-badge">
-        <div class="game-icon">&#128481;</div>
-        <span>Blade &amp; Soul</span>
-      </div>
-      <div class="game-badge">
-        <div class="game-icon">&#128299;</div>
-        <span>Killing Floor 2</span>
-      </div>
-      <div class="game-badge">
-        <div class="game-icon">&#9935;</div>
-        <span>Minecraft</span>
-      </div>
+    <h2 class="section-title" style="margin-bottom: 1.5rem;"><span class="accent">&#127918;</span> <span data-i18n="hosted_games">Hosted Games</span></h2>
+    <div class="games-list-container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;">
+      <% gamesList.forEach(function(game) { %>
+        <div class="game-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 160px; transition: transform var(--transition), border-color var(--transition); cursor: pointer;">
+          <img src="<%= game.icon %>" alt="<%= game.name %>" style="width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); background-color: transparent !important;">
+          <span style="font-weight: 600; text-align: center; font-size: 0.95rem; color: var(--text-primary);"><%= game.name %></span>
+        </div>
+      <% }); %>
     </div>
   </div>
 </section>
+<style>
+  .game-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
+</style>
+<% } %>
 
 <%- include('partials/footer') %>

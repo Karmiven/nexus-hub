@@ -44,9 +44,10 @@ function initPageTransitions() {
 
   // Fade out on form submissions that navigate (not AJAX)
   document.addEventListener('submit', (e) => {
+    if (e.defaultPrevented) return;
     const form = e.target;
     // Skip forms handled by JS (e.g. news modal with fetch)
-    if (form.id === 'newsForm') return;
+    if (form.id === 'newsForm' || form.id === 'chatForm') return;
     document.body.classList.remove('page-ready');
   });
 }

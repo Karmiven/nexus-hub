@@ -228,7 +228,7 @@ router.post('/settings', (req, res) => {
   const keys = [
     'site_name', 'site_description', 'navbar_title',
     'status_check_interval', 'max_chat_messages', 'community_enabled',
-    'hero_title', 'hero_subtitle', 'hero_style'
+    'hero_title', 'hero_subtitle', 'hero_style', 'games_list'
   ];
 
   for (const key of keys) {
