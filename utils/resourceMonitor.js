@@ -1,6 +1,4 @@
 const os = require('os');
-const fs = require('fs');
-const path = require('path');
 
 /**
  * Resource Monitor Agent - Runs on each server to collect metrics
@@ -29,21 +27,14 @@ class ResourceMonitor {
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
     
-    // Get disk usage (simplified - in production use proper disk stats)
-    let diskUsage = 0;
-    try {
-      const stats = fs.statSync('.');
-      // This is simplified - real implementation would use proper disk space checking
-      diskUsage = Math.random() * 100; // Placeholder
-    } catch (err) {
-      diskUsage = 0;
-    }
+    // Simplified disk usage placeholder
+    const diskUsage = 0;
 
     const metrics = {
       timestamp: Date.now(),
       serverId: this.serverId,
       cpu: {
-        usage: this.calculateCPUUsage(),
+        usage: this.calculateCPUUsage(cpus),
         cores: cpus.length,
         loadAverage: loadAvg[0],
         model: cpus[0].model
@@ -71,8 +62,8 @@ class ResourceMonitor {
   /**
    * Calculate CPU usage percentage
    */
-  calculateCPUUsage() {
-    const cpus = os.cpus();
+  calculateCPUUsage(cpus) {
+    if (!cpus) cpus = os.cpus();
     let totalIdle = 0;
     let totalTick = 0;
 

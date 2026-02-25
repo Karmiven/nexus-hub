@@ -16,7 +16,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
-const { initDatabase } = require('./config/database');
+const db = require('./config/database');
+const { initDatabase } = db;
 const { startStatusChecker } = require('./utils/statusChecker');
 
 const app = express();
@@ -56,7 +57,6 @@ app.use((req, res, next) => {
 
   // Global navbar title from settings
   try {
-    const db = require('./config/database');
     const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
     res.locals.navbarTitle = navbarTitle?.value || 'NexusHub';
   } catch (e) {
@@ -80,7 +80,7 @@ const communityRoutes = require('./routes/community');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
-const { router: monitoringRoutes } = require('./routes/monitoring');
+const monitoring = require('./routes/monitoring');
 
 app.use('/', homeRoutes);
 app.use('/servers', serverRoutes);
@@ -88,14 +88,13 @@ app.use('/admin', adminRoutes);
 app.use('/auth', authRoutes);
 app.use('/community', communityRoutes);
 app.use('/api', apiRoutes);
-app.use('/monitoring', monitoringRoutes);
+app.use('/monitoring', monitoring.router);
 
 // ── Socket.io Chat ──
 require('./sockets/chat')(io);
 
-// ── Initialize Monitoring ──
-const monitoring = require('./routes/monitoring');
-setTimeout(() => monitoring.initMonitoring && monitoring.initMonitoring(), 1000); // Delay to ensure database is ready
+// ── Initialize Monitoring (delay to ensure database is ready) ──
+setTimeout(() => monitoring.initMonitoring?.(), 1000);
 
 // ── 404 Handler ──
 app.use((req, res) => {
@@ -125,6 +124,16 @@ async function start() {
 start().catch(err => {
   console.error('Failed to start NexusHub:', err);
   process.exit(1);
+});
+
+// Graceful shutdown — flush pending DB writes
+process.on('SIGINT', () => {
+  db.stopAutoSave();
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  db.stopAutoSave();
+  process.exit(0);
 });
 
 module.exports = { app, server, io };

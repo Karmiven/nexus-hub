@@ -24,14 +24,20 @@ function saveToFile() {
   fs.writeFileSync(DB_PATH, buffer);
 }
 
-// Auto-save every 10 seconds
+// Dirty flag — set to true on writes, auto-save flushes it
+let isDirty = false;
+
+// Auto-save every 5 seconds (only writes when dirty)
 let saveInterval = null;
 
 function startAutoSave() {
   if (saveInterval) return;
   saveInterval = setInterval(() => {
-    saveToFile();
-  }, 10000);
+    if (isDirty) {
+      saveToFile();
+      isDirty = false;
+    }
+  }, 5000);
 }
 
 /**
@@ -203,7 +209,7 @@ function run(sql, params = []) {
   const info = db.exec("SELECT changes() as changes, last_insert_rowid() as lastId");
   const changes = info.length > 0 ? info[0].values[0][0] : 0;
   const lastInsertRowid = info.length > 0 ? info[0].values[0][1] : 0;
-  saveToFile();
+  isDirty = true;
   return { changes, lastInsertRowid };
 }
 
@@ -213,13 +219,18 @@ function run(sql, params = []) {
 function exec(sql) {
   if (!db) throw new Error('Database not initialized');
   db.exec(sql);
-  saveToFile();
+  isDirty = true;
 }
 
 function stopAutoSave() {
   if (saveInterval) {
     clearInterval(saveInterval);
     saveInterval = null;
+  }
+  // Flush any pending changes on shutdown
+  if (isDirty) {
+    saveToFile();
+    isDirty = false;
   }
 }
 

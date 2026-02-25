@@ -2,7 +2,6 @@ const db = require('../config/database');
 
 module.exports = function(io) {
   io.on('connection', (socket) => {
-    console.log('💬 User connected to chat:', socket.id);
 
     // Send recent messages on connect
     const messages = db.all(
@@ -35,23 +34,16 @@ module.exports = function(io) {
 
       io.emit('chat:message', msg);
 
-      // Cleanup old messages (keep only latest maxMessages)
+      // Cleanup old messages — single efficient DELETE
       const maxMessages = parseInt(
         db.get("SELECT value FROM settings WHERE key = 'max_chat_messages'")?.value || '200'
       );
-      const allMessages = db.all(
-        "SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC"
+      db.run(
+        `DELETE FROM chat_messages WHERE channel = 'general' AND id NOT IN (
+          SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT ?
+        )`,
+        [maxMessages]
       );
-      if (allMessages.length > maxMessages) {
-        const idsToDelete = allMessages.slice(maxMessages).map(m => m.id);
-        if (idsToDelete.length > 0) {
-          const placeholders = idsToDelete.map(() => '?').join(',');
-          db.run(
-            `DELETE FROM chat_messages WHERE id IN (${placeholders})`,
-            idsToDelete
-          );
-        }
-      }
     });
 
     // Handle typing indicator
@@ -59,8 +51,6 @@ module.exports = function(io) {
       socket.broadcast.emit('chat:typing', { username: data.username });
     });
 
-    socket.on('disconnect', () => {
-      console.log('💬 User disconnected:', socket.id);
-    });
+    socket.on('disconnect', () => {});
   });
 };

@@ -115,46 +115,46 @@ function queryMinecraft(host, port, timeout = 5000) {
 }
 
 /**
- * Check all servers in database and update their status
+ * Check all servers in database and update their status (in parallel)
  */
 async function checkAllServers() {
   const servers = db.all('SELECT * FROM servers');
 
-  for (const srv of servers) {
-    try {
-      let status = 'offline';
-      let playerCount = 0;
-      let maxPlayers = 0;
+  const results = await Promise.allSettled(
+    servers.map(async (srv) => {
+      try {
+        let status = 'offline';
+        let playerCount = 0;
+        let maxPlayers = 0;
 
-      // Always do a TCP ping first to check if port is open
-      const ping = await tcpPing(srv.ip, srv.port);
-      status = ping.online ? 'online' : 'offline';
+        const ping = await tcpPing(srv.ip, srv.port);
+        status = ping.online ? 'online' : 'offline';
 
-      // If online and it's a Minecraft server, try to get player count
-      if (ping.online && srv.game.toLowerCase().includes('minecraft') && srv.show_player_count) {
-        try {
-          const mc = await queryMinecraft(srv.ip, srv.port);
-          if (mc.online) {
-            playerCount = mc.players || 0;
-            maxPlayers = mc.maxPlayers || 0;
+        if (ping.online && srv.game.toLowerCase().includes('minecraft') && srv.show_player_count) {
+          try {
+            const mc = await queryMinecraft(srv.ip, srv.port);
+            if (mc.online) {
+              playerCount = mc.players || 0;
+              maxPlayers = mc.maxPlayers || 0;
+            }
+          } catch (mcErr) {
+            console.error(`Minecraft query failed for ${srv.name}:`, mcErr.message);
           }
-        } catch (mcErr) {
-          console.error(`Minecraft query failed for ${srv.name}:`, mcErr.message);
         }
-      }
 
-      db.run(
-        'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
-        [status, playerCount, maxPlayers, srv.id]
-      );
-    } catch (err) {
-      console.error(`Error checking server ${srv.name}:`, err.message);
-      db.run(
-        'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
-        ['offline', 0, 0, srv.id]
-      );
-    }
-  }
+        db.run(
+          'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
+          [status, playerCount, maxPlayers, srv.id]
+        );
+      } catch (err) {
+        console.error(`Error checking server ${srv.name}:`, err.message);
+        db.run(
+          'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
+          ['offline', 0, 0, srv.id]
+        );
+      }
+    })
+  );
 }
 
 /**
