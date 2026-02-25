@@ -2,7 +2,7 @@
 
 > **🚧 Work In Progress** — This project is under active development. Features may change, break, or be incomplete.
 
-A self-hosted gaming server hub for managing, monitoring, and showcasing game servers running on Proxmox VMs. Built with Node.js, Express, and a custom blue-cyan neon UI.
+A self-hosted gaming server hub for managing, monitoring, and showcasing game servers running on Proxmox VMs. Built with Node.js, Express, and a multi-theme CSS system with 5 atmospheric visual themes.
 
 ![Node.js](https://img.shields.io/badge/Node.js-24+-green?logo=node.js)
 ![Express](https://img.shields.io/badge/Express-4.18-blue?logo=express)
@@ -17,8 +17,8 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
 - **Homepage** — Hero section with customizable animated title (7 styles: Glitch, Gradient, Neon Pulse, Typewriter, Chrome, Retro, Hologram), latest news feed, hosted games showcase, live server stats
 - **Server Browser** — Live online/offline status via TCP ping, player counts (Minecraft), redirect-to-launcher support
 - **Server Detail** — Per-server info page with copy-address button and optional external launcher link
-- **Community Chat** — Real-time chat powered by Socket.io with typing indicators
-- **News System** — Bilingual news articles (EN/RU) with pinned articles, image cropping, and modal reading view
+- **Community Chat** — Real-time chat powered by Socket.io with typing indicators, online users list, nickname persistence
+- **News System** — Bilingual news articles (EN/RU) with separate fields for title, short content, and full content; pinned articles, image cropping, and modal reading view with animated language switching
 
 ### Admin Panel (Russian UI)
 - **Dashboard** — Stats overview (news count, server count, online servers, registered users) + server status monitor
@@ -28,17 +28,31 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
 - **Settings** — Two-column layout with:
   - *Site & Appearance*: site name, description, navbar title, hero title/subtitle, hero animation style (7 options with live preview)
   - *Server & Community*: status check interval, community chat toggle, max chat messages
+  - *Games List*: add/remove games with name + icon upload (stored as base64 data URIs)
+
+### Theming — 5 Visual Themes
+
+Themes are selected via a dropdown in the navbar. Saved to `localStorage` and applied instantly via CSS custom properties (28+ variables per theme).
+
+| Theme | Vibe |
+|---|---|
+| **Dark** | Blue-cyan neon — default dark gaming aesthetic |
+| **Light** | Clean & bright — high-contrast light mode |
+| **Cyberpunk Purple** | Night City — neon pink/cyan, animated grid overlay, glitch effects, sharp corners |
+| **Matrix Green** | Wake up, Neo — terminal green, scanlines, CRT glow, monospace fonts |
+| **Retro 90s Vaporwave** | Miami Sunsets — purple/pink/cyan neon, VHS noise, chromatic aberration |
+
+Special effects per theme:
+- **Cyberpunk**: Animated CSS grid background, glitch animation on button hover
+- **Matrix / Retro**: Scanline overlay (animated)
+- **Retro**: VHS noise via SVG `feTurbulence` filter, chromatic aberration on headings
+- **All themes**: Glassmorphism navbar, smooth 0.35s transitions between themes
 
 ### Internationalization (i18n)
 - Full bilingual support: **English** and **Russian**
 - Language switcher in the navbar — all text updates dynamically without page reload
 - `data-i18n` attribute system with custom `I18n` class handling translations client-side
 - News articles support separate EN/RU content with animated language switching
-
-### Theming
-- **Dark / Light mode** toggle with smooth transitions
-- Blue-cyan neon color palette (Primary `#2563EB`, Accent `#06B6D4`)
-- Responsive design — desktop navbar with grid layout, mobile hamburger menu
 
 ### Security
 - bcrypt password hashing
@@ -62,7 +76,7 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
 | Security | helmet, express-rate-limit |
 | File Uploads | multer |
 | Image Cropping | Cropper.js (CDN) |
-| CSS | Custom CSS with CSS variables, dark/light theming |
+| CSS | Custom CSS with 28+ CSS variables per theme, 5 themes, special effects (scanlines, VHS noise, glitch) |
 | i18n | Custom client-side I18n class + `data-i18n` attributes |
 
 ---
@@ -76,22 +90,22 @@ nexushub/
 ├── .env                     # Environment variables
 │
 ├── config/
-│   └── database.js          # sql.js setup, schema init, auto-save
+│   └── database.js          # sql.js setup, schema init, auto-save every 5s
 │
 ├── middleware/
 │   └── auth.js              # isAuthenticated, isAdmin, isGuest guards
 │
 ├── routes/
-│   ├── home.js              # Homepage (hero, news, games)
+│   ├── home.js              # Homepage (hero, news, games list, stats)
 │   ├── servers.js           # Server listing & detail pages
-│   ├── admin.js             # Admin CRUD (news/servers/users/settings)
-│   ├── auth.js              # Login & logout (registration disabled)
+│   ├── admin.js             # Admin CRUD (news/servers/users/settings/games)
+│   ├── auth.js              # Login & logout
 │   ├── community.js         # Chat page
 │   ├── monitoring.js        # Resource monitoring dashboard
 │   └── api.js               # JSON API endpoints
 │
 ├── sockets/
-│   └── chat.js              # Socket.io chat handler
+│   └── chat.js              # Socket.io chat handler (typing, online users)
 │
 ├── utils/
 │   ├── statusChecker.js     # TCP ping, Minecraft query, periodic checks
@@ -108,21 +122,23 @@ nexushub/
 │
 ├── views/
 │   ├── partials/
-│   │   ├── header.ejs       # Navbar, theme toggle, language selector
+│   │   ├── header.ejs       # Navbar, theme dropdown (5 themes), language selector
 │   │   └── footer.ejs       # Footer with quick links
-│   ├── home.ejs             # Homepage with hero, news, games
+│   ├── home.ejs             # Homepage: hero, news, games showcase
 │   ├── servers.ejs          # Server browser
 │   ├── server-detail.ejs    # Individual server page
-│   ├── community.ejs        # Real-time chat
+│   ├── community.ejs        # Real-time chat with online users
 │   ├── auth/
-│   │   └── login.ejs        # Login page
+│   │   ├── login.ejs        # Login page
+│   │   ├── register.ejs     # Registration page
+│   │   └── profile.ejs      # User profile
 │   ├── admin/
 │   │   ├── dashboard.ejs    # Admin overview
 │   │   ├── news-unified.ejs # Bilingual news editor with preview modal
 │   │   ├── servers.ejs      # Server management table
 │   │   ├── server-form.ejs  # Add/edit server form
 │   │   ├── users.ejs        # User management table
-│   │   └── settings.ejs     # Site settings (2-column layout)
+│   │   └── settings.ejs     # Site settings + hero styles + games list
 │   ├── monitoring/
 │   │   └── dashboard.ejs    # Resource monitoring
 │   └── errors/
@@ -131,10 +147,10 @@ nexushub/
 │
 ├── public/
 │   ├── css/
-│   │   ├── style.css        # Main stylesheet (~2100 lines)
+│   │   ├── style.css        # Main stylesheet (~2300 lines) — 5 theme tokens, effects, all components
 │   │   └── desktop.css      # Desktop navbar overrides
 │   └── js/
-│       ├── main.js          # Theme toggle, language selector, polling
+│       ├── main.js          # Theme switcher (dropdown), language selector, page transitions, polling
 │       └── translations.js  # I18n class + EN/RU translation keys
 │
 └── locales/                  # Reserved for future server-side i18n
@@ -226,6 +242,15 @@ Admin → Servers → **+ Add Server**:
 | Show Player Count | Minecraft servers only | ✅ |
 | Sort Order | Display priority (lower = higher) | 1 |
 
+### Managing the Games List
+
+Admin → Settings → **Games List**:
+
+- Add games with a name and icon image (any format, stored as base64)
+- Icons with transparent backgrounds (PNG) are fully supported
+- Games appear on the homepage in a showcase grid
+- Remove games with the delete button
+
 ### Server Status Checking
 
 - **TCP ping** (`net.Socket`) checks if `IP:PORT` is reachable
@@ -264,16 +289,33 @@ Seven animation styles are available with a live preview:
 
 ## Database
 
-NexusHub uses **sql.js** — a pure JavaScript SQLite implementation that runs in-memory and persists to `data/nexushub.db`.
+NexusHub uses **sql.js** — a pure JavaScript SQLite implementation that runs in-memory and persists to `data/nexushub.db`. Auto-saves every 5 seconds when changes are detected.
 
-Tables:
-- `users` — id, username, email, password (bcrypt), role, last_login_at, last_login_ip
-- `servers` — id, name, game, ip, port, description, status, players_online, max_players, redirect_enabled/url, show_player_count, sort_order
-- `news` — id, title, content, title_ru, content_ru, image, pinned, created_at, updated_at
-- `settings` — key/value pairs (site_name, hero_title, hero_style, navbar_title, etc.)
-- `messages` — id, user_id, content, created_at (community chat)
+### Tables
 
-The database file is auto-created on first run. Schema migrations are handled in `config/database.js`.
+| Table | Key Fields |
+|---|---|
+| `users` | id, username, email, password (bcrypt), role, notify_email, notify_discord, last_login, last_ip, created_at |
+| `news` | id, title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, image, author, pinned, created_at, updated_at |
+| `servers` | id, name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, player_count, max_players, status, last_checked, sort_order, created_at |
+| `chat_messages` | id, username, message, channel, created_at |
+| `settings` | key (PK), value — key-value store for all site configuration |
+
+### Settings Keys
+
+| Key | Default | Description |
+|---|---|---|
+| `site_name` | NexusHub | Site title |
+| `site_description` | — | Site description |
+| `navbar_title` | NexusHub | Brand name in navbar |
+| `hero_title` | NexusHub | Hero section title |
+| `hero_subtitle` | — | Hero section subtitle |
+| `hero_style` | glitch | Hero title animation style |
+| `status_check_interval` | 60 | Server ping interval (seconds) |
+| `community_enabled` | 1 | Toggle community chat |
+| `max_chat_messages` | 200 | Chat history limit |
+| `registration_enabled` | 1 | Toggle user registration |
+| `games_list` | [] | JSON array of `{name, icon}` objects |
 
 ---
 
@@ -326,12 +368,13 @@ server {
 - Client-side i18n only — no server-side translation for flash messages or API responses
 - No Docker image published yet
 - Monitoring dashboard is basic — planned expansion for Proxmox API integration
+- Hero title styles (neon-pulse, typewriter, chrome, retro, hologram) use hardcoded colors for their specific effects
 
 ---
 
 ## Roadmap
 
-- [ ] telegram bot notifications for server status changes
+- [ ] Telegram bot notifications for server status changes
 - [ ] Discord webhook integration
 - [ ] Server-side i18n (SSR translations)
 - [ ] More languages beyond EN/RU

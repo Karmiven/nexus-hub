@@ -99,18 +99,15 @@ function initServerPolling() {
  * Initialize theme toggle functionality
  */
 function initThemeToggle() {
-  const themeToggle = document.getElementById('themeToggle');
-  if (!themeToggle) return;
+  const themeSwitcher = document.getElementById('themeSwitcher');
+  if (!themeSwitcher) return;
 
   const savedTheme = localStorage.getItem('theme') || 'dark';
   setTheme(savedTheme);
+  themeSwitcher.value = savedTheme;
 
-  themeToggle.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  themeSwitcher.addEventListener('change', (e) => {
+    const newTheme = e.target.value;
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
   });
@@ -121,18 +118,6 @@ function initThemeToggle() {
  */
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
-
-  const lightIcon = document.querySelector('.theme-icon-light');
-  const darkIcon = document.querySelector('.theme-icon-dark');
-
-  if (!lightIcon || !darkIcon) return;
-  if (theme === 'dark') {
-    lightIcon.style.display = 'none';
-    darkIcon.style.display = 'inline';
-  } else {
-    lightIcon.style.display = 'inline';
-    darkIcon.style.display = 'none';
-  }
 }
 
 /**
