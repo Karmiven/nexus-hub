@@ -1,0 +1,59 @@
+<%- include('partials/header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">&#127918; <span data-i18n="game_servers">Game Servers</span></h1>
+    <p class="page-desc" data-i18n="servers_desc">Browse all our hosted game servers. Click on any server for more details.</p>
+  </div>
+</section>
+
+<section class="section container">
+  <% if (servers.length === 0) { %>
+    <div class="empty-state">
+      <p data-i18n="no_servers">No servers configured yet. Check back soon!</p>
+    </div>
+  <% } else { %>
+    <div class="server-grid">
+      <% servers.forEach(function(srv) { %>
+        <div class="server-card">
+          <div class="server-status-indicator status-<%= srv.status %>"></div>
+          <div class="server-card-header">
+            <h3 class="server-name"><%= srv.name %></h3>
+            <span class="status-badge badge-<%= srv.status %>" data-i18n="<%= srv.status === 'online' ? 'online' : 'offline' %>">
+              <%= srv.status === 'online' ? 'Online' : 'Offline' %>
+            </span>
+          </div>
+          <div class="server-info">
+            <div class="info-row">
+              <span class="info-label" data-i18n="game">Game</span>
+              <span class="info-value"><%= srv.game %></span>
+            </div>
+            <div class="info-row">
+              <span class="info-label" data-i18n="address">Address</span>
+              <span class="info-value mono"><%= srv.ip %>:<%= srv.port %></span>
+            </div>
+            <% if (srv.show_player_count && srv.status === 'online') { %>
+              <div class="info-row">
+                <span class="info-label" data-i18n="players">Players</span>
+                <span class="info-value"><%= srv.player_count %>/<%= srv.max_players %></span>
+              </div>
+            <% } %>
+            <% if (srv.description) { %>
+              <p class="server-desc"><%= srv.description.substring(0, 120) %></p>
+            <% } %>
+          </div>
+          <div class="server-card-footer">
+            <% if (srv.redirect_enabled && srv.redirect_url) { %>
+              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-primary"><span data-i18n="launch">Launch</span> &#8594;</a>
+            <% } else { %>
+              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-outline"><span data-i18n="details">Details</span> &#8594;</a>
+            <% } %>
+            <span class="last-checked"><span data-i18n="last_checked">Checked</span>: <%= new Date(srv.last_checked).toLocaleTimeString() %></span>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+</section>
+
+<%- include('partials/footer') %>

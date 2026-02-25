@@ -1,0 +1,197 @@
+<%- include('partials/header') %>
+
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content container">
+    <h1 class="hero-title <% if (heroStyle === 'glitch') { %>glitch<% } %> hero-style-<%= heroStyle %>"<% if (heroStyle === 'glitch') { %> data-text="<%= heroTitle %>"<% } %>><%= heroTitle %></h1>
+    <p class="hero-subtitle"><%= heroSubtitle %></p>
+    <div class="hero-stats">
+      <div class="stat-box">
+        <span class="stat-number"><%= stats.onlineServers %></span>
+        <span class="stat-label" data-i18n="stat_online">Online</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-number"><%= stats.totalServers %></span>
+        <span class="stat-label" data-i18n="stat_servers">Servers</span>
+      </div>
+    </div>
+    <div class="hero-actions">
+      <a href="/servers" class="btn btn-primary btn-glow" data-i18n="hero_browse_servers">Browse Servers</a>
+      <a href="/community" class="btn btn-outline" data-i18n="hero_join_community">Join Community</a>
+    </div>
+  </div>
+</section>
+
+<section class="section container">
+  <h2 class="section-title"><span class="accent">&#9889;</span> <span data-i18n="latest_news">Latest News</span></h2>
+
+  <% if (news.length === 0) { %>
+    <div class="empty-state">
+      <p data-i18n="no_news">No news yet. Check back soon!</p>
+    </div>
+  <% } else { %>
+    <div class="news-grid">
+      <% news.forEach(function(article) { %>
+        <% 
+          // Get content based on current language
+          const title = currentLang === 'ru' ? article.title_ru : article.title_en;
+          const contentShort = currentLang === 'ru' ? article.content_short_ru : article.content_short_en;
+          const contentFull = currentLang === 'ru' ? article.content_full_ru : article.content_full_en;
+        %>
+        <article class="news-card<%= article.pinned ? ' pinned' : '' %>" onclick="openNewsModal(this)" style="cursor:pointer;"
+          data-id="<%= article.id %>"
+          data-title-en="<%= article.title_en.replace(/"/g, '&quot;') %>"
+          data-title-ru="<%= article.title_ru.replace(/"/g, '&quot;') %>"
+          data-content-short-en="<%= article.content_short_en.replace(/"/g, '&quot;') %>"
+          data-content-short-ru="<%= article.content_short_ru.replace(/"/g, '&quot;') %>"
+          data-content-full-en="<%= article.content_full_en.replace(/"/g, '&quot;').replace(/\n/g, '\\n') %>"
+          data-content-full-ru="<%= article.content_full_ru.replace(/"/g, '&quot;').replace(/\n/g, '\\n') %>"
+          data-author="<%= article.author.replace(/"/g, '&quot;') %>"
+          data-date="<%= article.created_at %>"
+          data-image="<%= article.image || '' %>">
+          <% if (article.pinned) { %>
+            <span class="pin-badge">&#128204; <span data-i18n="pinned">Pinned</span></span>
+          <% } %>
+          <% if (article.image) { %>
+            <div class="news-image" style="background-image: url('<%= article.image %>')"></div>
+          <% } else { %>
+            <div class="news-image news-image-default"></div>
+          <% } %>
+          <div class="news-body">
+            <h3 class="news-title"><%= title %></h3>
+            <p class="news-excerpt"><%= contentShort %></p>
+            <div class="news-meta">
+              <span class="news-author"><%= article.author %></span>
+              <span class="news-date"><%= new Date(article.created_at).toLocaleDateString() %></span>
+            </div>
+          </div>
+        </article>
+      <% }); %>
+    </div>
+
+    <!-- News Modal -->
+    <div id="newsModal" class="modal" style="display:none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" onclick="closeNewsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-meta">
+            <span id="modalAuthor"></span>
+            <span id="modalDate"></span>
+          </div>
+          <div id="modalContent" class="modal-content-text"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function getNewsLang() {
+        return (window.i18n && window.i18n.getCurrentLanguage()) || 'en';
+      }
+
+      function openNewsModal(element) {
+        const lang = getNewsLang();
+        const title = element.dataset['title' + lang.charAt(0).toUpperCase() + lang.slice(1)] || element.dataset.titleEn;
+        const contentFull = (element.dataset['contentFull' + lang.charAt(0).toUpperCase() + lang.slice(1)] || element.dataset.contentFullEn).replace(/\\n/g, '\n');
+
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + element.dataset.author;
+        document.getElementById('modalDate').textContent = new Date(element.dataset.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        document.getElementById('modalContent').innerHTML = contentFull.replace(/\n/g, '<br>');
+        document.getElementById('newsModal').style.display = 'flex';
+      }
+      
+      function closeNewsModal() {
+        document.getElementById('newsModal').style.display = 'none';
+      }
+      
+      // Close modal when clicking outside
+      document.getElementById('newsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeNewsModal();
+      });
+
+      /**
+       * Smoothly switch news card content when language changes
+       */
+      function switchNewsLanguage(lang) {
+        const cards = document.querySelectorAll('.news-card');
+        if (!cards.length) return;
+
+        const suffix = lang.charAt(0).toUpperCase() + lang.slice(1); // "En" or "Ru"
+
+        // Staggered fade-out → swap → fade-in
+        cards.forEach((card, i) => {
+          const body = card.querySelector('.news-body');
+          if (!body) return;
+
+          const delay = i * 60; // stagger each card
+
+          setTimeout(() => {
+            body.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            body.style.opacity = '0';
+            body.style.transform = 'translateY(6px)';
+
+            setTimeout(() => {
+              // Swap content
+              const titleEl = body.querySelector('.news-title');
+              const excerptEl = body.querySelector('.news-excerpt');
+              if (titleEl) titleEl.textContent = card.dataset['title' + suffix] || card.dataset.titleEn;
+              if (excerptEl) excerptEl.textContent = card.dataset['contentShort' + suffix] || card.dataset.contentShortEn;
+
+              // Fade in
+              body.style.opacity = '1';
+              body.style.transform = 'translateY(0)';
+            }, 250);
+          }, delay);
+        });
+
+        // If modal is open, update it too
+        const modal = document.getElementById('newsModal');
+        if (modal && modal.style.display === 'flex') {
+          // Find which card is shown (match by modal title to any card)
+          // Just close the modal — user can reopen with new lang
+          closeNewsModal();
+        }
+      }
+
+      // Hook into the i18n language change
+      if (window.i18n) {
+        const originalSetLanguage = window.i18n.setLanguage.bind(window.i18n);
+        window.i18n.setLanguage = function(lang) {
+          originalSetLanguage(lang);
+          switchNewsLanguage(lang);
+        };
+        // Also apply on page load to ensure correct language
+        switchNewsLanguage(window.i18n.getCurrentLanguage());
+      }
+    </script>
+  <% } %>
+</section>
+
+<section class="section section-dark">
+  <div class="container">
+    <h2 class="section-title"><span class="accent">&#127918;</span> <span data-i18n="hosted_games">Hosted Games</span></h2>
+    <div class="games-showcase">
+      <div class="game-badge">
+        <div class="game-icon">&#9876;</div>
+        <span>World of Warcraft</span>
+      </div>
+      <div class="game-badge">
+        <div class="game-icon">&#128481;</div>
+        <span>Blade &amp; Soul</span>
+      </div>
+      <div class="game-badge">
+        <div class="game-icon">&#128299;</div>
+        <span>Killing Floor 2</span>
+      </div>
+      <div class="game-badge">
+        <div class="game-icon">&#9935;</div>
+        <span>Minecraft</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

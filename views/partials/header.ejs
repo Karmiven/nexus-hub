@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/desktop.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="/js/translations.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">&#9889;</span>
+        <span class="logo-text"><%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></span>
+      </a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="navLinks">
+        <li class="nav-item nav-item-home"><a href="/" class="nav-link" data-i18n="nav_home">Home</a></li>
+        <li class="nav-item nav-item-servers"><a href="/servers" class="nav-link" data-i18n="nav_servers">Servers</a></li>
+        <li class="nav-item nav-item-community"><a href="/community" class="nav-link" data-i18n="nav_community">Community</a></li>
+        <li class="nav-item nav-item-monitoring"><a href="/monitoring/dashboard" class="nav-link" data-i18n="nav_monitoring">Monitoring</a></li>
+
+        <li class="nav-item nav-item-admin <%= (user && user.role === 'admin') ? '' : 'nav-item-placeholder' %>">
+          <% if (user && user.role === 'admin') { %>
+            <a href="/admin" class="nav-link nav-admin" data-i18n="nav_admin">Admin</a>
+          <% } %>
+        </li>
+
+        <li class="nav-item nav-item-auth">
+          <% if (user) { %>
+            <a href="/auth/logout" class="nav-link btn-nav-outline" data-i18n="nav_logout">Logout</a>
+          <% } else { %>
+            <a href="/auth/login" class="nav-link btn-nav-outline" data-i18n="nav_login">Login</a>
+          <% } %>
+        </li>
+
+        <li class="nav-item nav-item-theme-lang">
+          <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+            <span class="theme-icon theme-icon-light">🌙</span>
+            <span class="theme-icon theme-icon-dark">☀️</span>
+          </button>
+
+          <select class="language-selector" id="languageSelector" aria-label="Select language">
+            <option value="en">ENG</option>
+            <option value="ru">RUS</option>
+          </select>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <% if (success && success.length > 0) { %>
+    <div class="flash flash-success"><%= success[0] %></div>
+  <% } %>
+  <% if (error && error.length > 0) { %>
+    <div class="flash flash-error"><%= error[0] %></div>
+  <% } %>
+
+  <main class="main-content">

@@ -1,0 +1,23 @@
+<%- include('../partials/header') %>
+
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title" data-i18n="welcome_back">Welcome Back</h1>
+      <p class="auth-subtitle" data-i18n="login_subtitle">Log in to your NexusHub account</p>
+    </div>
+    <form action="/auth/login" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username" data-i18n="username">Username</label>
+        <input type="text" id="username" name="username" class="form-input" required autofocus>
+      </div>
+      <div class="form-group">
+        <label for="password" data-i18n="password">Password</label>
+        <input type="password" id="password" name="password" class="form-input" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="log_in">Log In</button>
+    </form>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

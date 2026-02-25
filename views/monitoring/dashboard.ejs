@@ -1,0 +1,338 @@
+<%- include('../partials/header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">&#128202; <span data-i18n="resource_monitoring">Resource Monitoring</span></h1>
+    <p class="page-desc" data-i18n="monitoring_desc">Real-time system resource usage for all game servers</p>
+  </div>
+</section>
+
+<section class="section container">
+  <!-- Overall Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">&#128187;</div>
+      <div class="stat-content">
+        <div class="stat-number" id="totalServers">-</div>
+        <div class="stat-label" data-i18n="total_servers">Total Servers</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon status-online">&#128994;</div>
+      <div class="stat-content">
+        <div class="stat-number" id="onlineServers">-</div>
+        <div class="stat-label" data-i18n="online_servers">Online</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon status-offline">&#128308;</div>
+      <div class="stat-content">
+        <div class="stat-number" id="offlineServers">-</div>
+        <div class="stat-label" data-i18n="offline_servers">Offline</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">&#9881;</div>
+      <div class="stat-content">
+        <div class="stat-number" id="avgCPU">-%</div>
+        <div class="stat-label" data-i18n="avg_cpu">Avg CPU</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server Resources -->
+  <h2 class="section-title"><span class="accent">&#127918;</span> <span data-i18n="server_resources">Server Resources</span></h2>
+  <div class="resources-grid" id="resourcesGrid">
+    <!-- Server resource cards will be inserted here by JavaScript -->
+  </div>
+</section>
+
+<script>
+// Resource monitoring dashboard
+let updateInterval;
+
+async function fetchResources() {
+  try {
+    const response = await fetch('/monitoring/resources');
+    const data = await response.json();
+    
+    if (data.success) {
+      updateStats(data.stats);
+      updateServerCards(data.servers);
+    }
+  } catch (err) {
+    console.error('Failed to fetch resources:', err);
+  }
+}
+
+function updateStats(stats) {
+  document.getElementById('totalServers').textContent = stats.totalServers || 0;
+  document.getElementById('onlineServers').textContent = stats.onlineServers || 0;
+  document.getElementById('offlineServers').textContent = stats.offlineServers || 0;
+  document.getElementById('avgCPU').textContent = stats.averageCPU ? stats.averageCPU.toFixed(1) + '%' : '-%';
+}
+
+function updateServerCards(servers) {
+  const grid = document.getElementById('resourcesGrid');
+  grid.innerHTML = '';
+  
+  Object.values(servers).forEach(server => {
+    const card = createServerCard(server);
+    grid.appendChild(card);
+  });
+}
+
+function createServerCard(server) {
+  const card = document.createElement('div');
+  card.className = `resource-card status-${server.status}`;
+  
+  const metrics = server.metrics;
+  const lastCheck = server.lastCheck ? new Date(server.lastCheck).toLocaleTimeString() : 'Never';
+  
+  const t = (key) => window.i18n ? window.i18n.t(key) : key;
+  
+  card.innerHTML = `
+    <div class="resource-header">
+      <h3 class="resource-title">Server ${server.id}</h3>
+      <span class="resource-status status-${server.status}">
+        ${server.status === 'online' ? '🟢 ' + t('online') : '🔴 ' + t('offline')}
+      </span>
+    </div>
+    
+    ${metrics ? `
+      <div class="resource-metrics">
+        <div class="metric">
+          <div class="metric-label">${t('cpu')}</div>
+          <div class="metric-value">
+            <div class="metric-bar">
+              <div class="metric-fill" style="width: ${metrics.cpu.usage}%"></div>
+            </div>
+            <span class="metric-number">${metrics.cpu.usage.toFixed(1)}%</span>
+          </div>
+        </div>
+        
+        <div class="metric">
+          <div class="metric-label">${t('memory')}</div>
+          <div class="metric-value">
+            <div class="metric-bar">
+              <div class="metric-fill" style="width: ${metrics.memory.usage}%"></div>
+            </div>
+            <span class="metric-number">${metrics.memory.usage.toFixed(1)}%</span>
+          </div>
+        </div>
+        
+        <div class="metric">
+          <div class="metric-label">${t('disk')}</div>
+          <div class="metric-value">
+            <div class="metric-bar">
+              <div class="metric-fill" style="width: ${metrics.disk.usage}%"></div>
+            </div>
+            <span class="metric-number">${metrics.disk.usage.toFixed(1)}%</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="resource-details">
+        <div class="detail-row">
+          <span>${t('cores')}:</span>
+          <span>${metrics.cpu.cores}</span>
+        </div>
+        <div class="detail-row">
+          <span>${t('load')}:</span>
+          <span>${metrics.cpu.loadAverage.toFixed(2)}</span>
+        </div>
+        <div class="detail-row">
+          <span>${t('uptime')}:</span>
+          <span>${formatUptime(metrics.uptime)}</span>
+        </div>
+      </div>
+    ` : `
+      <div class="resource-offline">
+        <p>${t('server_offline_msg')}</p>
+      </div>
+    `}
+    
+    <div class="resource-footer">
+      <span class="last-check">${t('last_check')}: ${lastCheck}</span>
+    </div>
+  `;
+  
+  return card;
+}
+
+function formatUptime(seconds) {
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
+// Auto-refresh every 30 seconds
+function startAutoRefresh() {
+  fetchResources(); // Initial load
+  updateInterval = setInterval(fetchResources, 30000);
+}
+
+// Clean up on page unload
+window.addEventListener('beforeunload', () => {
+  if (updateInterval) clearInterval(updateInterval);
+});
+
+// Start monitoring
+startAutoRefresh();
+</script>
+
+<style>
+/* Resource Monitoring Styles */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.resource-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  transition: all var(--transition);
+}
+
+.resource-card.status-online {
+  border-color: var(--success);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+}
+
+.resource-card.status-offline {
+  opacity: 0.7;
+  border-color: var(--danger);
+}
+
+.resource-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.resource-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.resource-status {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.resource-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.metric-value {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metric-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.metric-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.metric-number {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 3.5rem;
+  text-align: right;
+}
+
+.resource-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-surface);
+  border-radius: var(--radius-sm);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.detail-row span:first-child {
+  color: var(--text-secondary);
+}
+
+.detail-row span:last-child {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.resource-offline {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted);
+}
+
+.resource-footer {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .metric-value {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .metric-number {
+    min-width: auto;
+    text-align: left;
+  }
+}
+</style>
+
+<%- include('../partials/footer') %>

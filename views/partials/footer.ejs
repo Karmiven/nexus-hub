@@ -1,0 +1,37 @@
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-section">
+          <h3 class="footer-logo"><span class="logo-icon">&#9889;</span> NexusHub</h3>
+          <p data-i18n="footer_tagline">Your ultimate gaming server hub. Play, connect, and conquer.</p>
+        </div>
+        <div class="footer-section">
+          <h4 data-i18n="quick_links">Quick Links</h4>
+          <ul>
+            <li><a href="/" data-i18n="nav_home">Home</a></li>
+            <li><a href="/servers" data-i18n="nav_servers">Servers</a></li>
+            <li><a href="/community" data-i18n="nav_community">Community</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4 data-i18n="account">Account</h4>
+          <ul>
+            <% if (user) { %>
+              <li><a href="/auth/logout" data-i18n="nav_logout">Logout</a></li>
+            <% } else { %>
+              <li><a href="/auth/login" data-i18n="nav_login">Login</a></li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; <%= new Date().getFullYear() %> <span data-i18n="footer_copyright">NexusHub. Powered by Proxmox.</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

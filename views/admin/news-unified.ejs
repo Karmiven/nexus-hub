@@ -1,0 +1,948 @@
+<%- include('../partials/header') %>
+
+<!-- Cropper.js CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<!-- Cropper.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title">&#9881; Управление новостями</h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab">Главная</a>
+      <a href="/admin/news" class="admin-tab active">Новости</a>
+      <a href="/admin/servers" class="admin-tab">Сервера</a>
+      <a href="/admin/users" class="admin-tab">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab">Настройки</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="admin-section-header">
+    <h2>Все статьи</h2>
+    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">+ Создать новость</button>
+  </div>
+    <% if (news.length === 0) { %>
+      <div class="empty-state">
+        <p>Новостей пока нет. <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">Создать</button></p>
+      </div>
+    <% } else { %>
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Заголовок</th>
+              <th>Автор</th>
+              <th>Закреп.</th>
+              <th>Дата</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% news.forEach(function(item) { %>
+              <tr>
+                <td><strong><%= item.title_en %> / <%= item.title_ru %></strong></td>
+                <td><%= item.author %></td>
+                <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><%= item.pinned ? '📌 Да' : '—' %></span></td>
+                <td><%= new Date(item.created_at).toLocaleDateString() %></td>
+                <td class="actions-cell">
+                  <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)">Ред.</button>
+                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Удалить эту статью?')">
+                    <button type="submit" class="btn btn-xs btn-danger">Удалить</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<!-- Modal Window -->
+<div id="newsModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTitle">📝 Создать новость</h2>
+      <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+
+    <form id="newsForm" method="POST" enctype="multipart/form-data" class="bilingual-form-unified">
+
+      <!-- English Column -->
+      <div class="language-column">
+        <div class="language-header">
+          <span class="language-flag">🇬🇧</span>
+          <span class="language-title">English</span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="title_en">Заголовок</label>
+          <input type="text" id="title_en" name="title_en" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="content_short_en">Краткое содержание (Главная)</label>
+          <textarea id="content_short_en" name="content_short_en" class="form-textarea" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="content_full_en">Полное содержание (Статья)</label>
+          <textarea id="content_full_en" name="content_full_en" class="form-textarea full-content" required></textarea>
+        </div>
+      </div>
+      
+      <!-- Russian Column -->
+      <div class="language-column">
+        <div class="language-header">
+          <span class="language-flag">🇷🇺</span>
+          <span class="language-title">Русский</span>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="title_ru">Заголовок</label>
+          <input type="text" id="title_ru" name="title_ru" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="content_short_ru">Краткое содержание (Главная)</label>
+          <textarea id="content_short_ru" name="content_short_ru" class="form-textarea" required></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="content_full_ru">Полное содержание (Статья)</label>
+          <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content" required></textarea>
+        </div>
+      </div>
+      
+      <!-- Common Fields -->
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <label class="form-label">Изображение (16:9 — высокое качество)</label>
+        <div class="image-section">
+          <div class="image-upload" id="imageUpload">
+            <input type="file" id="image" name="image" accept="image/*" style="display: none;">
+            <div class="upload-placeholder">
+              <p>📷 Нажмите для загрузки изображения</p>
+              <small>Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680x360px</small>
+            </div>
+          </div>
+          <!-- Hidden input to store cropped image -->
+          <input type="hidden" id="croppedImageData" name="croppedImageData">
+          <!-- Final preview after crop -->
+          <div id="finalImagePreview" style="display: none;">
+            <img id="finalImage" class="image-preview" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()">✏️ Заменить</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group" style="grid-column: 1 / -1;">
+        <div class="checkbox-group">
+          <input type="checkbox" id="pinned" name="pinned" class="checkbox-input">
+          <label for="pinned">Закрепить на главной</label>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-outline" onclick="openPreviewModal()">👁️ Предпросмотр</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">✨ Создать</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="modal" style="display: none; z-index: 1500;">
+  <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-header">
+      <h2>👁️ Предпросмотр статьи</h2>
+      <button type="button" class="modal-close" onclick="closePreviewModal()">&times;</button>
+    </div>
+    <div class="preview-tabs">
+      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')">🏠 Мини-карточка (Главная)</button>
+      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')">📄 Полная статья</button>
+    </div>
+    <div id="previewMini" class="preview-pane active">
+      <div class="preview-label">Как выглядит на главной:</div>
+      <div id="previewMiniContent" class="preview-home-bg"></div>
+    </div>
+    <div id="previewFull" class="preview-pane" style="display:none;">
+      <div class="preview-label">Полная статья при клике на карточку:</div>
+      <div id="previewFullContent" class="preview-full-bg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Modal -->
+<div id="cropModal" class="modal" style="display: none; z-index: 2000;">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>🖼️ Обрезка изображения (16:9)</h2>
+      <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
+    </div>
+    <div class="crop-container">
+      <img id="cropperImage" style="max-width: 100%;">
+    </div>
+    <div class="crop-controls" style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
+      <button type="button" class="btn btn-secondary" onclick="closeCropModal()">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()">✅ Применить</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .crop-container {
+    max-height: 500px;
+    overflow: auto;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+  }
+
+  .crop-controls {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+  }
+
+  /* Preview modal styles */
+  .preview-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border);
+  }
+
+  .preview-tab {
+    background: none;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: all var(--transition);
+  }
+
+  .preview-tab:hover {
+    color: var(--text-primary);
+  }
+
+  .preview-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .preview-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    font-style: italic;
+  }
+
+  .preview-home-bg {
+    background: var(--bg-dark);
+    border-radius: var(--radius-sm);
+    padding: 2rem;
+    border: 1px solid var(--border);
+  }
+
+  .preview-home-bg .news-title {
+    color: var(--text-primary);
+  }
+
+  .preview-home-bg .news-excerpt {
+    color: var(--text-secondary);
+  }
+
+  .preview-home-bg .news-meta {
+    color: var(--text-secondary);
+  }
+
+  .preview-full-bg {
+    background: var(--bg-dark);
+    border-radius: var(--radius-sm);
+    padding: 2rem;
+    border: 1px solid var(--border);
+  }
+
+  .preview-full-article {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .preview-full-article .pfa-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius-sm);
+    margin-bottom: 1.5rem;
+  }
+
+  .preview-full-article .pfa-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  .preview-full-article .pfa-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .preview-full-article .pfa-content {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-primary);
+    white-space: pre-line;
+  }
+
+  .preview-lang-switch {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .preview-lang-btn {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all var(--transition);
+  }
+
+  .preview-lang-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+  }
+
+  .modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 1200px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color var(--transition);
+  }
+
+  .modal-close:hover {
+    color: var(--accent);
+  }
+
+  .bilingual-form-unified {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .language-column {
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem;
+    border: 1px solid var(--border);
+  }
+
+  .language-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .language-flag {
+    font-size: 1.5rem;
+  }
+
+  .language-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .form-input,
+  .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    transition: all var(--transition);
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-textarea.full-content {
+    min-height: 120px;
+  }
+
+  .image-upload {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all var(--transition);
+    background: var(--bg-surface);
+  }
+
+  .image-upload:hover {
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.05);
+  }
+
+  .image-upload.has-image {
+    border-style: solid;
+    border-color: var(--accent);
+  }
+
+  .upload-placeholder {
+    pointer-events: none;
+  }
+
+  .upload-placeholder p {
+    margin: 0 0 0.5rem 0;
+    color: var(--text-secondary);
+  }
+
+  .upload-placeholder small {
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
+
+  .image-preview {
+    max-width: 100%;
+    max-height: 200px;
+    margin-top: 1rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .checkbox-input {
+    width: auto;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 0.4rem 0.8rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .badge-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+  }
+
+  .badge-default {
+    background: rgba(148, 163, 176, 0.15);
+    color: var(--text-secondary);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .data-table thead {
+    background: var(--bg-card);
+  }
+
+  .data-table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table tbody tr {
+    box-shadow: inset 0 -1px 0 0 var(--border);
+  }
+
+  .data-table tbody tr:last-child {
+    box-shadow: none;
+  }
+
+  .data-table td {
+    padding: 0.75rem 1rem;
+    color: var(--text-primary);
+    vertical-align: middle;
+    box-sizing: border-box;
+    height: auto;
+    min-height: 44px;
+    display: table-cell;
+  }
+
+  .data-table tbody tr:hover {
+    background: rgba(6, 182, 212, 0.05);
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .actions-cell form {
+    display: inline;
+    margin: 0;
+  }
+
+  .actions-cell button {
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 768px) {
+    .bilingual-form-unified {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+    }
+
+    .data-table {
+      font-size: 0.9rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
+</style>
+
+<script>
+  const modal = document.getElementById('newsModal');
+  const cropModal = document.getElementById('cropModal');
+  const form = document.getElementById('newsForm');
+  const imageUpload = document.getElementById('imageUpload');
+  const imageInput = document.getElementById('image');
+  const modalTitle = document.getElementById('modalTitle');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  let currentEditId = null;
+  let cropper = null;
+  let originalImageData = null;
+
+  // Image upload handler - open crop modal
+  imageUpload.addEventListener('click', () => {
+    imageInput.click();
+  });
+
+  imageInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File is too large. Max 5MB allowed.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        originalImageData = e.target.result;
+        openCropModal();
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Crop modal functions
+  function openCropModal() {
+    if (!originalImageData) return;
+    
+    const cropperImage = document.getElementById('cropperImage');
+    cropperImage.src = originalImageData;
+    
+    // Destroy existing cropper if any
+    if (cropper) {
+      cropper.destroy();
+    }
+    
+    // Create new cropper with 16:9 aspect ratio
+    cropper = new Cropper(cropperImage, {
+      aspectRatio: 16 / 9,
+      autoCropArea: 1,
+      responsive: true,
+      restore: true,
+      guides: true,
+      center: true,
+      highlight: true,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+      toggleDragModeOnDblclick: true,
+    });
+    
+    cropModal.style.display = 'flex';
+  }
+
+  function closeCropModal() {
+    cropModal.style.display = 'none';
+  }
+
+  function applyCrop() {
+    if (!cropper) return;
+    
+    // Get canvas with 680x360 size (16:9) - high quality
+    const canvas = cropper.getCroppedCanvas({
+      maxWidth: 680,
+      maxHeight: 360,
+      fillColor: '#fff',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+    
+    // Convert to data URL and store
+    const croppedData = canvas.toDataURL('image/jpeg', 0.9);
+    document.getElementById('croppedImageData').value = croppedData;
+    
+    // Show final preview
+    const finalImage = document.getElementById('finalImage');
+    const finalPreview = document.getElementById('finalImagePreview');
+    const placeholder = document.querySelector('.upload-placeholder');
+    
+    finalImage.src = croppedData;
+    finalPreview.style.display = 'block';
+    imageUpload.style.display = 'none';
+    placeholder.style.display = 'none';
+    
+    closeCropModal();
+  }
+
+  // ── Preview system ──
+  let previewLang = 'en';
+
+  function getPreviewData() {
+    return {
+      title_en: document.getElementById('title_en').value || 'Untitled',
+      title_ru: document.getElementById('title_ru').value || 'Без названия',
+      content_short_en: document.getElementById('content_short_en').value || 'No short content',
+      content_short_ru: document.getElementById('content_short_ru').value || 'Нет краткого содержания',
+      content_full_en: document.getElementById('content_full_en').value || 'No full content',
+      content_full_ru: document.getElementById('content_full_ru').value || 'Нет полного содержания',
+      image: document.getElementById('finalImage')?.src || '',
+      pinned: document.getElementById('pinned').checked,
+      author: '<%= typeof user !== "undefined" && user ? user.username : "Admin" %>',
+      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    };
+  }
+
+  function openPreviewModal() {
+    previewLang = 'en';
+    renderPreview();
+    document.getElementById('previewModal').style.display = 'flex';
+  }
+
+  function closePreviewModal() {
+    document.getElementById('previewModal').style.display = 'none';
+  }
+
+  function switchPreviewTab(tab) {
+    document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.preview-tab[data-tab="${tab}"]`).classList.add('active');
+    document.getElementById('previewMini').style.display = tab === 'mini' ? 'block' : 'none';
+    document.getElementById('previewFull').style.display = tab === 'full' ? 'block' : 'none';
+  }
+
+  function setPreviewLang(lang) {
+    previewLang = lang;
+    renderPreview();
+  }
+
+  function renderPreview() {
+    const d = getPreviewData();
+    const lang = previewLang;
+    const title = lang === 'ru' ? d.title_ru : d.title_en;
+    const shortContent = lang === 'ru' ? d.content_short_ru : d.content_short_en;
+    const fullContent = lang === 'ru' ? d.content_full_ru : d.content_full_en;
+    const imageHtml = d.image && !d.image.endsWith('#')
+      ? `<div class="news-image" style="background-image: url('${d.image}')"></div>`
+      : `<div class="news-image news-image-default"></div>`;
+    const pinnedBadge = d.pinned ? '<span class="pin-badge">📌 Закреплено</span>' : '';
+
+    const langSwitcher = `
+      <div class="preview-lang-switch">
+        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" onclick="setPreviewLang('en')">🇬🇧 English</button>
+        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" onclick="setPreviewLang('ru')">🇷🇺 Русский</button>
+      </div>
+    `;
+
+    // Mini card (homepage)
+    document.getElementById('previewMiniContent').innerHTML = `
+      ${langSwitcher}
+      <div class="news-grid" style="max-width: 380px;">
+        <article class="news-card${d.pinned ? ' pinned' : ''}" style="cursor: default;">
+          ${pinnedBadge}
+          ${imageHtml}
+          <div class="news-body">
+            <h3 class="news-title">${title}</h3>
+            <p class="news-excerpt">${shortContent}</p>
+            <div class="news-meta">
+              <span class="news-author">${d.author}</span>
+              <span class="news-date">${d.date}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    `;
+
+    // Full article
+    document.getElementById('previewFullContent').innerHTML = `
+      ${langSwitcher}
+      <div class="preview-full-article">
+        <h1 class="pfa-title">${title}</h1>
+        <div class="pfa-meta">
+          <span>${d.author}</span>
+          <span>${d.date}</span>
+        </div>
+        <div class="pfa-content">${fullContent}</div>
+      </div>
+    `;
+  }
+
+  // Close preview on background click
+  document.getElementById('previewModal').addEventListener('click', (e) => {
+    if (e.target.id === 'previewModal') closePreviewModal();
+  });
+
+  // Modal functions
+  function openCreateModal() {
+    currentEditId = null;
+    form.reset();
+    imageInput.value = '';
+    originalImageData = null;
+    document.getElementById('croppedImageData').value = '';
+    document.getElementById('finalImagePreview').style.display = 'none';
+    document.getElementById('imageUpload').style.display = 'flex';
+    modalTitle.textContent = '📝 Create News';
+    submitBtn.textContent = '✨ Создать';
+    modal.style.display = 'flex';
+  }
+
+  function closeModal() {
+    modal.style.display = 'none';
+    currentEditId = null;
+  }
+
+  // Close on background click
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeModal();
+    }
+  });
+
+  // Load article for editing
+  function loadArticle(articleId) {
+    fetch(`/admin/news/${articleId}/data`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById('title_en').value = data.title_en || '';
+        document.getElementById('title_ru').value = data.title_ru || '';
+        document.getElementById('content_short_en').value = data.content_short_en || '';
+        document.getElementById('content_short_ru').value = data.content_short_ru || '';
+        document.getElementById('content_full_en').value = data.content_full_en || '';
+        document.getElementById('content_full_ru').value = data.content_full_ru || '';
+        document.getElementById('pinned').checked = !!data.pinned;
+        
+        // Clear file input
+        imageInput.value = '';
+        originalImageData = null;
+        document.getElementById('croppedImageData').value = '';
+        
+        // Set image if exists
+        if (data.image) {
+          const finalImage = document.getElementById('finalImage');
+          const finalPreview = document.getElementById('finalImagePreview');
+          
+          finalImage.src = data.image;
+          finalPreview.style.display = 'block';
+          document.getElementById('imageUpload').style.display = 'none';
+        } else {
+          document.getElementById('finalImagePreview').style.display = 'none';
+          document.getElementById('imageUpload').style.display = 'flex';
+        }
+        
+        // Set edit ID
+        currentEditId = articleId;
+        
+        // Update header
+        modalTitle.textContent = '✏️ Редактировать';
+        submitBtn.textContent = '💾 Сохранить';
+        
+        // Open modal
+        modal.style.display = 'flex';
+      })
+      .catch(err => {
+        console.error('Error loading article:', err);
+        alert('Ошибка загрузки статьи: ' + err.message);
+      });
+  }
+
+  // Form submit
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(form);
+    const url = currentEditId ? `/admin/news/${currentEditId}` : '/admin/news/create';
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        window.location.reload();
+      } else {
+        const text = await response.text();
+        console.error('Response error:', text);
+        alert('Ошибка сохранения: ' + response.status);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Ошибка сохранения: ' + err.message);
+    }
+  });
+</script>
+
+<%- include('../partials/footer') %>

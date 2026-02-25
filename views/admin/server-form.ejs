@@ -1,0 +1,104 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title">&#9881; <%= server ? 'Редактировать' : 'Новый' %> сервер</h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab">Главная</a>
+      <a href="/admin/news" class="admin-tab">Новости</a>
+      <a href="/admin/servers" class="admin-tab active">Сервера</a>
+      <a href="/admin/users" class="admin-tab">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab">Настройки</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="form-card">
+    <form action="<%= server ? '/admin/servers/' + server.id : '/admin/servers' %>" method="POST" class="admin-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Название сервера *</label>
+          <input type="text" id="name" name="name" class="form-input" required value="<%= server ? server.name : '' %>">
+        </div>
+        <div class="form-group">
+          <label for="game">Игра *</label>
+          <input type="text" id="game" name="game" class="form-input" required value="<%= server ? server.game : '' %>" list="gamesList" placeholder="e.g. Minecraft, World of Warcraft">
+          <datalist id="gamesList">
+            <option value="Minecraft">
+            <option value="World of Warcraft">
+            <option value="Blade and Soul">
+            <option value="Killing Floor 2">
+            <option value="Counter-Strike 2">
+            <option value="Valheim">
+            <option value="ARK: Survival Evolved">
+            <option value="Terraria">
+          </datalist>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ip">IP адрес *</label>
+          <input type="text" id="ip" name="ip" class="form-input" required value="<%= server ? server.ip : '' %>" placeholder="e.g. 192.168.1.100">
+        </div>
+        <div class="form-group">
+          <label for="port">Порт *</label>
+          <input type="number" id="port" name="port" class="form-input" required value="<%= server ? server.port : '' %>" min="1" max="65535" placeholder="e.g. 25565">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="description">Описание</label>
+        <textarea id="description" name="description" class="form-input form-textarea" rows="4"><%= server ? server.description : '' %></textarea>
+      </div>
+      <div class="form-group">
+        <label for="image">URL изображения (необязательно)</label>
+        <input type="url" id="image" name="image" class="form-input" value="<%= server ? server.image : '' %>" placeholder="https://example.com/server-banner.jpg">
+      </div>
+
+      <fieldset class="form-fieldset">
+        <legend>Настройки редиректа</legend>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="redirect_enabled" value="1" id="redirectToggle" <%= server && server.redirect_enabled ? 'checked' : '' %>>
+            Включить редирект при клике на сервер
+          </label>
+        </div>
+        <div class="form-group" id="redirectUrlGroup">
+          <label for="redirect_url">URL редиректа</label>
+          <input type="url" id="redirect_url" name="redirect_url" class="form-input" value="<%= server ? server.redirect_url : '' %>" placeholder="https://example.com/launcher">
+        </div>
+      </fieldset>
+
+      <fieldset class="form-fieldset">
+        <legend>Дополнительно</legend>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="show_player_count" value="1" <%= server && server.show_player_count ? 'checked' : '' %>>
+            Показывать кол-во игроков (только Minecraft)
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="sort_order">Порядок сортировки (меньше = выше)</label>
+          <input type="number" id="sort_order" name="sort_order" class="form-input" value="<%= server ? server.sort_order : 0 %>" min="0">
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary"><%= server ? 'Сохранить' : 'Добавить' %> сервер</button>
+        <a href="/admin/servers" class="btn btn-outline">Отмена</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<script>
+  const toggle = document.getElementById('redirectToggle');
+  const urlGroup = document.getElementById('redirectUrlGroup');
+  function updateRedirectVisibility() {
+    urlGroup.style.display = toggle.checked ? 'block' : 'none';
+  }
+  toggle.addEventListener('change', updateRedirectVisibility);
+  updateRedirectVisibility();
+</script>
+
+<%- include('../partials/footer') %>

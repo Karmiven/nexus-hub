@@ -1,0 +1,34 @@
+<%- include('../partials/header') %>
+
+<section class="auth-section">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1 class="auth-title" data-i18n="join_nexushub">Join NexusHub</h1>
+      <p class="auth-subtitle" data-i18n="register_subtitle">Create your account and join the community</p>
+    </div>
+    <form action="/auth/register" method="POST" class="auth-form">
+      <div class="form-group">
+        <label for="username" data-i18n="username_required">Username *</label>
+        <input type="text" id="username" name="username" class="form-input" required autofocus minlength="3" maxlength="30">
+      </div>
+      <div class="form-group">
+        <label for="email" data-i18n="email_optional">Email (optional, for notifications)</label>
+        <input type="email" id="email" name="email" class="form-input">
+      </div>
+      <div class="form-group">
+        <label for="password" data-i18n="password_required">Password *</label>
+        <input type="password" id="password" name="password" class="form-input" required minlength="6">
+      </div>
+      <div class="form-group">
+        <label for="password2" data-i18n="confirm_password">Confirm Password *</label>
+        <input type="password" id="password2" name="password2" class="form-input" required minlength="6">
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" data-i18n="create_account">Create Account</button>
+    </form>
+    <div class="auth-footer">
+      <p><span data-i18n="have_account">Already have an account?</span> <a href="/auth/login" data-i18n="log_in">Log In</a></p>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

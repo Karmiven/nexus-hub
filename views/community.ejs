@@ -1,0 +1,112 @@
+<%- include('partials/header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">&#128172; <span data-i18n="community_chat">Community Chat</span></h1>
+    <p class="page-desc" data-i18n="community_desc">Chat with other players in real-time. Be respectful!</p>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="chat-container">
+    <div class="chat-nickname-bar" id="nicknameBar">
+      <label for="nicknameInput" class="nickname-label" data-i18n="your_nickname">Your nickname:</label>
+      <input type="text" id="nicknameInput" class="chat-input" data-i18n-placeholder="enter_nickname" placeholder="Enter nickname..." maxlength="30" autocomplete="off"
+        value="<%= user ? user.username : '' %>">
+      <button type="button" id="nicknameBtn" class="btn btn-primary btn-sm" data-i18n="join_chat">Join Chat</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <% messages.forEach(function(msg) { %>
+        <div class="chat-msg">
+          <span class="chat-user"><%= msg.username %></span>
+          <span class="chat-time"><%= new Date(msg.created_at).toLocaleTimeString() %></span>
+          <p class="chat-text"><%= msg.message %></p>
+        </div>
+      <% }); %>
+    </div>
+
+    <div class="chat-typing" id="typingIndicator"></div>
+    <form class="chat-form" id="chatForm" style="display:none;">
+      <input type="text" id="chatInput" class="chat-input" data-i18n-placeholder="type_message" placeholder="Type a message..." maxlength="500" autocomplete="off">
+      <button type="submit" class="btn btn-primary btn-sm" data-i18n="send">Send</button>
+    </form>
+  </div>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let username = '';
+  const messagesDiv = document.getElementById('chatMessages');
+  const chatForm = document.getElementById('chatForm');
+  const chatInput = document.getElementById('chatInput');
+  const typingIndicator = document.getElementById('typingIndicator');
+  const nicknameBar = document.getElementById('nicknameBar');
+  const nicknameInput = document.getElementById('nicknameInput');
+  const nicknameBtn = document.getElementById('nicknameBtn');
+
+  function scrollToBottom() {
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+  scrollToBottom();
+
+  // Join chat with nickname
+  function joinChat() {
+    const nick = nicknameInput.value.trim().replace(/[<>]/g, '');
+    if (!nick) return;
+    username = nick;
+    nicknameBar.style.display = 'none';
+    chatForm.style.display = 'flex';
+    chatInput.focus();
+  }
+
+  nicknameBtn.addEventListener('click', joinChat);
+  nicknameInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') joinChat();
+  });
+
+  // Receive message
+  socket.on('chat:message', (msg) => {
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = `
+      <span class="chat-user">${escapeHtml(msg.username)}</span>
+      <span class="chat-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+      <p class="chat-text">${escapeHtml(msg.message)}</p>
+    `;
+    messagesDiv.appendChild(div);
+    scrollToBottom();
+  });
+
+  // Typing indicator
+  let typingTimeout;
+  socket.on('chat:typing', (data) => {
+    typingIndicator.textContent = window.i18n ? window.i18n.t('is_typing', { user: data.username }) : data.username + ' is typing...';
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      typingIndicator.textContent = '';
+    }, 2000);
+  });
+
+  chatInput.addEventListener('input', () => {
+    if (username) socket.emit('chat:typing', { username });
+  });
+
+  // Send message
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const message = chatInput.value.trim();
+    if (!message || !username) return;
+    socket.emit('chat:message', { username, message });
+    chatInput.value = '';
+  });
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+</script>
+
+<%- include('partials/footer') %>

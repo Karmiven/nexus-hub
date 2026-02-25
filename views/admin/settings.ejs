@@ -1,0 +1,364 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title">&#9881; Настройки</h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab">Главная</a>
+      <a href="/admin/news" class="admin-tab">Новости</a>
+      <a href="/admin/servers" class="admin-tab">Сервера</a>
+      <a href="/admin/users" class="admin-tab">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab active">Настройки</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container settings-container">
+  <div class="form-card settings-card">
+    <form action="/admin/settings" method="POST" class="admin-form settings-grid">
+      <!-- Left column: Site & Appearance -->
+      <div class="settings-col-left">
+        <fieldset class="form-fieldset">
+          <legend>🌐 Сайт и внешний вид</legend>
+          <div class="form-group">
+            <label for="site_name">Название сайта</label>
+            <input type="text" id="site_name" name="site_name" class="form-input" value="<%= settings.site_name || 'NexusHub' %>">
+          </div>
+          <div class="form-group">
+            <label for="site_description">Описание сайта</label>
+            <input type="text" id="site_description" name="site_description" class="form-input" value="<%= settings.site_description || '' %>">
+          </div>
+          <div class="form-group">
+            <label for="navbar_title">Заголовок навигации</label>
+            <input type="text" id="navbar_title" name="navbar_title" class="form-input" value="<%= settings.navbar_title || 'NexusHub' %>" maxlength="30">
+            <small class="form-hint">Название бренда в навигационной панели и вкладке браузера.</small>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+          <div class="form-group">
+            <label for="hero_title">Заголовок героя</label>
+            <input type="text" id="hero_title" name="hero_title" class="form-input" value="<%= settings.hero_title || 'NexusHub' %>" maxlength="40">
+          </div>
+          <div class="form-group">
+            <label for="hero_subtitle">Подзаголовок героя</label>
+            <input type="text" id="hero_subtitle" name="hero_subtitle" class="form-input" value="<%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %>" maxlength="80">
+          </div>
+          <div class="form-group">
+            <label>Стиль заголовка</label>
+            <div class="style-options">
+              <% const currentStyle = settings.hero_style || 'glitch'; %>
+              <% const styles = [
+                { id: 'glitch', name: 'Glitch', desc: 'Neon glitch effect' },
+                { id: 'gradient', name: 'Gradient', desc: 'Smooth gradient flow' },
+                { id: 'neon-pulse', name: 'Neon Pulse', desc: 'Pulsating neon glow' },
+                { id: 'typewriter', name: 'Typewriter', desc: 'Typing animation' },
+                { id: 'chrome', name: 'Chrome', desc: 'Metallic chrome shine' },
+                { id: 'retro', name: 'Retro Arcade', desc: 'Pixelated retro style' },
+                { id: 'hologram', name: 'Hologram', desc: '3D holographic scan' }
+              ]; %>
+              <% styles.forEach(s => { %>
+                <label class="style-option <%= currentStyle === s.id ? 'active' : '' %>" data-style="<%= s.id %>">
+                  <input type="radio" name="hero_style" value="<%= s.id %>" <%= currentStyle === s.id ? 'checked' : '' %> hidden>
+                  <span class="style-name"><%= s.name %></span>
+                  <span class="style-desc"><%= s.desc %></span>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Предпросмотр</label>
+            <div class="hero-preview" id="heroPreview">
+              <div class="hero-preview-bg"></div>
+              <div class="hero-preview-content">
+                <h1 id="previewTitle" class="hero-title glitch" data-text="<%= settings.hero_title || 'NexusHub' %>"><%= settings.hero_title || 'NexusHub' %></h1>
+                <p id="previewSubtitle" class="hero-subtitle"><%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %></p>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </div>
+
+      <!-- Right column: Server & Community -->
+      <div class="settings-col-right">
+        <fieldset class="form-fieldset">
+          <legend>⚙️ Сервер и сообщество</legend>
+          <div class="form-group">
+            <label for="status_check_interval">Интервал проверки статуса (сек.)</label>
+            <input type="number" id="status_check_interval" name="status_check_interval" class="form-input" value="<%= settings.status_check_interval || 60 %>" min="10" max="600">
+            <small class="form-hint">Как часто пинговать сервера. Меньше = чаще, но больше ресурсов.</small>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="community_enabled" value="0">
+              <input type="checkbox" name="community_enabled" value="1" <%= settings.community_enabled === '1' ? 'checked' : '' %>>
+              Включить чат сообщества
+            </label>
+          </div>
+          <div class="form-group">
+            <label for="max_chat_messages">Макс. сообщений в чате</label>
+            <input type="number" id="max_chat_messages" name="max_chat_messages" class="form-input" value="<%= settings.max_chat_messages || 200 %>" min="50" max="1000">
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="form-actions settings-full-width">
+        <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>
+
+<style>
+  .settings-container {
+    max-width: 1400px;
+  }
+
+  .settings-card {
+    max-width: 100%;
+  }
+
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .settings-col-left,
+  .settings-col-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .settings-full-width {
+    grid-column: 1 / -1;
+  }
+
+  @media (max-width: 768px) {
+    .settings-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .style-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .style-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: var(--bg-surface);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: center;
+  }
+
+  .style-option:hover {
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.05);
+  }
+
+  .style-option.active {
+    border-color: var(--accent);
+    background: rgba(6, 182, 212, 0.1);
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+  }
+
+  .style-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .style-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  .hero-preview {
+    position: relative;
+    background: #0B0F19;
+    border-radius: var(--radius-sm);
+    padding: 3rem 2rem;
+    text-align: center;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .hero-preview-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(37, 99, 235, 0.2) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 50%, rgba(29, 78, 216, 0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 60%);
+    z-index: 0;
+  }
+
+  .hero-preview-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-preview .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+  }
+
+  .hero-preview .hero-subtitle {
+    font-size: 1rem;
+    color: #94A3B8;
+    margin-bottom: 0;
+  }
+
+  /* ── Title styles for preview ── */
+  .hero-preview .hero-title.style-glitch {
+    background: linear-gradient(135deg, #fff, #22D3EE, #06B6D4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-preview .hero-title.style-gradient {
+    background: linear-gradient(90deg, #06B6D4, #3B82F6, #818CF8, #06B6D4);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradient-flow 4s ease infinite;
+  }
+
+  @keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .hero-preview .hero-title.style-neon-pulse {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    text-shadow: 0 0 10px #06B6D4, 0 0 20px #06B6D4, 0 0 40px #0891B2, 0 0 80px #0E7490;
+    animation: neon-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes neon-pulse {
+    0%, 100% { text-shadow: 0 0 10px #06B6D4, 0 0 20px #06B6D4, 0 0 40px #0891B2, 0 0 80px #0E7490; }
+    50% { text-shadow: 0 0 5px #22D3EE, 0 0 10px #06B6D4, 0 0 20px #0891B2, 0 0 40px #164E63; }
+  }
+
+  .hero-preview .hero-title.style-typewriter {
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    border-right: 3px solid var(--accent);
+    overflow: hidden;
+    white-space: nowrap;
+    display: inline-block;
+    animation: typewriter-cursor 0.7s step-end infinite;
+  }
+
+  @keyframes typewriter-cursor {
+    0%, 100% { border-color: var(--accent); }
+    50% { border-color: transparent; }
+  }
+
+  .hero-preview .hero-title.style-chrome {
+    background: linear-gradient(180deg, #fff 0%, #aaa 30%, #fff 50%, #888 70%, #ddd 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+
+  .hero-preview .hero-title.style-retro {
+    color: #FFD740;
+    -webkit-text-fill-color: #FFD740;
+    text-shadow: 3px 3px 0 #FF5252, -1px -1px 0 #00E676;
+    letter-spacing: 0.1em;
+  }
+
+  .hero-preview .hero-title.style-hologram {
+    color: #00E5FF;
+    -webkit-text-fill-color: #00E5FF;
+    text-shadow: 0 0 10px #00E5FF, 0 0 20px #00B8D4, 0 0 40px #006064;
+    animation: hologram-flicker 3s ease-in-out infinite;
+    position: relative;
+  }
+
+  @keyframes hologram-flicker {
+    0%, 100% { opacity: 1; text-shadow: 0 0 10px #00E5FF, 0 0 20px #00B8D4, 0 0 40px #006064; }
+    25% { opacity: 0.95; text-shadow: 0 0 12px #00E5FF, 0 0 25px #00B8D4, 0 0 50px #006064; }
+    50% { opacity: 0.88; text-shadow: 0 0 8px #00E5FF, 0 0 15px #00B8D4, 0 0 30px #006064; transform: translateX(1px); }
+    75% { opacity: 1; text-shadow: 0 0 14px #00E5FF, 0 0 28px #00B8D4, 0 0 55px #006064; transform: translateX(-1px); }
+  }
+</style>
+
+<script>
+  // Hero preview live updates
+  const titleInput = document.getElementById('hero_title');
+  const subtitleInput = document.getElementById('hero_subtitle');
+  const previewTitle = document.getElementById('previewTitle');
+  const previewSubtitle = document.getElementById('previewSubtitle');
+  const styleOptions = document.querySelectorAll('.style-option');
+
+  const allStyles = ['style-glitch', 'style-gradient', 'style-neon-pulse', 'style-typewriter', 'style-chrome', 'style-retro', 'style-hologram'];
+
+  function applyStyle(styleId) {
+    // Remove all style classes and glitch class
+    previewTitle.classList.remove('glitch', ...allStyles);
+    previewTitle.removeAttribute('data-text');
+
+    if (styleId === 'glitch') {
+      previewTitle.classList.add('glitch', 'style-glitch');
+      previewTitle.setAttribute('data-text', previewTitle.textContent);
+    } else {
+      previewTitle.classList.add('style-' + styleId);
+    }
+  }
+
+  if (titleInput) {
+    titleInput.addEventListener('input', () => {
+      previewTitle.textContent = titleInput.value || 'NexusHub';
+      if (previewTitle.classList.contains('glitch')) {
+        previewTitle.setAttribute('data-text', previewTitle.textContent);
+      }
+    });
+  }
+
+  if (subtitleInput) {
+    subtitleInput.addEventListener('input', () => {
+      previewSubtitle.textContent = subtitleInput.value || 'Your Ultimate Gaming Server Hub';
+    });
+  }
+
+  styleOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      styleOptions.forEach(o => o.classList.remove('active'));
+      opt.classList.add('active');
+      opt.querySelector('input').checked = true;
+      applyStyle(opt.dataset.style);
+    });
+  });
+
+  // Apply initial style
+  const checkedStyle = document.querySelector('.style-option.active');
+  if (checkedStyle) {
+    applyStyle(checkedStyle.dataset.style);
+  }
+</script>

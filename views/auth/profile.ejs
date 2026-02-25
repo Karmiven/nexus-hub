@@ -1,0 +1,52 @@
+<%- include('../partials/header') %>
+
+<section class="page-header">
+  <div class="container">
+    <h1 class="page-title">&#128100; <span data-i18n="profile_title">Profile</span></h1>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="profile-grid">
+    <div class="profile-card">
+      <h2 data-i18n="account_info">Account Info</h2>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <span class="detail-label" data-i18n="username">Username</span>
+          <span class="detail-value"><%= profile.username %></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label" data-i18n="email">Email</span>
+          <span class="detail-value"><% if (profile.email) { %><%= profile.email %><% } else { %><span data-i18n="not_set">Not set</span><% } %></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label" data-i18n="role">Role</span>
+          <span class="detail-value role-badge role-<%= profile.role %>"><%= profile.role %></span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label" data-i18n="joined">Joined</span>
+          <span class="detail-value"><%= new Date(profile.created_at).toLocaleDateString() %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-card">
+      <h2 data-i18n="notification_prefs">Notification Preferences</h2>
+      <form action="/auth/profile/notifications" method="POST" class="auth-form">
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="notify_email" value="1" <%= profile.notify_email ? 'checked' : '' %>>
+            <span data-i18n="notify_email_label">Receive email notifications for new servers/news</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="notify_discord" data-i18n="discord_id_label">Discord User ID (for bot notifications)</label>
+          <input type="text" id="notify_discord" name="notify_discord" class="form-input" value="<%= profile.notify_discord || '' %>" placeholder="e.g. 123456789012345678">
+        </div>
+        <button type="submit" class="btn btn-primary" data-i18n="save_preferences">Save Preferences</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

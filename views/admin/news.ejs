@@ -1,0 +1,59 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title">&#9881; Управление новостями</h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab">Главная</a>
+      <a href="/admin/news" class="admin-tab active">Новости</a>
+      <a href="/admin/servers" class="admin-tab">Сервера</a>
+      <a href="/admin/users" class="admin-tab">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab">Настройки</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="admin-section-header">
+    <h2>Все новости</h2>
+    <a href="/admin/news/new" class="btn btn-primary btn-sm">+ Добавить</a>
+  </div>
+
+  <% if (news.length === 0) { %>
+    <div class="empty-state">
+      <p>Новостей пока нет. <a href="/admin/news/new">Создать</a>.</p>
+    </div>
+  <% } else { %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Заголовок</th>
+            <th>Автор</th>
+            <th>Закреп.</th>
+            <th>Дата</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% news.forEach(function(article) { %>
+            <tr>
+              <td><strong><%= article.title_en %> / <%= article.title_ru %></strong></td>
+              <td><%= article.author %></td>
+              <td><%= article.pinned ? 'Да' : 'Нет' %></td>
+              <td><%= new Date(article.created_at).toLocaleDateString() %></td>
+              <td class="actions-cell">
+                <a href="/admin/news/<%= article.id %>/edit" class="btn btn-xs btn-outline">Ред.</a>
+                <form action="/admin/news/<%= article.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Удалить эту статью?')">
+                  <button type="submit" class="btn btn-xs btn-danger">Удалить</button>
+                </form>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+</section>
+
+<%- include('../partials/footer') %>
