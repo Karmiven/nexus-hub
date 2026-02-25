@@ -2,13 +2,13 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; <%= article ? 'Редактировать' : 'Новая' %> статья</h1>
+    <h1 class="page-title">&#9881; <span data-i18n="<%= article ? 'admin_edit_article' : 'admin_new_article' %>"><%= article ? 'Редактировать' : 'Новая' %></span> <span data-i18n="admin_article_word">статья</span></h1>
     <nav class="admin-nav">
-      <a href="/admin" class="admin-tab">Главная</a>
-      <a href="/admin/news" class="admin-tab active">Новости</a>
-      <a href="/admin/servers" class="admin-tab">Сервера</a>
-      <a href="/admin/users" class="admin-tab">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab">Настройки</a>
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab active" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
     </nav>
   </div>
 </section>
@@ -17,30 +17,30 @@
   <div class="form-card">
     <form action="<%= article ? '/admin/news/' + article.id : '/admin/news' %>" method="POST" class="admin-form">
       <div class="form-group">
-        <label for="title">Заголовок *</label>
+        <label for="title" data-i18n="admin_article_title">Заголовок *</label>
         <input type="text" id="title" name="title" class="form-input" required value="<%= article ? article.title : '' %>">
       </div>
       <div class="form-group">
-        <label for="content_short">Краткое содержание (Главная) *</label>
+        <label for="content_short" data-i18n="admin_article_short">Краткое содержание (Главная) *</label>
         <textarea id="content_short" name="content_short" class="form-input form-textarea" rows="4" required placeholder="Brief description shown on homepage (max ~200 chars)"><%= article ? article.content_short : '' %></textarea>
       </div>
       <div class="form-group">
-        <label for="content_full">Полное содержание (Статья) *</label>
+        <label for="content_full" data-i18n="admin_article_full">Полное содержание (Статья) *</label>
         <textarea id="content_full" name="content_full" class="form-input form-textarea" rows="12" required placeholder="Complete article content for popup view"><%= article ? article.content_full : '' %></textarea>
       </div>
       <div class="form-group">
-        <label for="image">URL изображения (необязательно)</label>
+        <label for="image" data-i18n="admin_article_image">URL изображения (необязательно)</label>
         <input type="url" id="image" name="image" class="form-input" value="<%= article ? article.image : '' %>" placeholder="https://example.com/image.jpg">
       </div>
       <div class="form-group">
         <label class="checkbox-label">
           <input type="checkbox" name="pinned" value="1" <%= article && article.pinned ? 'checked' : '' %>>
-          Закрепить статью вверху
+          <span data-i18n="admin_article_pin">Закрепить статью вверху</span>
         </label>
       </div>
       <div class="form-actions">
-        <button type="submit" class="btn btn-primary"><%= article ? 'Сохранить' : 'Создать' %></button>
-        <a href="/admin/news" class="btn btn-outline">Отмена</a>
+        <button type="submit" class="btn btn-primary" data-i18n="<%= article ? 'save' : 'create' %>"><%= article ? 'Сохранить' : 'Создать' %></button>
+        <a href="/admin/news" class="btn btn-outline" data-i18n="cancel">Отмена</a>
       </div>
     </form>
   </div>

@@ -7,8 +7,25 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/desktop.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="/js/translations.js"></script>
+  <script>
+    // Apply saved theme BEFORE paint to prevent white flash
+    (function(){
+      var t=localStorage.getItem('theme')||'dark';
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <style>
+    /* Page transition */
+    body {
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    body.page-ready {
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">

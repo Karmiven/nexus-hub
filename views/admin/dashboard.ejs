@@ -1,64 +1,14 @@
 <%- include('../partials/header') %>
 
-<style>
-  .admin-table-wrapper {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    margin-bottom: 2rem;
-  }
-
-  .admin-table-wrapper .admin-section-header {
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    padding: 1.5rem;
-    margin-bottom: 0;
-  }
-
-  .admin-table-wrapper .data-table {
-    background: var(--bg-surface);
-    border: none;
-    border-radius: 0;
-    overflow: visible;
-  }
-
-  .admin-table-wrapper .data-table thead {
-    background: var(--bg-card);
-  }
-
-  .admin-table-wrapper .data-table th {
-    padding: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .admin-table-wrapper .data-table td {
-    padding: 0.75rem 1rem;
-    box-sizing: border-box;
-  }
-
-  .admin-table-wrapper .data-table tbody tr {
-    box-shadow: inset 0 -1px 0 0 var(--border);
-  }
-
-  .admin-table-wrapper .data-table tbody tr:last-child {
-    box-shadow: none;
-  }
-
-  .admin-table-wrapper .data-table tbody tr:hover {
-    background: rgba(6, 182, 212, 0.05);
-  }
-</style>
-
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; Панель управления</h1>
+    <h1 class="page-title">&#9881; <span data-i18n="admin_panel">Панель управления</span></h1>
     <nav class="admin-nav">
-      <a href="/admin" class="admin-tab active">Главная</a>
-      <a href="/admin/news" class="admin-tab">Новости</a>
-      <a href="/admin/servers" class="admin-tab">Сервера</a>
-      <a href="/admin/users" class="admin-tab">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab">Настройки</a>
+      <a href="/admin" class="admin-tab active" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
     </nav>
   </div>
 </section>
@@ -69,48 +19,48 @@
       <div class="stat-icon">&#128240;</div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.newsCount %></span>
-        <span class="stat-label">Новости</span>
+        <span class="stat-label" data-i18n="admin_stat_news">Новости</span>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon">&#127918;</div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.totalServers %></span>
-        <span class="stat-label">Всего серверов</span>
+        <span class="stat-label" data-i18n="admin_stat_total_servers">Всего серверов</span>
       </div>
     </div>
     <div class="stat-card stat-card-online">
       <div class="stat-icon">&#128994;</div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.onlineServers %></span>
-        <span class="stat-label">Сервера онлайн</span>
+        <span class="stat-label" data-i18n="admin_stat_online_servers">Сервера онлайн</span>
       </div>
     </div>
     <div class="stat-card">
       <div class="stat-icon">&#128101;</div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.userCount %></span>
-        <span class="stat-label">Пользователи</span>
+        <span class="stat-label" data-i18n="admin_stat_users">Пользователи</span>
       </div>
     </div>
   </div>
 
   <div class="admin-table-wrapper">
     <div class="admin-section-header">
-      <h2>Монитор статуса серверов</h2>
+      <h2 data-i18n="admin_server_monitor">Монитор статуса серверов</h2>
       <form action="/admin/servers/refresh" method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-sm btn-outline">&#128260; Обновить все</button>
+        <button type="submit" class="btn btn-sm btn-outline">&#128260; <span data-i18n="admin_refresh_all">Обновить все</span></button>
       </form>
     </div>
     <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Название</th>
-            <th>Игра</th>
-            <th>Адрес</th>
-            <th>Статус</th>
-            <th>Проверено</th>
+            <th data-i18n="admin_th_name">Название</th>
+            <th data-i18n="admin_th_game">Игра</th>
+            <th data-i18n="admin_th_address">Адрес</th>
+            <th data-i18n="admin_th_status">Статус</th>
+            <th data-i18n="admin_th_checked">Проверено</th>
           </tr>
         </thead>
         <tbody>

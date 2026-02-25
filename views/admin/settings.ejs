@@ -2,13 +2,13 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; Настройки</h1>
+    <h1 class="page-title">&#9881; <span data-i18n="admin_settings_title">Настройки</span></h1>
     <nav class="admin-nav">
-      <a href="/admin" class="admin-tab">Главная</a>
-      <a href="/admin/news" class="admin-tab">Новости</a>
-      <a href="/admin/servers" class="admin-tab">Сервера</a>
-      <a href="/admin/users" class="admin-tab">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab active">Настройки</a>
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab active" data-i18n="admin_tab_settings">Настройки</a>
     </nav>
   </div>
 </section>
@@ -19,33 +19,33 @@
       <!-- Left column: Site & Appearance -->
       <div class="settings-col-left">
         <fieldset class="form-fieldset">
-          <legend>🌐 Сайт и внешний вид</legend>
+          <legend>🌐 <span data-i18n="admin_settings_site">Сайт и внешний вид</span></legend>
           <div class="form-group">
-            <label for="site_name">Название сайта</label>
+            <label for="site_name" data-i18n="admin_settings_site_name">Название сайта</label>
             <input type="text" id="site_name" name="site_name" class="form-input" value="<%= settings.site_name || 'NexusHub' %>">
           </div>
           <div class="form-group">
-            <label for="site_description">Описание сайта</label>
+            <label for="site_description" data-i18n="admin_settings_site_desc">Описание сайта</label>
             <input type="text" id="site_description" name="site_description" class="form-input" value="<%= settings.site_description || '' %>">
           </div>
           <div class="form-group">
-            <label for="navbar_title">Заголовок навигации</label>
+            <label for="navbar_title" data-i18n="admin_settings_nav_title">Заголовок навигации</label>
             <input type="text" id="navbar_title" name="navbar_title" class="form-input" value="<%= settings.navbar_title || 'NexusHub' %>" maxlength="30">
-            <small class="form-hint">Название бренда в навигационной панели и вкладке браузера.</small>
+            <small class="form-hint" data-i18n="admin_settings_nav_hint">Название бренда в навигационной панели и вкладке браузера.</small>
           </div>
 
           <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
 
           <div class="form-group">
-            <label for="hero_title">Заголовок героя</label>
+            <label for="hero_title" data-i18n="admin_settings_hero_title">Заголовок героя</label>
             <input type="text" id="hero_title" name="hero_title" class="form-input" value="<%= settings.hero_title || 'NexusHub' %>" maxlength="40">
           </div>
           <div class="form-group">
-            <label for="hero_subtitle">Подзаголовок героя</label>
+            <label for="hero_subtitle" data-i18n="admin_settings_hero_subtitle">Подзаголовок героя</label>
             <input type="text" id="hero_subtitle" name="hero_subtitle" class="form-input" value="<%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %>" maxlength="80">
           </div>
           <div class="form-group">
-            <label>Стиль заголовка</label>
+            <label data-i18n="admin_settings_hero_style">Стиль заголовка</label>
             <div class="style-options">
               <% const currentStyle = settings.hero_style || 'glitch'; %>
               <% const styles = [
@@ -67,7 +67,7 @@
             </div>
           </div>
           <div class="form-group">
-            <label>Предпросмотр</label>
+            <label data-i18n="admin_settings_preview">Предпросмотр</label>
             <div class="hero-preview" id="heroPreview">
               <div class="hero-preview-bg"></div>
               <div class="hero-preview-content">
@@ -82,11 +82,11 @@
       <!-- Right column: Server & Community -->
       <div class="settings-col-right">
         <fieldset class="form-fieldset">
-          <legend>⚙️ Сервер и сообщество</legend>
+          <legend>⚙️ <span data-i18n="admin_settings_server">Сервер и сообщество</span></legend>
           <div class="form-group">
-            <label for="status_check_interval">Интервал проверки статуса (сек.)</label>
+            <label for="status_check_interval" data-i18n="admin_settings_check_interval">Интервал проверки статуса (сек.)</label>
             <input type="number" id="status_check_interval" name="status_check_interval" class="form-input" value="<%= settings.status_check_interval || 60 %>" min="10" max="600">
-            <small class="form-hint">Как часто пинговать сервера. Меньше = чаще, но больше ресурсов.</small>
+            <small class="form-hint" data-i18n="admin_settings_check_hint">Как часто пинговать сервера. Меньше = чаще, но больше ресурсов.</small>
           </div>
 
           <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
@@ -95,18 +95,18 @@
             <label class="checkbox-label">
               <input type="hidden" name="community_enabled" value="0">
               <input type="checkbox" name="community_enabled" value="1" <%= settings.community_enabled === '1' ? 'checked' : '' %>>
-              Включить чат сообщества
+              <span data-i18n="admin_settings_chat_enable">Включить чат сообщества</span>
             </label>
           </div>
           <div class="form-group">
-            <label for="max_chat_messages">Макс. сообщений в чате</label>
+            <label for="max_chat_messages" data-i18n="admin_settings_chat_max">Макс. сообщений в чате</label>
             <input type="number" id="max_chat_messages" name="max_chat_messages" class="form-input" value="<%= settings.max_chat_messages || 200 %>" min="50" max="1000">
           </div>
         </fieldset>
       </div>
 
       <div class="form-actions settings-full-width">
-        <button type="submit" class="btn btn-primary">Сохранить настройки</button>
+        <button type="submit" class="btn btn-primary" data-i18n="admin_settings_save">Сохранить настройки</button>
       </div>
     </form>
   </div>

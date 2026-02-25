@@ -2,37 +2,37 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; Управление новостями</h1>
+    <h1 class="page-title">&#9881; <span data-i18n="admin_news_mgmt">Управление новостями</span></h1>
     <nav class="admin-nav">
-      <a href="/admin" class="admin-tab">Главная</a>
-      <a href="/admin/news" class="admin-tab active">Новости</a>
-      <a href="/admin/servers" class="admin-tab">Сервера</a>
-      <a href="/admin/users" class="admin-tab">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab">Настройки</a>
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab active" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
     </nav>
   </div>
 </section>
 
 <section class="section container">
   <div class="admin-section-header">
-    <h2>Все новости</h2>
-    <a href="/admin/news/new" class="btn btn-primary btn-sm">+ Добавить</a>
+    <h2 data-i18n="admin_all_articles">Все новости</h2>
+    <a href="/admin/news/new" class="btn btn-primary btn-sm">+ <span data-i18n="admin_add">Добавить</span></a>
   </div>
 
   <% if (news.length === 0) { %>
     <div class="empty-state">
-      <p>Новостей пока нет. <a href="/admin/news/new">Создать</a>.</p>
+      <p><span data-i18n="admin_no_news">Новостей пока нет.</span> <a href="/admin/news/new" data-i18n="create">Создать</a>.</p>
     </div>
   <% } else { %>
     <div class="table-responsive">
       <table class="data-table">
         <thead>
           <tr>
-            <th>Заголовок</th>
-            <th>Автор</th>
-            <th>Закреп.</th>
-            <th>Дата</th>
-            <th>Действия</th>
+            <th data-i18n="admin_th_title">Заголовок</th>
+            <th data-i18n="admin_th_author">Автор</th>
+            <th data-i18n="admin_th_pinned">Закреп.</th>
+            <th data-i18n="admin_th_date">Дата</th>
+            <th data-i18n="admin_th_actions">Действия</th>
           </tr>
         </thead>
         <tbody>
@@ -43,9 +43,9 @@
               <td><%= article.pinned ? 'Да' : 'Нет' %></td>
               <td><%= new Date(article.created_at).toLocaleDateString() %></td>
               <td class="actions-cell">
-                <a href="/admin/news/<%= article.id %>/edit" class="btn btn-xs btn-outline">Ред.</a>
-                <form action="/admin/news/<%= article.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Удалить эту статью?')">
-                  <button type="submit" class="btn btn-xs btn-danger">Удалить</button>
+                <a href="/admin/news/<%= article.id %>/edit" class="btn btn-xs btn-outline" data-i18n="admin_edit_short">Ред.</a>
+                <form action="/admin/news/<%= article.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_article') : 'Удалить эту статью?')">
+                  <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                 </form>
               </td>
             </tr>

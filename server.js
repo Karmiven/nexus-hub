@@ -73,7 +73,29 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// ── Setup Middleware ──
+app.use((req, res, next) => {
+  // Skip check for static files and setup route itself
+  if (req.path.startsWith('/css') || req.path.startsWith('/js') || req.path.startsWith('/img') || req.path === '/setup') {
+    return next();
+  }
+  
+  try {
+    const adminCount = db.get("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
+    const isInstalled = adminCount && adminCount.count > 0;
+    
+    if (!isInstalled) {
+      return res.redirect('/setup');
+    }
+  } catch (e) {
+    // Database might not be fully initialized yet
+  }
+  
+  next();
+});
+
 // ── Routes ──
+const setupRoutes = require('./routes/setup');
 const homeRoutes = require('./routes/home');
 const serverRoutes = require('./routes/servers');
 const communityRoutes = require('./routes/community');
@@ -82,6 +104,7 @@ const adminRoutes = require('./routes/admin');
 const apiRoutes = require('./routes/api');
 const monitoring = require('./routes/monitoring');
 
+app.use('/setup', setupRoutes);
 app.use('/', homeRoutes);
 app.use('/servers', serverRoutes);
 app.use('/admin', adminRoutes);
@@ -112,6 +135,7 @@ const PORT = process.env.PORT || 3000;
 
 async function start() {
   await initDatabase();
+  
   startStatusChecker();
 
   server.listen(PORT, () => {

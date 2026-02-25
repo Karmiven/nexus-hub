@@ -156,22 +156,6 @@ async function initDatabase() {
     db.run('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, value]);
   }
 
-  // Insert demo news only if news table is empty
-  const newsCount = db.exec('SELECT COUNT(*) as count FROM news');
-  const count = newsCount.length > 0 ? newsCount[0].values[0][0] : 0;
-  
-  if (count === 0) {
-    db.run('INSERT INTO news (title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, author) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-      'Welcome to NexusHub!',
-      'Добро пожаловать в NexusHub!',
-      'Your ultimate gaming server hub is now live!',
-      'Ваш центр игровых серверов теперь доступен!',
-      'We are excited to launch our new gaming server hub. Connect with fellow gamers, find your favorite servers, and join our growing community.',
-      'Мы рады запустить наш новый центр игровых серверов. Общайтесь с другими геймерами, находите любимые серверы и присоединяйтесь к нашему растущему сообществу.',
-      'Admin'
-    ]);
-  }
-
   saveToFile();
   startAutoSave();
   console.log('✅ Database initialized');

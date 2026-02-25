@@ -1,12 +1,55 @@
 // ── NexusHub Client-Side JavaScript ──
 
+// Fade-in on page load
+document.body.classList.add('page-ready');
+
 document.addEventListener('DOMContentLoaded', () => {
+  initPageTransitions();
   initThemeToggle();
   initLanguageSelector();
   initMobileNav();
   initFlashMessages();
   initServerPolling();
 });
+
+/**
+ * Smooth page transitions — intercept link clicks, fade out, then navigate
+ */
+function initPageTransitions() {
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    // Skip: external links, anchors, javascript:, new-tab, download, or special
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') ||
+        href.startsWith('mailto:') || href.startsWith('tel:') ||
+        link.target === '_blank' || link.hasAttribute('download') ||
+        e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+    // Skip logout (needs full reload)
+    if (href.includes('/auth/logout')) return;
+
+    e.preventDefault();
+    document.body.classList.remove('page-ready');
+    setTimeout(() => { window.location.href = href; }, 120);
+  });
+
+  // Handle browser back/forward
+  window.addEventListener('pageshow', (e) => {
+    if (e.persisted) {
+      document.body.classList.add('page-ready');
+    }
+  });
+
+  // Fade out on form submissions that navigate (not AJAX)
+  document.addEventListener('submit', (e) => {
+    const form = e.target;
+    // Skip forms handled by JS (e.g. news modal with fetch)
+    if (form.id === 'newsForm') return;
+    document.body.classList.remove('page-ready');
+  });
+}
 
 function initMobileNav() {
   const navToggle = document.getElementById('navToggle');

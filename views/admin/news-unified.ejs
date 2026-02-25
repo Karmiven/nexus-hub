@@ -7,36 +7,37 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; Управление новостями</h1>
+    <h1 class="page-title">&#9881; <span data-i18n="admin_news_mgmt">Управление новостями</span></h1>
     <nav class="admin-nav">
-      <a href="/admin" class="admin-tab">Главная</a>
-      <a href="/admin/news" class="admin-tab active">Новости</a>
-      <a href="/admin/servers" class="admin-tab">Сервера</a>
-      <a href="/admin/users" class="admin-tab">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab">Настройки</a>
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab active" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
     </nav>
   </div>
 </section>
 
 <section class="section container">
-  <div class="admin-section-header">
-    <h2>Все статьи</h2>
-    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">+ Создать новость</button>
-  </div>
-    <% if (news.length === 0) { %>
-      <div class="empty-state">
-        <p>Новостей пока нет. <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">Создать</button></p>
+  <% if (news.length === 0) { %>
+    <div class="empty-state">
+      <p><span data-i18n="admin_no_news">Новостей пока нет.</span> <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()" data-i18n="create">Создать</button></p>
+    </div>
+  <% } else { %>
+    <div class="admin-table-wrapper">
+      <div class="admin-section-header">
+        <h2 data-i18n="admin_all_articles">Все статьи</h2>
+        <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">+ <span data-i18n="admin_create_news">Создать новость</span></button>
       </div>
-    <% } else { %>
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Заголовок</th>
-              <th>Автор</th>
-              <th>Закреп.</th>
-              <th>Дата</th>
-              <th>Действия</th>
+              <th data-i18n="admin_th_title">Заголовок</th>
+              <th data-i18n="admin_th_author">Автор</th>
+              <th data-i18n="admin_th_pinned">Закреп.</th>
+              <th data-i18n="admin_th_date">Дата</th>
+              <th data-i18n="admin_th_actions">Действия</th>
             </tr>
           </thead>
           <tbody>
@@ -47,9 +48,9 @@
                 <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><%= item.pinned ? '📌 Да' : '—' %></span></td>
                 <td><%= new Date(item.created_at).toLocaleDateString() %></td>
                 <td class="actions-cell">
-                  <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)">Ред.</button>
-                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm('Удалить эту статью?')">
-                    <button type="submit" class="btn btn-xs btn-danger">Удалить</button>
+                  <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
+                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_article') : 'Удалить эту статью?')">
+                    <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                   </form>
                 </td>
               </tr>
@@ -57,15 +58,15 @@
           </tbody>
         </table>
       </div>
-    <% } %>
-  </div>
+    </div>
+  <% } %>
 </section>
 
 <!-- Modal Window -->
 <div id="newsModal" class="modal" style="display: none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="modalTitle">📝 Создать новость</h2>
+      <h2 id="modalTitle">📝 <span data-i18n="admin_news_modal_create">Создать новость</span></h2>
       <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
     </div>
 
@@ -79,17 +80,17 @@
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="title_en">Заголовок</label>
+          <label class="form-label" for="title_en" data-i18n="admin_news_heading_en">Заголовок</label>
           <input type="text" id="title_en" name="title_en" class="form-input" required>
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="content_short_en">Краткое содержание (Главная)</label>
+          <label class="form-label" for="content_short_en" data-i18n="admin_news_short_en">Краткое содержание (Главная)</label>
           <textarea id="content_short_en" name="content_short_en" class="form-textarea" required></textarea>
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="content_full_en">Полное содержание (Статья)</label>
+          <label class="form-label" for="content_full_en" data-i18n="admin_news_full_en">Полное содержание (Статья)</label>
           <textarea id="content_full_en" name="content_full_en" class="form-textarea full-content" required></textarea>
         </div>
       </div>
@@ -102,30 +103,30 @@
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="title_ru">Заголовок</label>
+          <label class="form-label" for="title_ru" data-i18n="admin_news_heading_ru">Заголовок</label>
           <input type="text" id="title_ru" name="title_ru" class="form-input" required>
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="content_short_ru">Краткое содержание (Главная)</label>
+          <label class="form-label" for="content_short_ru" data-i18n="admin_news_short_ru">Краткое содержание (Главная)</label>
           <textarea id="content_short_ru" name="content_short_ru" class="form-textarea" required></textarea>
         </div>
         
         <div class="form-group">
-          <label class="form-label" for="content_full_ru">Полное содержание (Статья)</label>
+          <label class="form-label" for="content_full_ru" data-i18n="admin_news_full_ru">Полное содержание (Статья)</label>
           <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content" required></textarea>
         </div>
       </div>
       
       <!-- Common Fields -->
       <div class="form-group" style="grid-column: 1 / -1;">
-        <label class="form-label">Изображение (16:9 — высокое качество)</label>
+        <label class="form-label" data-i18n="admin_news_image">Изображение (16:9 — высокое качество)</label>
         <div class="image-section">
           <div class="image-upload" id="imageUpload">
             <input type="file" id="image" name="image" accept="image/*" style="display: none;">
             <div class="upload-placeholder">
-              <p>📷 Нажмите для загрузки изображения</p>
-              <small>Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680x360px</small>
+              <p>📷 <span data-i18n="admin_news_image_click">Нажмите для загрузки изображения</span></p>
+              <small data-i18n="admin_news_image_hint">Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680x360px</small>
             </div>
           </div>
           <!-- Hidden input to store cropped image -->
@@ -134,7 +135,7 @@
           <div id="finalImagePreview" style="display: none;">
             <img id="finalImage" class="image-preview" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()">✏️ Заменить</button>
+              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()">✏️ <span data-i18n="admin_news_replace">Заменить</span></button>
             </div>
           </div>
         </div>
@@ -143,14 +144,14 @@
       <div class="form-group" style="grid-column: 1 / -1;">
         <div class="checkbox-group">
           <input type="checkbox" id="pinned" name="pinned" class="checkbox-input">
-          <label for="pinned">Закрепить на главной</label>
+          <label for="pinned" data-i18n="admin_news_pin">Закрепить на главной</label>
         </div>
       </div>
       
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-        <button type="button" class="btn btn-outline" onclick="openPreviewModal()">👁️ Предпросмотр</button>
-        <button type="submit" class="btn btn-primary" id="submitBtn">✨ Создать</button>
+        <button type="button" class="btn btn-outline" onclick="openPreviewModal()">👁️ <span data-i18n="admin_news_preview">Предпросмотр</span></button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">✨ <span data-i18n="create">Создать</span></button>
       </div>
     </form>
   </div>
@@ -160,19 +161,19 @@
 <div id="previewModal" class="modal" style="display: none; z-index: 1500;">
   <div class="modal-content" style="max-width: 900px;">
     <div class="modal-header">
-      <h2>👁️ Предпросмотр статьи</h2>
+      <h2>👁️ <span data-i18n="admin_news_preview_title">Предпросмотр статьи</span></h2>
       <button type="button" class="modal-close" onclick="closePreviewModal()">&times;</button>
     </div>
     <div class="preview-tabs">
-      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')">🏠 Мини-карточка (Главная)</button>
-      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')">📄 Полная статья</button>
+      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')">🏠 <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
+      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')">📄 <span data-i18n="admin_news_preview_full">Полная статья</span></button>
     </div>
     <div id="previewMini" class="preview-pane active">
-      <div class="preview-label">Как выглядит на главной:</div>
+      <div class="preview-label" data-i18n="admin_news_preview_mini_desc">Как выглядит на главной:</div>
       <div id="previewMiniContent" class="preview-home-bg"></div>
     </div>
     <div id="previewFull" class="preview-pane" style="display:none;">
-      <div class="preview-label">Полная статья при клике на карточку:</div>
+      <div class="preview-label" data-i18n="admin_news_preview_full_desc">Полная статья при клике на карточку:</div>
       <div id="previewFullContent" class="preview-full-bg"></div>
     </div>
   </div>
@@ -182,20 +183,21 @@
 <div id="cropModal" class="modal" style="display: none; z-index: 2000;">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
-      <h2>🖼️ Обрезка изображения (16:9)</h2>
+      <h2>🖼️ <span data-i18n="admin_news_crop_title">Обрезка изображения (16:9)</span></h2>
       <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
     </div>
     <div class="crop-container">
       <img id="cropperImage" style="max-width: 100%;">
     </div>
     <div class="crop-controls" style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
-      <button type="button" class="btn btn-secondary" onclick="closeCropModal()">Отмена</button>
-      <button type="button" class="btn btn-primary" onclick="applyCrop()">✅ Применить</button>
+      <button type="button" class="btn btn-secondary" onclick="closeCropModal()" data-i18n="cancel">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()">✅ <span data-i18n="admin_news_crop_apply">Применить</span></button>
     </div>
   </div>
 </div>
 
 <style>
+  /* ── Crop modal ── */
   .crop-container {
     max-height: 500px;
     overflow: auto;
@@ -211,7 +213,7 @@
     justify-content: flex-end;
   }
 
-  /* Preview modal styles */
+  /* ── Preview modal ── */
   .preview-tabs {
     display: flex;
     gap: 0;
@@ -224,7 +226,7 @@
     border: none;
     padding: 0.75rem 1.5rem;
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -335,12 +337,7 @@
     color: #fff;
   }
 
-  .image-section {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
+  /* ── Modal ── */
   .modal {
     position: fixed;
     top: 0;
@@ -378,6 +375,7 @@
 
   .modal-header h2 {
     margin: 0;
+    font-size: 1.2rem;
     color: var(--text-primary);
   }
 
@@ -400,6 +398,7 @@
     color: var(--accent);
   }
 
+  /* ── Bilingual form ── */
   .bilingual-form-unified {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -432,44 +431,27 @@
     color: var(--text-primary);
   }
 
-  .form-group {
-    margin-bottom: 1.5rem;
-  }
-
-  .form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-  }
-
-  .form-input,
-  .form-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-    transition: all var(--transition);
-  }
-
-  .form-input:focus,
-  .form-textarea:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
-  }
-
-  .form-textarea {
+  .bilingual-form-unified .form-textarea {
     resize: vertical;
     min-height: 80px;
   }
 
-  .form-textarea.full-content {
+  .bilingual-form-unified .form-textarea.full-content {
     min-height: 120px;
+  }
+
+  .bilingual-form-unified .form-actions {
+    grid-column: 1 / -1;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Image upload ── */
+  .image-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
   }
 
   .image-upload {
@@ -499,11 +481,13 @@
   .upload-placeholder p {
     margin: 0 0 0.5rem 0;
     color: var(--text-secondary);
+    font-size: 0.9rem;
   }
 
   .upload-placeholder small {
     color: var(--text-secondary);
     opacity: 0.7;
+    font-size: 0.8rem;
   }
 
   .image-preview {
@@ -513,16 +497,7 @@
     border-radius: var(--radius-sm);
   }
 
-  .form-actions {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 1rem;
-    justify-content: flex-end;
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid var(--border);
-  }
-
+  /* ── Checkbox ── */
   .checkbox-group {
     display: flex;
     align-items: center;
@@ -533,11 +508,12 @@
     width: auto;
   }
 
+  /* ── Pinned badge ── */
   .badge {
     display: inline-block;
     padding: 0.4rem 0.8rem;
     border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     font-weight: 600;
   }
 
@@ -551,69 +527,7 @@
     color: var(--text-secondary);
   }
 
-  .data-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-  }
-
-  .data-table thead {
-    background: var(--bg-card);
-  }
-
-  .data-table th {
-    padding: 1rem;
-    text-align: left;
-    font-weight: 600;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .data-table tbody tr {
-    box-shadow: inset 0 -1px 0 0 var(--border);
-  }
-
-  .data-table tbody tr:last-child {
-    box-shadow: none;
-  }
-
-  .data-table td {
-    padding: 0.75rem 1rem;
-    color: var(--text-primary);
-    vertical-align: middle;
-    box-sizing: border-box;
-    height: auto;
-    min-height: 44px;
-    display: table-cell;
-  }
-
-  .data-table tbody tr:hover {
-    background: rgba(6, 182, 212, 0.05);
-  }
-
-  .actions-cell {
-    display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .actions-cell form {
-    display: inline;
-    margin: 0;
-  }
-
-  .actions-cell button {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
+  /* ── Responsive ── */
   @media (max-width: 768px) {
     .bilingual-form-unified {
       grid-template-columns: 1fr;
@@ -622,15 +536,6 @@
 
     .modal-content {
       padding: 1.5rem;
-    }
-
-    .data-table {
-      font-size: 0.9rem;
-    }
-
-    .data-table th,
-    .data-table td {
-      padding: 0.75rem 0.5rem;
     }
   }
 </style>
@@ -738,12 +643,12 @@
 
   function getPreviewData() {
     return {
-      title_en: document.getElementById('title_en').value || 'Untitled',
-      title_ru: document.getElementById('title_ru').value || 'Без названия',
-      content_short_en: document.getElementById('content_short_en').value || 'No short content',
-      content_short_ru: document.getElementById('content_short_ru').value || 'Нет краткого содержания',
-      content_full_en: document.getElementById('content_full_en').value || 'No full content',
-      content_full_ru: document.getElementById('content_full_ru').value || 'Нет полного содержания',
+      title_en: document.getElementById('title_en').value || (window.i18n ? window.i18n.t('admin_news_no_title') : 'Untitled'),
+      title_ru: document.getElementById('title_ru').value || (window.i18n ? window.i18n.t('admin_news_no_title') : 'Без названия'),
+      content_short_en: document.getElementById('content_short_en').value || (window.i18n ? window.i18n.t('admin_news_no_short') : 'No short content'),
+      content_short_ru: document.getElementById('content_short_ru').value || (window.i18n ? window.i18n.t('admin_news_no_short') : 'Нет краткого содержания'),
+      content_full_en: document.getElementById('content_full_en').value || (window.i18n ? window.i18n.t('admin_news_no_full') : 'No full content'),
+      content_full_ru: document.getElementById('content_full_ru').value || (window.i18n ? window.i18n.t('admin_news_no_full') : 'Нет полного содержания'),
       image: document.getElementById('finalImage')?.src || '',
       pinned: document.getElementById('pinned').checked,
       author: '<%= typeof user !== "undefined" && user ? user.username : "Admin" %>',
@@ -782,7 +687,7 @@
     const imageHtml = d.image && !d.image.endsWith('#')
       ? `<div class="news-image" style="background-image: url('${d.image}')"></div>`
       : `<div class="news-image news-image-default"></div>`;
-    const pinnedBadge = d.pinned ? '<span class="pin-badge">📌 Закреплено</span>' : '';
+    const pinnedBadge = d.pinned ? `<span class="pin-badge">📌 ${window.i18n ? window.i18n.t('admin_news_pinned_label') : 'Закреплено'}</span>` : '';
 
     const langSwitcher = `
       <div class="preview-lang-switch">
@@ -838,8 +743,8 @@
     document.getElementById('croppedImageData').value = '';
     document.getElementById('finalImagePreview').style.display = 'none';
     document.getElementById('imageUpload').style.display = 'flex';
-    modalTitle.textContent = '📝 Create News';
-    submitBtn.textContent = '✨ Создать';
+    modalTitle.innerHTML = '📝 <span data-i18n="admin_news_modal_create">' + (window.i18n ? window.i18n.t('admin_news_modal_create') : 'Создать новость') + '</span>';
+    submitBtn.innerHTML = '✨ <span data-i18n="create">' + (window.i18n ? window.i18n.t('create') : 'Создать') + '</span>';
     modal.style.display = 'flex';
   }
 
@@ -906,15 +811,15 @@
         currentEditId = articleId;
         
         // Update header
-        modalTitle.textContent = '✏️ Редактировать';
-        submitBtn.textContent = '💾 Сохранить';
+        modalTitle.innerHTML = '✏️ <span data-i18n="admin_news_modal_edit">' + (window.i18n ? window.i18n.t('admin_news_modal_edit') : 'Редактировать') + '</span>';
+        submitBtn.innerHTML = '💾 <span data-i18n="save">' + (window.i18n ? window.i18n.t('save') : 'Сохранить') + '</span>';
         
         // Open modal
         modal.style.display = 'flex';
       })
       .catch(err => {
         console.error('Error loading article:', err);
-        alert('Ошибка загрузки статьи: ' + err.message);
+        alert((window.i18n ? window.i18n.t('admin_news_error_load') : 'Ошибка загрузки статьи:') + ' ' + err.message);
       });
   }
 
@@ -936,11 +841,11 @@
       } else {
         const text = await response.text();
         console.error('Response error:', text);
-        alert('Ошибка сохранения: ' + response.status);
+        alert((window.i18n ? window.i18n.t('admin_news_error_save') : 'Ошибка сохранения:') + ' ' + response.status);
       }
     } catch (err) {
       console.error('Error:', err);
-      alert('Ошибка сохранения: ' + err.message);
+      alert((window.i18n ? window.i18n.t('admin_news_error_save') : 'Ошибка сохранения:') + ' ' + err.message);
     }
   });
 </script>
