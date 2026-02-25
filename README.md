@@ -212,7 +212,7 @@ The admin panel is **hidden** from non-admin users — accessing `/admin` withou
 
 ### Adding a Game Server
 
-Admin → Сервера → **+ Добавить сервер**:
+Admin → Servers → **+ Add Server**:
 
 | Field | Description | Example |
 |---|---|---|
@@ -231,11 +231,11 @@ Admin → Сервера → **+ Добавить сервер**:
 - **TCP ping** (`net.Socket`) checks if `IP:PORT` is reachable
 - **Minecraft** servers with player count enabled use the MC Server List Ping protocol to fetch online players
 - Automatic checks run at a configurable interval (default: 60 seconds, adjustable in Settings)
-- Manual refresh available from Admin → Сервера → 🔄 **Обновить статус**
+- Manual refresh available from Admin → Servers → 🔄 **Refresh Status**
 
 ### Hero Title Customization
 
-Admin → Настройки → *Hero Title*:
+Admin → Settings → *Hero Title*:
 
 Seven animation styles are available with a live preview:
 
