@@ -43,11 +43,10 @@ app.use('/api/', limiter);
 
 // ── Middleware ──
 app.use(express.json({ limit: '50mb' }));
-app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback-secret',
+  secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
@@ -55,18 +54,22 @@ app.use(session({
 app.use(flash());
 
 // Flash messages & global settings middleware
+let cachedNavbarTitle = null;
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.user = req.session.user || null;
 
   // Global navbar title from settings
-  try {
-    const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
-    res.locals.navbarTitle = navbarTitle?.value || 'NexusHub';
-  } catch (e) {
-    res.locals.navbarTitle = 'NexusHub';
+  if (cachedNavbarTitle === null) {
+    try {
+      const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
+      cachedNavbarTitle = navbarTitle?.value || 'NexusHub';
+    } catch (e) {
+      cachedNavbarTitle = 'NexusHub';
+    }
   }
+  res.locals.navbarTitle = cachedNavbarTitle;
   next();
 });
 
@@ -79,9 +82,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Setup Middleware ──
+let isInstalledCache = false;
 app.use((req, res, next) => {
   // Skip check for static files and setup route itself
-  if (req.path.startsWith('/css') || req.path.startsWith('/js') || req.path.startsWith('/img') || req.path === '/setup') {
+  if (req.path.startsWith('/css') || req.path.startsWith('/js') || req.path.startsWith('/img') || req.path.startsWith('/setup')) {
+    return next();
+  }
+  
+  if (isInstalledCache) {
     return next();
   }
   
@@ -91,6 +99,8 @@ app.use((req, res, next) => {
     
     if (!isInstalled) {
       return res.redirect('/setup');
+    } else {
+      isInstalledCache = true;
     }
   } catch (e) {
     // Database might not be fully initialized yet
@@ -121,9 +131,6 @@ app.use('/monitoring', monitoring.router);
 // ── Socket.io Chat ──
 require('./sockets/chat')(io);
 
-// ── Initialize Monitoring (delay to ensure database is ready) ──
-setTimeout(() => monitoring.initMonitoring?.(), 1000);
-
 // ── 404 Handler ──
 app.use((req, res) => {
   res.status(404).render('errors/404', { title: 'Page Not Found' });
@@ -141,6 +148,7 @@ const PORT = process.env.PORT || 3000;
 async function start() {
   await initDatabase();
   
+  monitoring.initMonitoring?.();
   startStatusChecker();
 
   server.listen(PORT, () => {

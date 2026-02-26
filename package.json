@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.6.2",
     "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
@@ -21,8 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.9.8",
-    "socket.io": "^4.7.4",
-    "sql.js": "^1.10.2"
+    "socket.io": "^4.7.4"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

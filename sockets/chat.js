@@ -67,16 +67,19 @@ module.exports = function(io) {
 
       io.emit('chat:message', msg);
 
-      // Cleanup old messages — single efficient DELETE
-      const maxMessages = parseInt(
-        db.get("SELECT value FROM settings WHERE key = 'max_chat_messages'")?.value || '200'
-      );
-      db.run(
-        `DELETE FROM chat_messages WHERE channel = 'general' AND id NOT IN (
-          SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT ?
-        )`,
-        [maxMessages]
-      );
+      // Cleanup old messages periodically instead of every message
+      // We'll do it roughly every 20 messages to save DB performance
+      if (result.lastInsertRowid % 20 === 0) {
+        const maxMessages = parseInt(
+          db.get("SELECT value FROM settings WHERE key = 'max_chat_messages'")?.value || '200'
+        );
+        db.run(
+          `DELETE FROM chat_messages WHERE channel = 'general' AND id NOT IN (
+            SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT ?
+          )`,
+          [maxMessages]
+        );
+      }
     });
 
     // Handle typing indicator

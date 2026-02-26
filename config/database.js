@@ -1,4 +1,4 @@
-const initSqlJs = require('sql.js');
+const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
@@ -13,47 +13,13 @@ const DB_PATH = path.join(dataDir, 'nexushub.db');
 let db = null;
 
 /**
- * Wrapper around sql.js to provide a simpler API.
- * After calling initDatabase(), use db module methods.
- */
-
-function saveToFile() {
-  if (!db) return;
-  const data = db.export();
-  const buffer = Buffer.from(data);
-  fs.writeFileSync(DB_PATH, buffer);
-}
-
-// Dirty flag — set to true on writes, auto-save flushes it
-let isDirty = false;
-
-// Auto-save every 5 seconds (only writes when dirty)
-let saveInterval = null;
-
-function startAutoSave() {
-  if (saveInterval) return;
-  saveInterval = setInterval(() => {
-    if (isDirty) {
-      saveToFile();
-      isDirty = false;
-    }
-  }, 5000);
-}
-
-/**
  * Initialize the database: load from file or create new
  */
 async function initDatabase() {
-  const SQL = await initSqlJs();
+  db = new Database(DB_PATH);
+  db.pragma('journal_mode = WAL'); // Better performance and concurrency
 
-  if (fs.existsSync(DB_PATH)) {
-    const fileBuffer = fs.readFileSync(DB_PATH);
-    db = new SQL.Database(fileBuffer);
-  } else {
-    db = new SQL.Database();
-  }
-
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
@@ -68,7 +34,7 @@ async function initDatabase() {
     );
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS news (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title_en TEXT NOT NULL,
@@ -88,24 +54,19 @@ async function initDatabase() {
   // Database schema is initialized with bilingual support
 
   // Add last_login and last_ip columns if they don't exist
-  const userColsStmt = db.prepare("PRAGMA table_info(users)");
-  const userCols = [];
-  while (userColsStmt.step()) {
-    userCols.push(userColsStmt.getAsObject());
-  }
-  userColsStmt.free();
+  const userCols = db.pragma("table_info(users)");
   
   const hasLastLogin = userCols.some(col => col.name === 'last_login');
   const hasLastIp = userCols.some(col => col.name === 'last_ip');
   
   if (!hasLastLogin) {
-    db.run("ALTER TABLE users ADD COLUMN last_login DATETIME");
+    db.exec("ALTER TABLE users ADD COLUMN last_login DATETIME");
   }
   if (!hasLastIp) {
-    db.run("ALTER TABLE users ADD COLUMN last_ip TEXT");
+    db.exec("ALTER TABLE users ADD COLUMN last_ip TEXT");
   }
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS servers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -126,7 +87,7 @@ async function initDatabase() {
     );
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS chat_messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT NOT NULL,
@@ -136,7 +97,7 @@ async function initDatabase() {
     );
   `);
 
-  db.run(`
+  db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL
@@ -152,12 +113,12 @@ async function initDatabase() {
     registration_enabled: '1',
     community_enabled: '1'
   };
+  
+  const insertSetting = db.prepare('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)');
   for (const [key, value] of Object.entries(defaults)) {
-    db.run('INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    insertSetting.run(key, value);
   }
 
-  saveToFile();
-  startAutoSave();
   console.log('✅ Database initialized');
 }
 
@@ -166,22 +127,16 @@ async function initDatabase() {
  */
 function all(sql, params = []) {
   if (!db) throw new Error('Database not initialized');
-  const stmt = db.prepare(sql);
-  if (params.length) stmt.bind(params);
-  const rows = [];
-  while (stmt.step()) {
-    rows.push(stmt.getAsObject());
-  }
-  stmt.free();
-  return rows;
+  return db.prepare(sql).all(params);
 }
 
 /**
  * Helper: run a SELECT and return first row or null
  */
 function get(sql, params = []) {
-  const rows = all(sql, params);
-  return rows.length > 0 ? rows[0] : null;
+  if (!db) throw new Error('Database not initialized');
+  const row = db.prepare(sql).get(params);
+  return row || null;
 }
 
 /**
@@ -189,12 +144,8 @@ function get(sql, params = []) {
  */
 function run(sql, params = []) {
   if (!db) throw new Error('Database not initialized');
-  db.run(sql, params);
-  const info = db.exec("SELECT changes() as changes, last_insert_rowid() as lastId");
-  const changes = info.length > 0 ? info[0].values[0][0] : 0;
-  const lastInsertRowid = info.length > 0 ? info[0].values[0][1] : 0;
-  isDirty = true;
-  return { changes, lastInsertRowid };
+  const info = db.prepare(sql).run(params);
+  return { changes: info.changes, lastInsertRowid: info.lastInsertRowid };
 }
 
 /**
@@ -203,19 +154,12 @@ function run(sql, params = []) {
 function exec(sql) {
   if (!db) throw new Error('Database not initialized');
   db.exec(sql);
-  isDirty = true;
 }
 
 function stopAutoSave() {
-  if (saveInterval) {
-    clearInterval(saveInterval);
-    saveInterval = null;
-  }
-  // Flush any pending changes on shutdown
-  if (isDirty) {
-    saveToFile();
-    isDirty = false;
+  if (db) {
+    db.close();
   }
 }
 
-module.exports = { initDatabase, all, get, run, exec, saveToFile, stopAutoSave };
+module.exports = { initDatabase, all, get, run, exec, stopAutoSave };
