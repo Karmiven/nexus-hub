@@ -118,6 +118,96 @@ function initThemeToggle() {
  */
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  // Toggle Matrix rain canvas
+  if (theme === 'matrix-green') {
+    startMatrixRain();
+  } else {
+    stopMatrixRain();
+  }
+}
+
+/* ── Matrix Digital Rain ── */
+let matrixCanvas = null;
+let matrixCtx = null;
+let matrixRAF = null;
+let matrixDrops = [];
+let _matrixResizeHandler = null;
+
+const MATRIX_CHARS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ<>{}[]|/\\=+*&@#$%';
+const MATRIX_FONT_SIZE = 16;
+
+function startMatrixRain() {
+  if (matrixCanvas) return; // already running
+
+  matrixCanvas = document.createElement('canvas');
+  matrixCanvas.id = 'matrixRainCanvas';
+  matrixCanvas.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-2;pointer-events:none;opacity:0.12;';
+  document.body.prepend(matrixCanvas);
+
+  matrixCtx = matrixCanvas.getContext('2d');
+
+  function resetDrops() {
+    const cols = Math.floor(matrixCanvas.width / MATRIX_FONT_SIZE);
+    if (matrixDrops.length !== cols) {
+      matrixDrops = Array.from({ length: cols }, (_, i) =>
+        matrixDrops[i] !== undefined ? matrixDrops[i] : Math.random() * -100
+      );
+    }
+  }
+
+  function onResize() {
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+    resetDrops();
+  }
+
+  _matrixResizeHandler = onResize;
+  onResize();
+  window.addEventListener('resize', _matrixResizeHandler);
+
+  function draw() {
+    matrixCtx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+    matrixCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+
+    const cols = Math.floor(matrixCanvas.width / MATRIX_FONT_SIZE);
+
+    for (let i = 0; i < cols; i++) {
+      const char = MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)];
+      const x = i * MATRIX_FONT_SIZE;
+      const y = (matrixDrops[i] || 0) * MATRIX_FONT_SIZE;
+
+      const brightness = Math.random() > 0.1 ? '#00ff41' : '#80ffa0';
+      matrixCtx.fillStyle = brightness;
+      matrixCtx.font = MATRIX_FONT_SIZE + 'px monospace';
+      matrixCtx.fillText(char, x, y);
+
+      if (y > matrixCanvas.height && Math.random() > 0.975) {
+        matrixDrops[i] = 0;
+      }
+      matrixDrops[i] = (matrixDrops[i] || 0) + 1;
+    }
+
+    matrixRAF = requestAnimationFrame(draw);
+  }
+
+  draw();
+}
+
+function stopMatrixRain() {
+  if (matrixRAF) {
+    cancelAnimationFrame(matrixRAF);
+    matrixRAF = null;
+  }
+  if (matrixCanvas) {
+    if (_matrixResizeHandler) {
+      window.removeEventListener('resize', _matrixResizeHandler);
+      _matrixResizeHandler = null;
+    }
+    matrixCanvas.remove();
+    matrixCanvas = null;
+    matrixCtx = null;
+    matrixDrops = [];
+  }
 }
 
 /**

@@ -32,7 +32,10 @@ router.post('/login', isGuest, async (req, res) => {
   }
 
   // Update last login and IP
-  const clientIP = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+  let clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.connection?.remoteAddress || 'unknown';
+  // Normalize IPv6 loopback to readable form
+  if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') clientIP = '127.0.0.1';
+  if (clientIP.startsWith('::ffff:')) clientIP = clientIP.slice(7);
   db.run(
     'UPDATE users SET last_login = CURRENT_TIMESTAMP, last_ip = ? WHERE id = ?',
     [clientIP, user.id]

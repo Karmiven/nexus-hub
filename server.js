@@ -24,6 +24,9 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
+// ── Trust proxy (for correct client IP behind Nginx/reverse proxy) ──
+app.set('trust proxy', true);
+
 // ── Security ──
 app.use(helmet({
   contentSecurityPolicy: false,
