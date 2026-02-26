@@ -20,7 +20,8 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
 - **Community Chat** — Real-time chat powered by Socket.io with typing indicators, online users list, nickname persistence
 - **News System** — Bilingual news articles (EN/RU) with separate fields for title, short content, and full content; pinned articles, image cropping, and modal reading view with animated language switching
 
-### Admin Panel (Russian UI)
+
+### Admin Panel (RU/EN UI)
 - **Dashboard** — Stats overview (news count, server count, online servers, registered users) + server status monitor
 - **News Management** — Full CRUD with bilingual editor (EN/RU side-by-side), image upload with 16:9 cropper (Cropper.js), pin/unpin, inline preview (mini card + full article)
 - **Server Management** — Add/edit/delete servers, configure redirect URLs, toggle player count display, manual status refresh
@@ -30,7 +31,20 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
   - *Server & Community*: status check interval, community chat toggle, max chat messages
   - *Games List*: add/remove games with name + icon upload (stored as base64 data URIs)
 
+#### Proxmox Monitoring (LXC/VM)
+- **Guest Discovery**: Now sorts containers/VMs by Node > VMID, and visually groups them by node in the admin UI
+- **Permission Hints**: If no guests are found, the UI shows a detailed hint with the exact Proxmox permissions required (`VM.Audit`, `Sys.Audit`, `Datastore.Audit`) and step-by-step instructions (EN/RU)
+- **i18n**: All Proxmox-related admin UI and permission hints are fully translated (EN/RU)
 
+---
+## Changelog
+
+### 2026-02-26
+- Proxmox guest discovery: sort by Node > VMID, group by node in UI
+- Show detailed permission requirements if no guests found (EN/RU)
+- All Proxmox admin UI and hints now fully i18n (EN/RU)
+
+---
 ### Theming — 6 Visual Themes
 
 Themes are selected via a dropdown in the navbar. Saved to `localStorage` and applied instantly via CSS custom properties (28+ variables per theme). All themes now use the same font families and element sizing for perfect layout stability—only colors, shadows, and effects change.

@@ -14,6 +14,7 @@
       <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
       <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
       <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
+      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
     </nav>
   </div>
 </section>
@@ -30,7 +31,7 @@
         <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">+ <span data-i18n="admin_create_news">Создать новость</span></button>
       </div>
       <div class="table-responsive">
-        <table class="data-table">
+        <table class="data-table table-news">
           <thead>
             <tr>
               <th data-i18n="admin_th_title">Заголовок</th>
@@ -45,7 +46,7 @@
               <tr>
                 <td><strong><%= item.title_en %> / <%= item.title_ru %></strong></td>
                 <td><%= item.author %></td>
-                <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><%= item.pinned ? 'Да' : '—' %></span></td>
+                <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><% if (item.pinned) { %><span data-i18n="admin_pinned_yes">Да</span><% } else { %><span data-i18n="admin_pinned_no">—</span><% } %></span></td>
                 <td><%= new Date(item.created_at).toLocaleDateString() %></td>
                 <td class="actions-cell">
                   <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>

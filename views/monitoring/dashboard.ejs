@@ -2,340 +2,203 @@
 
 <section class="page-header">
   <div class="container">
-    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="resource_monitoring">Resource Monitoring</span></h1>
-    <p class="page-desc" data-i18n="monitoring_desc">Real-time system resource usage for all game servers</p>
+    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="mon_title">Мониторинг</span></h1>
+    <p class="page-desc" data-i18n="mon_desc">Нагрузка контейнеров и виртуальных машин в реальном времени</p>
   </div>
 </section>
 
 <section class="section container">
-  <!-- Overall Stats -->
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-icon"><i data-lucide="server"></i></div>
-      <div class="stat-content">
-        <div class="stat-number" id="totalServers">-</div>
-        <div class="stat-label" data-i18n="total_servers">Total Servers</div>
-      </div>
+
+  <% if (!proxmoxConfigured) { %>
+    <div class="empty-state">
+      <i data-lucide="server-off" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"></i>
+      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_not_connected">Proxmox не подключён</h3>
+      <p style="margin-bottom:1rem;" data-i18n="mon_not_connected_desc">Подключите сервер Proxmox VE для отображения данных мониторинга.</p>
+      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_setup">Настроить Proxmox</a>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon status-online"><i data-lucide="circle-check"></i></div>
-      <div class="stat-content">
-        <div class="stat-number" id="onlineServers">-</div>
-        <div class="stat-label" data-i18n="online_servers">Online</div>
-      </div>
+  <% } else if (!hasSelectedGuests) { %>
+    <div class="empty-state">
+      <i data-lucide="list-checks" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"></i>
+      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_no_guests">Контейнеры не выбраны</h3>
+      <p style="margin-bottom:1rem;" data-i18n="mon_no_guests_desc">Выберите контейнеры/ВМ для мониторинга в панели администратора.</p>
+      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_select_guests">Выбрать контейнеры</a>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon status-offline"><i data-lucide="circle-x"></i></div>
-      <div class="stat-content">
-        <div class="stat-number" id="offlineServers">-</div>
-        <div class="stat-label" data-i18n="offline_servers">Offline</div>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon"><i data-lucide="cpu"></i></div>
-      <div class="stat-content">
-        <div class="stat-number" id="avgCPU">-%</div>
-        <div class="stat-label" data-i18n="avg_cpu">Avg CPU</div>
-      </div>
+  <% } else { %>
+
+  <!-- Guest Cards -->
+  <div class="resources-grid" id="guestsGrid">
+    <div class="empty-state">
+      <p data-i18n="mon_loading">Загрузка данных...</p>
     </div>
   </div>
 
-  <!-- Server Resources -->
-  <h2 class="section-title"><span class="accent"><i data-lucide="gamepad-2"></i></span> <span data-i18n="server_resources">Server Resources</span></h2>
-  <div class="resources-grid" id="resourcesGrid">
-    <!-- Server resource cards will be inserted here by JavaScript -->
+  <div style="text-align:right; margin-top:1rem; font-size:0.75rem; color:var(--text-muted);">
+    <span data-i18n="mon_updated">Обновлено</span>: <span id="lastUpdate">--</span> &nbsp;|&nbsp;
+    <button class="btn btn-xs btn-outline" onclick="fetchData()" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> <span data-i18n="mon_refresh">Обновить</span></button>
   </div>
+
+  <% } %>
 </section>
 
-<script>
-// Resource monitoring dashboard
-let updateInterval;
+<style>
+.resource-metric { display:flex; flex-direction:column; gap:0.25rem; }
+.resource-metric-label { display:flex; justify-content:space-between; font-size:0.82rem; font-weight:600; color:var(--text-secondary); }
+.resource-bar { height:8px; border-radius:4px; background:var(--bg-surface); overflow:hidden; }
+.resource-bar-fill { height:100%; border-radius:4px; transition:width 0.5s ease; background:var(--accent); }
+.resource-bar-fill.low { background:var(--success); }
+.resource-bar-fill.medium { background:var(--warning, #f59e0b); }
+.resource-bar-fill.high { background:var(--danger); }
+.resource-card .resource-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; }
+.resource-card .resource-title { font-size:1rem; font-weight:600; margin:0; display:flex; align-items:center; gap:0.4rem; }
+.resource-card .resource-status { font-size:0.78rem; padding:0.2rem 0.6rem; border-radius:var(--radius-sm,4px); font-weight:600; display:flex; align-items:center; gap:0.3rem; }
+.status-dot-inline { width:6px; height:6px; border-radius:50%; display:inline-block; }
+.status-dot-inline.online { background:var(--success); }
+.status-dot-inline.offline { background:var(--danger); }
+.btn-xs { padding:0.2rem 0.55rem; font-size:0.75rem; display:inline-flex; align-items:center; gap:0.3rem; }
+.guest-info-row { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; }
+.guest-info-row span { display:inline-flex; align-items:center; gap:0.25rem; }
+</style>
 
-async function fetchResources() {
+<script>
+<% if (proxmoxConfigured && hasSelectedGuests) { %>
+var refreshInterval;
+
+function _t(key) {
+  return (typeof window.i18n !== 'undefined') ? window.i18n.t(key) : key;
+}
+
+async function fetchData() {
+  var btn = document.getElementById('refreshBtn');
+  if (btn) btn.disabled = true;
+
   try {
-    const response = await fetch('/monitoring/resources');
-    const data = await response.json();
-    
-    if (data.success) {
-      updateStats(data.stats);
-      updateServerCards(data.servers);
+    var res = await fetch('/monitoring/resources');
+    var data = await res.json();
+
+    if (!data.success) {
+      showError(data.error || _t('pve_conn_error'));
+      return;
     }
+
+    renderGuests(data.guests || []);
+    document.getElementById('lastUpdate').textContent = new Date(data.timestamp).toLocaleTimeString();
   } catch (err) {
-    console.error('Failed to fetch resources:', err);
+    showError(_t('mon_net_error') + ': ' + err.message);
+  } finally {
+    if (btn) btn.disabled = false;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 }
 
-function updateStats(stats) {
-  document.getElementById('totalServers').textContent = stats.totalServers || 0;
-  document.getElementById('onlineServers').textContent = stats.onlineServers || 0;
-  document.getElementById('offlineServers').textContent = stats.offlineServers || 0;
-  document.getElementById('avgCPU').textContent = stats.averageCPU ? stats.averageCPU.toFixed(1) + '%' : '-%';
+function showError(msg) {
+  document.getElementById('guestsGrid').innerHTML =
+    '<div class="empty-state"><p style="color:var(--danger)">' + escHtml(msg) + '</p></div>';
 }
 
-function updateServerCards(servers) {
-  const grid = document.getElementById('resourcesGrid');
+function escHtml(s) {
+  var d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderGuests(guests) {
+  var grid = document.getElementById('guestsGrid');
+
+  if (!guests || guests.length === 0) {
+    grid.innerHTML = '<div class="empty-state"><p>' + escHtml(_t('mon_no_data')) + '</p></div>';
+    return;
+  }
+
   grid.innerHTML = '';
-  
-  Object.values(servers).forEach(server => {
-    const card = createServerCard(server);
+
+  guests.forEach(function(g) {
+    var isRunning = g.status === 'running';
+    var isError = g.status === 'error';
+    var typeLabel = g.type === 'lxc' ? 'LXC' : 'VM';
+    var typeIcon = g.type === 'lxc' ? 'container' : 'monitor';
+
+    var card = document.createElement('div');
+    card.className = 'resource-card' + (isRunning ? ' status-online' : ' status-offline');
+
+    var statusText = isRunning ? _t('mon_running') : (isError ? _t('mon_error') : _t('mon_stopped'));
+
+    var html = '<div class="resource-header">' +
+      '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> ' + escHtml(g.name) +
+        ' <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">' + typeLabel + ' ' + g.vmid + '</span></h3>' +
+      '<span class="resource-status ' + (isRunning ? 'status-online' : 'status-offline') + '">' +
+        '<span class="status-dot-inline ' + (isRunning ? 'online' : 'offline') + '"></span> ' +
+        statusText +
+      '</span></div>';
+
+    if (isError) {
+      html += '<div style="padding:1rem;text-align:center;color:var(--danger);font-size:0.85rem;">' +
+        '<i data-lucide="alert-triangle" style="width:1.2em;height:1.2em;vertical-align:-0.15em;"></i> ' + escHtml(g.error || _t('mon_no_access')) +
+      '</div>';
+    } else if (isRunning) {
+      // CPU bar
+      html += '<div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.7rem;">' +
+        makeBar('CPU (' + g.cpus + ' ' + coreWord(g.cpus) + ')', g.cpu) +
+        makeBar('RAM — ' + fmtBytes(g.mem) + ' / ' + fmtBytes(g.maxmem), g.memUsage) +
+      '</div>';
+      // Info row
+      html += '<div class="guest-info-row">' +
+        '<span><i data-lucide="clock" style="width:14px;height:14px;"></i> ' + fmtUptime(g.uptime) + '</span>' +
+        '<span><i data-lucide="arrow-down" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netin) + '</span>' +
+        '<span><i data-lucide="arrow-up" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netout) + '</span>' +
+      '</div>';
+    } else {
+      html += '<div style="padding:1.5rem;text-align:center;">' +
+        '<p style="color:var(--text-muted);"><i data-lucide="power-off" style="width:1.2em;height:1.2em;vertical-align:-0.15em;"></i> ' + escHtml(_t('mon_container_stopped')) + '</p>';
+      if (g.maxmem) {
+        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.35rem;">' +
+          g.cpus + ' CPU, ' + fmtBytes(g.maxmem) + ' RAM</p>';
+      }
+      html += '</div>';
+    }
+
+    card.innerHTML = html;
     grid.appendChild(card);
   });
-  
-  // Refresh icons after dynamic content
-  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
-function createServerCard(server) {
-  const card = document.createElement('div');
-  card.className = `resource-card status-${server.status}`;
-  
-  const metrics = server.metrics;
-  const lastCheck = server.lastCheck ? new Date(server.lastCheck).toLocaleTimeString() : 'Never';
-  
-  const t = (key) => window.i18n ? window.i18n.t(key) : key;
-  
-  card.innerHTML = `
-    <div class="resource-header">
-      <h3 class="resource-title">Server ${server.id}</h3>
-      <span class="resource-status status-${server.status}">
-        ${server.status === 'online' ? '<span class="status-dot-inline online"></span> ' + t('online') : '<span class="status-dot-inline offline"></span> ' + t('offline')}
-      </span>
-    </div>
-    
-    ${metrics ? `
-      <div class="resource-metrics">
-        <div class="metric">
-          <div class="metric-label">${t('cpu')}</div>
-          <div class="metric-value">
-            <div class="metric-bar">
-              <div class="metric-fill" style="width: ${metrics.cpu.usage}%"></div>
-            </div>
-            <span class="metric-number">${metrics.cpu.usage.toFixed(1)}%</span>
-          </div>
-        </div>
-        
-        <div class="metric">
-          <div class="metric-label">${t('memory')}</div>
-          <div class="metric-value">
-            <div class="metric-bar">
-              <div class="metric-fill" style="width: ${metrics.memory.usage}%"></div>
-            </div>
-            <span class="metric-number">${metrics.memory.usage.toFixed(1)}%</span>
-          </div>
-        </div>
-        
-        <div class="metric">
-          <div class="metric-label">${t('disk')}</div>
-          <div class="metric-value">
-            <div class="metric-bar">
-              <div class="metric-fill" style="width: ${metrics.disk.usage}%"></div>
-            </div>
-            <span class="metric-number">${metrics.disk.usage.toFixed(1)}%</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="resource-details">
-        <div class="detail-row">
-          <span>${t('cores')}:</span>
-          <span>${metrics.cpu.cores}</span>
-        </div>
-        <div class="detail-row">
-          <span>${t('load')}:</span>
-          <span>${metrics.cpu.loadAverage.toFixed(2)}</span>
-        </div>
-        <div class="detail-row">
-          <span>${t('uptime')}:</span>
-          <span>${formatUptime(metrics.uptime)}</span>
-        </div>
-      </div>
-    ` : `
-      <div class="resource-offline">
-        <p>${t('server_offline_msg')}</p>
-      </div>
-    `}
-    
-    <div class="resource-footer">
-      <span class="last-check">${t('last_check')}: ${lastCheck}</span>
-    </div>
-  `;
-  
-  return card;
+function makeBar(label, pct) {
+  var clamped = Math.min(100, Math.max(0, pct || 0));
+  var cls = clamped > 85 ? 'high' : (clamped > 60 ? 'medium' : 'low');
+  return '<div class="resource-metric">' +
+    '<div class="resource-metric-label"><span>' + label + '</span><span>' + clamped.toFixed(1) + '%</span></div>' +
+    '<div class="resource-bar"><div class="resource-bar-fill ' + cls + '" style="width:' + clamped.toFixed(1) + '%"></div></div>' +
+  '</div>';
 }
 
-function formatUptime(seconds) {
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  
-  if (days > 0) return `${days}d ${hours}h`;
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  return `${minutes}m`;
+function fmtBytes(b) {
+  if (!b || b === 0) return '0 B';
+  var units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  var i = Math.floor(Math.log(b) / Math.log(1024));
+  return (b / Math.pow(1024, i)).toFixed(i > 1 ? 1 : 0) + ' ' + units[i];
 }
 
-// Auto-refresh every 30 seconds
-function startAutoRefresh() {
-  fetchResources(); // Initial load
-  updateInterval = setInterval(fetchResources, 30000);
+function fmtUptime(sec) {
+  if (!sec) return '--';
+  var d = Math.floor(sec / 86400);
+  var h = Math.floor((sec % 86400) / 3600);
+  var m = Math.floor((sec % 3600) / 60);
+  if (d > 0) return d + 'д ' + h + 'ч';
+  if (h > 0) return h + 'ч ' + m + 'м';
+  return m + 'м';
 }
 
-// Clean up on page unload
-window.addEventListener('beforeunload', () => {
-  if (updateInterval) clearInterval(updateInterval);
-});
+function coreWord(n) {
+  var lang = (typeof window.i18n !== 'undefined') ? window.i18n.getCurrentLanguage() : 'ru';
+  if (lang === 'en') return n === 1 ? _t('mon_core_one') : _t('mon_core_many');
+  if (n === 1) return _t('mon_core_one');
+  if (n >= 2 && n <= 4) return _t('mon_core_few');
+  return _t('mon_core_many');
+}
 
-// Start monitoring
-startAutoRefresh();
+fetchData();
+refreshInterval = setInterval(fetchData, 15000);
+window.addEventListener('beforeunload', function() { clearInterval(refreshInterval); });
+<% } %>
 </script>
-
-<style>
-/* Resource Monitoring Styles */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.resource-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  transition: all var(--transition);
-}
-
-.resource-card.status-online {
-  border-color: var(--success);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
-}
-
-.resource-card.status-offline {
-  opacity: 0.7;
-  border-color: var(--danger);
-}
-
-.resource-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.resource-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.resource-status {
-  font-size: 0.85rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-}
-
-.resource-metrics {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.metric {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.metric-label {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.metric-value {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.metric-bar {
-  flex: 1;
-  height: 6px;
-  background: var(--bg-surface);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.metric-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--primary));
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.metric-number {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  min-width: 3.5rem;
-  text-align: right;
-}
-
-.resource-details {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: var(--bg-surface);
-  border-radius: var(--radius-sm);
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.8rem;
-}
-
-.detail-row span:first-child {
-  color: var(--text-secondary);
-}
-
-.detail-row span:last-child {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.resource-offline {
-  text-align: center;
-  padding: 2rem;
-  color: var(--text-muted);
-}
-
-.resource-footer {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-align: right;
-}
-
-@media (max-width: 768px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  
-  .metric-value {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-  
-  .metric-number {
-    min-width: auto;
-    text-align: left;
-  }
-}
-</style>
 
 <%- include('../partials/footer') %>

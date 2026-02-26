@@ -1,0 +1,453 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="pve_title">Proxmox Мониторинг</span></h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
+      <a href="/admin/proxmox" class="admin-tab active">Proxmox</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="pve-two-col">
+
+    <!-- ═══ LEFT: Connection ═══ -->
+    <div class="form-card">
+      <form id="proxmoxForm">
+        <fieldset class="form-fieldset">
+          <legend><i data-lucide="server"></i> <span data-i18n="pve_connection">Подключение к Proxmox VE</span></legend>
+
+          <div class="pve-conn-grid">
+            <div class="form-group">
+              <label for="proxmox_host" data-i18n="pve_host">Хост</label>
+              <input type="text" id="proxmox_host" name="proxmox_host" class="form-input" value="<%= settings.proxmox_host || '' %>" placeholder="192.168.1.100">
+            </div>
+            <div class="form-group">
+              <label for="proxmox_port" data-i18n="pve_port">Порт</label>
+              <input type="number" id="proxmox_port" name="proxmox_port" class="form-input" value="<%= settings.proxmox_port || '8006' %>" min="1" max="65535">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="proxmox_token_id">API Token ID</label>
+            <input type="text" id="proxmox_token_id" name="proxmox_token_id" class="form-input" value="<%= settings.proxmox_token_id || '' %>" placeholder="user@pam!token-name">
+            <small class="form-hint" data-i18n="pve_token_hint">Формат: user@realm!token-name (например root@pam!monitoring)</small>
+          </div>
+          <div class="form-group">
+            <label for="proxmox_token_secret">API Token Secret</label>
+            <input type="password" id="proxmox_token_secret" name="proxmox_token_secret" class="form-input" value="<%= settings.proxmox_token_secret || '' %>" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+          </div>
+          <div class="form-group">
+            <label for="proxmox_node" data-i18n="pve_node_label">Имя ноды (необязательно)</label>
+            <input type="text" id="proxmox_node" name="proxmox_node" class="form-input" value="<%= settings.proxmox_node || '' %>" data-i18n-placeholder="pve_node_placeholder" placeholder="Авто-определение">
+            <small class="form-hint" data-i18n="pve_node_hint">Заполняется автоматически при тесте подключения.</small>
+          </div>
+
+          <div class="form-actions" style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn btn-sm btn-outline" id="testBtn" onclick="testConnection()">
+              <i data-lucide="wifi" style="width:14px;height:14px;"></i> <span data-i18n="pve_test">Тест подключения</span>
+            </button>
+            <button type="button" class="btn btn-sm btn-primary" id="saveBtn" onclick="saveSettings()">
+              <i data-lucide="save" style="width:14px;height:14px;"></i> <span data-i18n="save">Сохранить</span>
+            </button>
+            <span id="connResult" style="font-size:0.85rem;"></span>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+
+    <!-- ═══ RIGHT: Guest Selector ═══ -->
+    <div class="form-card">
+      <fieldset class="form-fieldset">
+        <legend><i data-lucide="boxes"></i> <span data-i18n="pve_guests_title">Контейнеры и ВМ для мониторинга</span></legend>
+        <p class="form-hint" style="margin-bottom:1rem;" data-i18n="pve_guests_desc">
+          Нажмите «Обнаружить» чтобы получить список доступных контейнеров и ВМ с Proxmox. Отметьте те, которые хотите видеть на дашборде.
+        </p>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:1rem;">
+          <button type="button" class="btn btn-sm btn-outline" id="discoverBtn" onclick="discoverGuests()">
+            <i data-lucide="search" style="width:14px;height:14px;"></i> <span data-i18n="pve_discover">Обнаружить</span>
+          </button>
+          <button type="button" class="btn btn-sm btn-primary" id="saveGuestsBtn" onclick="saveGuests()">
+            <i data-lucide="save" style="width:14px;height:14px;"></i> <span data-i18n="pve_save_selection">Сохранить выбор</span>
+          </button>
+          <span id="guestResult" style="font-size:0.85rem;"></span>
+        </div>
+
+        <div id="guestsTable">
+          <% const selectedRaw = settings.proxmox_guests || '[]'; %>
+          <% let selectedGuests = []; try { selectedGuests = JSON.parse(selectedRaw); } catch(e) {} %>
+          <%
+            // Sort by node, then VMID
+            selectedGuests.sort(function(a, b) {
+              var nc = (a.node || '').localeCompare(b.node || '');
+              return nc !== 0 ? nc : (a.vmid || 0) - (b.vmid || 0);
+            });
+          %>
+          <% if (selectedGuests.length > 0) { %>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>
+                  <th>VMID</th>
+                  <th data-i18n="pve_th_name">Имя</th>
+                  <th data-i18n="pve_th_type">Тип</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% let lastNode = null; %>
+                <% selectedGuests.forEach(function(g) { %>
+                  <% if (g.node !== lastNode) { lastNode = g.node; %>
+                    <tr class="node-group-header">
+                      <td colspan="4"><i data-lucide="server" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> Node: <strong><%= g.node %></strong></td>
+                    </tr>
+                  <% } %>
+                  <tr>
+                    <td><input type="checkbox" class="guest-check" checked data-vmid="<%= g.vmid %>" data-type="<%= g.type %>" data-node="<%= g.node %>" data-name="<%= g.name %>"></td>
+                    <td><%= g.vmid %></td>
+                    <td><%= g.name %></td>
+                    <td><span class="badge badge-<%= g.type === 'lxc' ? 'info' : 'warning' %>"><%= g.type === 'lxc' ? 'LXC' : 'VM' %></span></td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          <% } else { %>
+            <p class="pve-empty-msg" data-i18n="pve_click_discover">Нажмите «Обнаружить» для загрузки списка.</p>
+          <% } %>
+        </div>
+      </fieldset>
+    </div>
+
+  </div>
+</section>
+
+<style>
+  .pve-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  .pve-conn-grid {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+    gap: 1rem;
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .admin-table th,
+  .admin-table td {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.88rem;
+  }
+  .admin-table th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .admin-table tr:hover td {
+    background: var(--bg-surface);
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .badge-info {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--accent, #06b6d4);
+  }
+  .badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+  }
+  .pve-empty-msg {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 2rem 0;
+  }
+  .node-group-header td {
+    background: rgba(139, 92, 246, 0.08);
+    border-left: 3px solid var(--accent, #8b5cf6);
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+    padding: 0.5rem 0.8rem !important;
+    color: var(--text-secondary);
+  }
+  .badge-success {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+  }
+  .badge-secondary {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+  }
+  .pve-perm-hint {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    padding: 1rem 1.2rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .pve-perm-list {
+    margin: 0.3rem 0 0 1.2rem;
+    font-size: 0.85rem;
+    list-style: none;
+    padding: 0;
+  }
+  .pve-perm-list li {
+    padding: 0.15rem 0;
+  }
+  .pve-perm-list code {
+    background: rgba(139, 92, 246, 0.12);
+    color: var(--accent, #8b5cf6);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  @media (max-width: 900px) {
+    .pve-two-col { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .pve-conn-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  function getFormValues() {
+    return {
+      host: document.getElementById('proxmox_host').value.trim(),
+      port: document.getElementById('proxmox_port').value.trim(),
+      tokenId: document.getElementById('proxmox_token_id').value.trim(),
+      tokenSecret: document.getElementById('proxmox_token_secret').value.trim(),
+      node: document.getElementById('proxmox_node').value.trim()
+    };
+  }
+
+  function setResult(id, text, ok) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    el.style.color = ok ? 'var(--success)' : (ok === false ? 'var(--danger)' : 'var(--text-muted)');
+  }
+
+  function _t(key) {
+    return (typeof window.i18n !== 'undefined') ? window.i18n.t(key) : key;
+  }
+
+  // ── Test Connection ──
+  async function testConnection() {
+    var btn = document.getElementById('testBtn');
+    btn.disabled = true;
+    setResult('connResult', _t('pve_checking'), null);
+    try {
+      var res = await fetch('/monitoring/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getFormValues())
+      });
+      var data = await res.json();
+      if (data.success) {
+        setResult('connResult', _t('pve_connected'), true);
+        // Auto-fill node name if detected and field is empty
+        var nodeInput = document.getElementById('proxmox_node');
+        if (data.nodes && data.nodes.length > 0 && !nodeInput.value.trim()) {
+          nodeInput.value = data.nodes[0];
+        }
+      } else {
+        setResult('connResult', data.error || _t('pve_conn_error'), false);
+      }
+    } catch (err) {
+      setResult('connResult', err.message, false);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Save Connection Settings ──
+  async function saveSettings() {
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    try {
+      var vals = getFormValues();
+      var res = await fetch('/admin/proxmox/save-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(vals)
+      });
+      var data = await res.json();
+      if (data.success) {
+        setResult('connResult', _t('pve_saved'), true);
+      } else {
+        setResult('connResult', data.error || _t('pve_save_error'), false);
+      }
+    } catch (err) {
+      setResult('connResult', err.message, false);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // ── Discover Guests ──
+  async function discoverGuests() {
+    var btn = document.getElementById('discoverBtn');
+    btn.disabled = true;
+    setResult('guestResult', _t('pve_discovering'), null);
+
+    try {
+      var res = await fetch('/monitoring/discover-guests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(getFormValues())
+      });
+      var data = await res.json();
+      if (!data.success) {
+        setResult('guestResult', data.error || _t('error'), false);
+        return;
+      }
+
+      var guests = data.guests || [];
+      if (guests.length === 0) {
+        var msg = _t('pve_no_guests');
+        if (data.hint) msg += '\n' + data.hint;
+        setResult('guestResult', '', false);
+        document.getElementById('guestsTable').innerHTML =
+          '<div class="pve-perm-hint">' +
+          '<p style="font-weight:600;margin-bottom:0.5rem;">&#9888; ' + escHtml(_t('pve_no_guests')) + '</p>' +
+          '<p>' + escHtml(_t('pve_perm_hint')) + '</p>' +
+          '<div class="pve-perm-section">' +
+          '<p style="font-weight:500;margin:0.8rem 0 0.3rem;">' + escHtml(_t('pve_perm_required_title')) + '</p>' +
+          '<ul class="pve-perm-list">' +
+          '<li><code>VM.Audit</code> — ' + escHtml(_t('pve_perm_vm_audit')) + '</li>' +
+          '<li><code>Sys.Audit</code> — ' + escHtml(_t('pve_perm_sys_audit')) + '</li>' +
+          '<li><code>Datastore.Audit</code> — ' + escHtml(_t('pve_perm_ds_audit')) + '</li>' +
+          '</ul></div>' +
+          '<p style="font-weight:500;margin:0.8rem 0 0.3rem;">' + escHtml(_t('pve_perm_how_to_fix')) + '</p>' +
+          '<ol style="margin:0.3rem 0 0 1.2rem;font-size:0.85rem;">' +
+          '<li>' + escHtml(_t('pve_perm_step1')) + '</li>' +
+          '<li>' + escHtml(_t('pve_perm_step2')) + '</li>' +
+          '<li>' + escHtml(_t('pve_perm_step3')) + '</li>' +
+          '</ol></div>';
+        return;
+      }
+
+      // Get currently selected VMIDs
+      var currentChecked = {};
+      document.querySelectorAll('.guest-check:checked').forEach(function(cb) {
+        currentChecked[cb.dataset.vmid] = true;
+      });
+
+      var thName = _t('pve_th_name');
+      var thType = _t('pve_th_type');
+      var thStatus = _t('pve_th_status');
+
+      // Sort guests: node name first, then VMID
+      guests.sort(function(a, b) {
+        var nc = a.node.localeCompare(b.node);
+        return nc !== 0 ? nc : a.vmid - b.vmid;
+      });
+
+      var table = document.getElementById('guestsTable');
+      var html = '<table class="admin-table"><thead><tr>' +
+        '<th style="width:40px;"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>' +
+        '<th>VMID</th><th>' + escHtml(thName) + '</th><th>' + escHtml(thType) + '</th><th>' + escHtml(thStatus) + '</th>' +
+        '</tr></thead><tbody>';
+
+      var lastNode = null;
+      guests.forEach(function(g) {
+        // Insert node group header row when node changes
+        if (g.node !== lastNode) {
+          html += '<tr class="node-group-header">' +
+            '<td colspan="5"><i data-lucide="server" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"></i> ' +
+            _t('pve_th_node') + ': <strong>' + escHtml(g.node) + '</strong></td></tr>';
+          lastNode = g.node;
+        }
+        var checked = currentChecked[g.vmid] ? ' checked' : '';
+        var badge = g.type === 'lxc' ? 'info' : 'warning';
+        var label = g.type === 'lxc' ? 'LXC' : 'VM';
+        var statusBadge = g.status === 'running' ? 'success' : (g.status === 'stopped' ? 'secondary' : 'warning');
+        html += '<tr>' +
+          '<td><input type="checkbox" class="guest-check"' + checked + ' data-vmid="' + g.vmid + '" data-type="' + g.type + '" data-node="' + g.node + '" data-name="' + escHtml(g.name) + '"></td>' +
+          '<td>' + g.vmid + '</td>' +
+          '<td>' + escHtml(g.name) + '</td>' +
+          '<td><span class="badge badge-' + badge + '">' + label + '</span></td>' +
+          '<td><span class="badge badge-' + statusBadge + '">' + g.status + '</span></td>' +
+          '</tr>';
+      });
+
+      html += '</tbody></table>';
+      table.innerHTML = html;
+
+      setResult('guestResult', _t('pve_found') + ': ' + guests.length, true);
+    } catch (err) {
+      setResult('guestResult', err.message, false);
+    } finally {
+      btn.disabled = false;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  }
+
+  // ── Save Guest Selection ──
+  async function saveGuests() {
+    var btn = document.getElementById('saveGuestsBtn');
+    btn.disabled = true;
+    var selected = [];
+    document.querySelectorAll('.guest-check:checked').forEach(function(cb) {
+      selected.push({
+        vmid: parseInt(cb.dataset.vmid),
+        type: cb.dataset.type,
+        node: cb.dataset.node,
+        name: cb.dataset.name
+      });
+    });
+
+    try {
+      var res = await fetch('/admin/proxmox/save-guests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guests: selected })
+      });
+      var data = await res.json();
+      if (data.success) {
+        setResult('guestResult', _t('pve_saved') + ' (' + selected.length + ')', true);
+      } else {
+        setResult('guestResult', data.error || _t('error'), false);
+      }
+    } catch (err) {
+      setResult('guestResult', err.message, false);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function toggleAll(master) {
+    document.querySelectorAll('.guest-check').forEach(function(cb) {
+      cb.checked = master.checked;
+    });
+  }
+
+  function escHtml(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+</script>
+
+<%- include('../partials/footer') %>

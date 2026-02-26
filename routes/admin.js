@@ -160,9 +160,15 @@ router.get('/servers/new', (req, res) => {
 router.post('/servers/refresh', async (req, res) => {
   try {
     await checkAllServers();
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.json({ success: true });
+    }
     req.flash('success', 'Server statuses refreshed.');
   } catch (err) {
     console.error('Status refresh error:', err);
+    if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
+      return res.json({ success: false, message: 'Failed to refresh server statuses.' });
+    }
     req.flash('error', 'Failed to refresh server statuses.');
   }
   res.redirect('/admin/servers');
@@ -255,6 +261,38 @@ router.post('/users/:id/delete', (req, res) => {
   db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
   req.flash('success', 'User deleted.');
   res.redirect('/admin/users');
+});
+
+// ── Proxmox Admin Page ──
+router.get('/proxmox', (req, res) => {
+  const settings = {};
+  const rows = db.all('SELECT * FROM settings');
+  for (const row of rows) {
+    settings[row.key] = row.value;
+  }
+  res.render('admin/proxmox', { title: 'Proxmox', settings });
+});
+
+router.post('/proxmox/save-connection', (req, res) => {
+  const { host, port, tokenId, tokenSecret, node } = req.body || {};
+  const keys = {
+    proxmox_host: host || '',
+    proxmox_port: port || '8006',
+    proxmox_token_id: tokenId || '',
+    proxmox_token_secret: tokenSecret || '',
+    proxmox_node: node || ''
+  };
+  for (const [key, value] of Object.entries(keys)) {
+    db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+  }
+  res.json({ success: true });
+});
+
+router.post('/proxmox/save-guests', (req, res) => {
+  const { guests } = req.body || {};
+  const list = Array.isArray(guests) ? guests : [];
+  db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['proxmox_guests', JSON.stringify(list)]);
+  res.json({ success: true });
 });
 
 module.exports = router;

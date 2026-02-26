@@ -9,6 +9,7 @@
       <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
       <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
       <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
+      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
     </nav>
   </div>
 </section>
@@ -48,12 +49,10 @@
   <div class="admin-table-wrapper">
     <div class="admin-section-header">
       <h2 data-i18n="admin_server_monitor">Монитор статуса серверов</h2>
-      <form action="/admin/servers/refresh" method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-sm btn-outline"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
-      </form>
+      <button type="button" id="refreshAllBtn" class="btn btn-sm btn-outline" onclick="refreshAllServers()"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
     </div>
     <div class="table-responsive">
-      <table class="data-table">
+      <table class="data-table table-dashboard">
         <thead>
           <tr>
             <th data-i18n="admin_th_name">Название</th>
@@ -82,5 +81,28 @@
     </div>
   </div>
 </section>
+
+<script>
+async function refreshAllServers() {
+  const btn = document.getElementById('refreshAllBtn');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = '...';
+  try {
+    const res = await fetch('/admin/servers/refresh', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    } else {
+      alert(data.message || 'Error');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = (window.i18n ? window.i18n.t('admin_refresh_all') : 'Обновить все');
+    }
+  } catch(e) {
+    alert('Failed to refresh');
+    btn.disabled = false;
+    btn.querySelector('span').textContent = (window.i18n ? window.i18n.t('admin_refresh_all') : 'Обновить все');
+  }
+}
+</script>
 
 <%- include('../partials/footer') %>
