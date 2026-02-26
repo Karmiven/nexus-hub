@@ -95,7 +95,7 @@
           <div class="form-group">
             <label class="checkbox-label">
               <input type="hidden" name="community_enabled" value="0">
-              <input type="checkbox" name="community_enabled" value="1" <%= settings.community_enabled === '1' ? 'checked' : '' %>>
+              <input type="checkbox" name="community_enabled" value="1" <%= String(settings.community_enabled) === '1' ? 'checked' : '' %>>
               <span data-i18n="admin_settings_chat_enable">Включить чат сообщества</span>
             </label>
           </div>

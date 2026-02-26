@@ -239,7 +239,12 @@ router.post('/settings', (req, res) => {
 
   for (const key of keys) {
     if (req.body[key] !== undefined) {
-      db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, req.body[key]]);
+      let value = req.body[key];
+      // If checkbox and hidden input both send values, it becomes an array. Take the last one.
+      if (Array.isArray(value)) {
+        value = value[value.length - 1];
+      }
+      db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
     }
   }
 
