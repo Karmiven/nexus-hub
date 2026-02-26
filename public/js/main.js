@@ -4,6 +4,7 @@
 document.body.classList.add('page-ready');
 
 document.addEventListener('DOMContentLoaded', () => {
+  initLucideIcons();
   initPageTransitions();
   initThemeToggle();
   initLanguageSelector();
@@ -11,6 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
   initFlashMessages();
   initServerPolling();
 });
+
+/**
+ * Initialize Lucide icons across the page
+ */
+function initLucideIcons() {
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
+// Global helper for refreshing icons after dynamic content changes
+window.refreshIcons = function() {
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+};
 
 /**
  * Smooth page transitions — intercept link clicks, fade out, then navigate

@@ -2,7 +2,7 @@
 
 <section class="page-header">
   <div class="container">
-    <h1 class="page-title">&#128202; <span data-i18n="resource_monitoring">Resource Monitoring</span></h1>
+    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="resource_monitoring">Resource Monitoring</span></h1>
     <p class="page-desc" data-i18n="monitoring_desc">Real-time system resource usage for all game servers</p>
   </div>
 </section>
@@ -11,28 +11,28 @@
   <!-- Overall Stats -->
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon">&#128187;</div>
+      <div class="stat-icon"><i data-lucide="server"></i></div>
       <div class="stat-content">
         <div class="stat-number" id="totalServers">-</div>
         <div class="stat-label" data-i18n="total_servers">Total Servers</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon status-online">&#128994;</div>
+      <div class="stat-icon status-online"><i data-lucide="circle-check"></i></div>
       <div class="stat-content">
         <div class="stat-number" id="onlineServers">-</div>
         <div class="stat-label" data-i18n="online_servers">Online</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon status-offline">&#128308;</div>
+      <div class="stat-icon status-offline"><i data-lucide="circle-x"></i></div>
       <div class="stat-content">
         <div class="stat-number" id="offlineServers">-</div>
         <div class="stat-label" data-i18n="offline_servers">Offline</div>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon">&#9881;</div>
+      <div class="stat-icon"><i data-lucide="cpu"></i></div>
       <div class="stat-content">
         <div class="stat-number" id="avgCPU">-%</div>
         <div class="stat-label" data-i18n="avg_cpu">Avg CPU</div>
@@ -41,7 +41,7 @@
   </div>
 
   <!-- Server Resources -->
-  <h2 class="section-title"><span class="accent">&#127918;</span> <span data-i18n="server_resources">Server Resources</span></h2>
+  <h2 class="section-title"><span class="accent"><i data-lucide="gamepad-2"></i></span> <span data-i18n="server_resources">Server Resources</span></h2>
   <div class="resources-grid" id="resourcesGrid">
     <!-- Server resource cards will be inserted here by JavaScript -->
   </div>
@@ -80,6 +80,9 @@ function updateServerCards(servers) {
     const card = createServerCard(server);
     grid.appendChild(card);
   });
+  
+  // Refresh icons after dynamic content
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function createServerCard(server) {
@@ -95,7 +98,7 @@ function createServerCard(server) {
     <div class="resource-header">
       <h3 class="resource-title">Server ${server.id}</h3>
       <span class="resource-status status-${server.status}">
-        ${server.status === 'online' ? '🟢 ' + t('online') : '🔴 ' + t('offline')}
+        ${server.status === 'online' ? '<span class="status-dot-inline online"></span> ' + t('online') : '<span class="status-dot-inline offline"></span> ' + t('offline')}
       </span>
     </div>
     

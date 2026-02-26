@@ -6,8 +6,9 @@
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/desktop.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&family=VT323&display=swap" rel="stylesheet">
   <script src="/js/translations.js"></script>
   <script>
     // Apply saved theme BEFORE paint to prevent white flash
@@ -31,7 +32,7 @@
   <nav class="navbar">
     <div class="nav-container">
       <a href="/" class="nav-logo">
-        <span class="logo-icon">&#9889;</span>
+        <span class="logo-icon"><i data-lucide="zap"></i></span>
         <span class="logo-text"><%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></span>
       </a>
       <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">

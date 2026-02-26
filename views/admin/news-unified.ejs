@@ -7,7 +7,7 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; <span data-i18n="admin_news_mgmt">Управление новостями</span></h1>
+    <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_news_mgmt">Управление новостями</span></h1>
     <nav class="admin-nav">
       <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
       <a href="/admin/news" class="admin-tab active" data-i18n="admin_tab_news">Новости</a>
@@ -45,7 +45,7 @@
               <tr>
                 <td><strong><%= item.title_en %> / <%= item.title_ru %></strong></td>
                 <td><%= item.author %></td>
-                <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><%= item.pinned ? '📌 Да' : '—' %></span></td>
+                <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><%= item.pinned ? 'Да' : '—' %></span></td>
                 <td><%= new Date(item.created_at).toLocaleDateString() %></td>
                 <td class="actions-cell">
                   <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
@@ -66,7 +66,7 @@
 <div id="newsModal" class="modal" style="display: none;">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="modalTitle">📝 <span data-i18n="admin_news_modal_create">Создать новость</span></h2>
+      <h2 id="modalTitle"><i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">Создать новость</span></h2>
       <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
     </div>
 
@@ -77,7 +77,7 @@
           <!-- English Column -->
           <div class="language-column">
         <div class="language-header">
-          <span class="language-flag">🇬🇧</span>
+          <span class="language-flag">EN</span>
           <span class="language-title">English</span>
         </div>
         
@@ -100,7 +100,7 @@
       <!-- Russian Column -->
       <div class="language-column">
         <div class="language-header">
-          <span class="language-flag">🇷🇺</span>
+          <span class="language-flag">RU</span>
           <span class="language-title">Русский</span>
         </div>
         
@@ -127,7 +127,7 @@
           <div class="image-upload" id="imageUpload">
             <input type="file" id="image" name="image" accept="image/*" style="display: none;">
             <div class="upload-placeholder">
-              <p>📷 <span data-i18n="admin_news_image_click">Нажмите для загрузки изображения</span></p>
+              <p><i data-lucide="image"></i> <span data-i18n="admin_news_image_click">Нажмите для загрузки изображения</span></p>
               <small data-i18n="admin_news_image_hint">Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680x360px</small>
             </div>
           </div>
@@ -137,7 +137,7 @@
           <div id="finalImagePreview" style="display: none;">
             <img id="finalImage" class="image-preview" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()">✏️ <span data-i18n="admin_news_replace">Заменить</span></button>
+              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()"><i data-lucide="pencil"></i> <span data-i18n="admin_news_replace">Заменить</span></button>
             </div>
           </div>
         </div>
@@ -154,8 +154,8 @@
 
     <div class="form-actions">
       <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button type="button" class="btn btn-outline" onclick="openPreviewModal()">👁️ <span data-i18n="admin_news_preview">Предпросмотр</span></button>
-      <button type="submit" class="btn btn-primary" id="submitBtn">✨ <span data-i18n="create">Создать</span></button>
+      <button type="button" class="btn btn-outline" onclick="openPreviewModal()"><i data-lucide="eye"></i> <span data-i18n="admin_news_preview">Предпросмотр</span></button>
+      <button type="submit" class="btn btn-primary" id="submitBtn"><i data-lucide="sparkles"></i> <span data-i18n="create">Создать</span></button>
     </div>
   </form>
 </div>
@@ -164,12 +164,12 @@
 <div id="previewModal" class="modal" style="display: none; z-index: 1500;">
   <div class="modal-content" style="max-width: 900px;">
     <div class="modal-header">
-      <h2>👁️ <span data-i18n="admin_news_preview_title">Предпросмотр статьи</span></h2>
+      <h2><i data-lucide="eye"></i> <span data-i18n="admin_news_preview_title">Предпросмотр статьи</span></h2>
       <button type="button" class="modal-close" onclick="closePreviewModal()">&times;</button>
     </div>
     <div class="preview-tabs">
-      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')">🏠 <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
-      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')">📄 <span data-i18n="admin_news_preview_full">Полная статья</span></button>
+      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')"><i data-lucide="home"></i> <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
+      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')"><i data-lucide="file-text"></i> <span data-i18n="admin_news_preview_full">Полная статья</span></button>
     </div>
     <div id="previewMini" class="preview-pane active">
       <div class="preview-label" data-i18n="admin_news_preview_mini_desc">Как выглядит на главной:</div>
@@ -186,7 +186,7 @@
 <div id="cropModal" class="modal" style="display: none; z-index: 2000;">
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
-      <h2>🖼️ <span data-i18n="admin_news_crop_title">Обрезка изображения (16:9)</span></h2>
+      <h2><i data-lucide="crop"></i> <span data-i18n="admin_news_crop_title">Обрезка изображения (16:9)</span></h2>
       <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
     </div>
     <div class="crop-container">
@@ -194,7 +194,7 @@
     </div>
     <div class="crop-controls" style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
       <button type="button" class="btn btn-secondary" onclick="closeCropModal()" data-i18n="cancel">Отмена</button>
-      <button type="button" class="btn btn-primary" onclick="applyCrop()">✅ <span data-i18n="admin_news_crop_apply">Применить</span></button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> <span data-i18n="admin_news_crop_apply">Применить</span></button>
     </div>
   </div>
 </div>
@@ -741,12 +741,12 @@
     const imageHtml = d.image && !d.image.endsWith('#')
       ? `<div class="news-image" style="background-image: url('${d.image}')"></div>`
       : `<div class="news-image news-image-default"></div>`;
-    const pinnedBadge = d.pinned ? `<span class="pin-badge">📌 ${window.i18n ? window.i18n.t('admin_news_pinned_label') : 'Закреплено'}</span>` : '';
+    const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${window.i18n ? window.i18n.t('admin_news_pinned_label') : 'Закреплено'}</span>` : '';
 
     const langSwitcher = `
       <div class="preview-lang-switch">
-        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" onclick="setPreviewLang('en')">🇬🇧 English</button>
-        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" onclick="setPreviewLang('ru')">🇷🇺 Русский</button>
+        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" onclick="setPreviewLang('en')">EN English</button>
+        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" onclick="setPreviewLang('ru')">RU Русский</button>
       </div>
     `;
 
@@ -781,6 +781,9 @@
         <div class="pfa-content">${fullContent}</div>
       </div>
     `;
+    
+    // Refresh Lucide icons in preview
+    if (typeof lucide !== 'undefined') lucide.createIcons();
   }
 
   // Close preview on background click
@@ -797,8 +800,9 @@
     document.getElementById('croppedImageData').value = '';
     document.getElementById('finalImagePreview').style.display = 'none';
     document.getElementById('imageUpload').style.display = 'flex';
-    modalTitle.innerHTML = '📝 <span data-i18n="admin_news_modal_create">' + (window.i18n ? window.i18n.t('admin_news_modal_create') : 'Создать новость') + '</span>';
-    submitBtn.innerHTML = '✨ <span data-i18n="create">' + (window.i18n ? window.i18n.t('create') : 'Создать') + '</span>';
+    modalTitle.innerHTML = '<i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">' + (window.i18n ? window.i18n.t('admin_news_modal_create') : 'Создать новость') + '</span>';
+    submitBtn.innerHTML = '<i data-lucide="sparkles"></i> <span data-i18n="create">' + (window.i18n ? window.i18n.t('create') : 'Создать') + '</span>';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     modal.style.display = 'flex';
   }
 
@@ -865,8 +869,9 @@
         currentEditId = articleId;
         
         // Update header
-        modalTitle.innerHTML = '✏️ <span data-i18n="admin_news_modal_edit">' + (window.i18n ? window.i18n.t('admin_news_modal_edit') : 'Редактировать') + '</span>';
-        submitBtn.innerHTML = '💾 <span data-i18n="save">' + (window.i18n ? window.i18n.t('save') : 'Сохранить') + '</span>';
+        modalTitle.innerHTML = '<i data-lucide="pencil"></i> <span data-i18n="admin_news_modal_edit">' + (window.i18n ? window.i18n.t('admin_news_modal_edit') : 'Редактировать') + '</span>';
+        submitBtn.innerHTML = '<i data-lucide="save"></i> <span data-i18n="save">' + (window.i18n ? window.i18n.t('save') : 'Сохранить') + '</span>';
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         
         // Open modal
         modal.style.display = 'flex';

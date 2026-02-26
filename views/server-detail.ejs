@@ -2,7 +2,7 @@
 
 <section class="page-header">
   <div class="container">
-    <a href="/servers" class="back-link">&#8592; <span data-i18n="back_to_servers">Back to Servers</span></a>
+    <a href="/servers" class="back-link"><i data-lucide="arrow-left"></i> <span data-i18n="back_to_servers">Back to Servers</span></a>
     <h1 class="page-title"><%= server.name %></h1>
   </div>
 </section>
@@ -52,7 +52,7 @@
       </button>
       <% if (server.redirect_enabled && server.redirect_url) { %>
         <a href="<%= server.redirect_url %>" target="_blank" class="btn btn-accent" data-i18n="open_launcher">
-          Open Launcher &#8599;
+          Open Launcher <i data-lucide="external-link"></i>
         </a>
       <% } %>
     </div>

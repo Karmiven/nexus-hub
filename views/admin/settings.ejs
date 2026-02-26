@@ -2,7 +2,7 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; <span data-i18n="admin_settings_title">Настройки</span></h1>
+    <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_settings_title">Настройки</span></h1>
     <nav class="admin-nav">
       <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
       <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
@@ -19,7 +19,7 @@
       <!-- Left column: Site & Appearance -->
       <div class="settings-col-left">
         <fieldset class="form-fieldset">
-          <legend>🌐 <span data-i18n="admin_settings_site">Сайт и внешний вид</span></legend>
+          <legend><i data-lucide="globe"></i> <span data-i18n="admin_settings_site">Сайт и внешний вид</span></legend>
           <div class="form-group">
             <label for="site_name" data-i18n="admin_settings_site_name">Название сайта</label>
             <input type="text" id="site_name" name="site_name" class="form-input" value="<%= settings.site_name || 'NexusHub' %>">
@@ -82,7 +82,7 @@
       <!-- Right column: Server & Community -->
       <div class="settings-col-right">
         <fieldset class="form-fieldset">
-          <legend>⚙️ <span data-i18n="admin_settings_server">Сервер и сообщество</span></legend>
+          <legend><i data-lucide="settings"></i> <span data-i18n="admin_settings_server">Сервер и сообщество</span></legend>
           <div class="form-group">
             <label for="status_check_interval" data-i18n="admin_settings_check_interval">Интервал проверки статуса (сек.)</label>
             <input type="number" id="status_check_interval" name="status_check_interval" class="form-input" value="<%= settings.status_check_interval || 60 %>" min="10" max="600">
@@ -105,7 +105,7 @@
         </fieldset>
 
         <fieldset class="form-fieldset" style="margin-top: 1.5rem;">
-          <legend>🎮 <span data-i18n="admin_settings_games">Список игр на главной</span></legend>
+          <legend><i data-lucide="gamepad-2"></i> <span data-i18n="admin_settings_games">Список игр на главной</span></legend>
           <div class="form-group">
             <p class="form-hint" style="margin-bottom: 1rem;" data-i18n="admin_settings_games_hint">Добавьте игры, которые будут отображаться на главной странице. Иконки автоматически сжимаются до 64x64px.</p>
             
@@ -121,7 +121,7 @@
               <div>
                 <label class="form-label" style="font-size: 0.8rem;" data-i18n="admin_settings_game_icon">Иконка</label>
                 <input type="file" id="newGameIcon" accept="image/*" style="display: none;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('newGameIcon').click()" id="newGameIconBtn">📁 Выбрать</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('newGameIcon').click()" id="newGameIconBtn"><i data-lucide="folder-open"></i> Выбрать</button>
               </div>
               <button type="button" class="btn btn-sm btn-primary" onclick="addGame()">+ Добавить</button>
             </div>
@@ -412,7 +412,8 @@
     reader.onload = (event) => {
       // Save the raw base64 string to preserve original transparency and quality
       currentIconBase64 = event.target.result;
-      newGameIconBtn.textContent = '✅ Выбрано';
+      newGameIconBtn.innerHTML = '<i data-lucide="check"></i> Выбрано';
+      if (typeof lucide !== 'undefined') lucide.createIcons();
       newGameIconBtn.classList.add('btn-success');
       newGameIconBtn.classList.remove('btn-outline');
     };
@@ -453,7 +454,8 @@
     newGameName.value = '';
     newGameIcon.value = '';
     currentIconBase64 = '';
-    newGameIconBtn.textContent = '📁 Выбрать';
+    newGameIconBtn.innerHTML = '<i data-lucide="folder-open"></i> Выбрать';
+    if (typeof lucide !== 'undefined') lucide.createIcons();
     newGameIconBtn.classList.remove('btn-success');
     newGameIconBtn.classList.add('btn-outline');
   };

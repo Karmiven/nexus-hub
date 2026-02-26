@@ -2,7 +2,7 @@
 
 <section class="admin-header">
   <div class="container">
-    <h1 class="page-title">&#9881; <span data-i18n="admin_panel">Панель управления</span></h1>
+    <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_panel">Панель управления</span></h1>
     <nav class="admin-nav">
       <a href="/admin" class="admin-tab active" data-i18n="admin_tab_home">Главная</a>
       <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
@@ -16,28 +16,28 @@
 <section class="section container">
   <div class="stats-grid">
     <div class="stat-card">
-      <div class="stat-icon">&#128240;</div>
+      <div class="stat-icon"><i data-lucide="newspaper"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.newsCount %></span>
         <span class="stat-label" data-i18n="admin_stat_news">Новости</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon">&#127918;</div>
+      <div class="stat-icon"><i data-lucide="gamepad-2"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.totalServers %></span>
         <span class="stat-label" data-i18n="admin_stat_total_servers">Всего серверов</span>
       </div>
     </div>
     <div class="stat-card stat-card-online">
-      <div class="stat-icon">&#128994;</div>
+      <div class="stat-icon status-online"><i data-lucide="circle-check"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.onlineServers %></span>
         <span class="stat-label" data-i18n="admin_stat_online_servers">Сервера онлайн</span>
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon">&#128101;</div>
+      <div class="stat-icon"><i data-lucide="users"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.userCount %></span>
         <span class="stat-label" data-i18n="admin_stat_users">Пользователи</span>
@@ -49,7 +49,7 @@
     <div class="admin-section-header">
       <h2 data-i18n="admin_server_monitor">Монитор статуса серверов</h2>
       <form action="/admin/servers/refresh" method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-sm btn-outline">&#128260; <span data-i18n="admin_refresh_all">Обновить все</span></button>
+        <button type="submit" class="btn btn-sm btn-outline"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
       </form>
     </div>
     <div class="table-responsive">

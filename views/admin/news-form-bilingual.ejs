@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create News | NexusHub</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -171,10 +172,10 @@
   <nav class="navbar">
     <div class="nav-container">
       <a href="/admin" class="nav-logo">
-        <span class="logo-icon">&#9889;</span>
+        <span class="logo-icon"><i data-lucide="zap"></i></span>
         <span class="logo-text">NexusHub</span>
       </a>
-      <a href="/admin" class="nav-link">← Back to Admin</a>
+      <a href="/admin" class="nav-link"><i data-lucide="arrow-left"></i> Back to Admin</a>
     </div>
   </nav>
 
@@ -186,7 +187,7 @@
         <!-- English Column -->
         <div class="language-column">
           <div class="language-header">
-            <span class="language-flag">🇬🇧</span>
+            <span class="language-flag">EN</span>
             <span class="language-title">English</span>
           </div>
           
@@ -209,7 +210,7 @@
         <!-- Russian Column -->
         <div class="language-column">
           <div class="language-header">
-            <span class="language-flag">🇷🇺</span>
+            <span class="language-flag">RU</span>
             <span class="language-title">Русский</span>
           </div>
           
@@ -235,7 +236,7 @@
           <div class="image-upload" id="imageUpload">
             <input type="file" id="image" name="image" accept="image/*" style="display: none;">
             <div class="upload-placeholder" <% if (article?.image) { %>style="display: none;"<% } %>>
-              <p>📷 Click to upload preview image</p>
+              <p><i data-lucide="image"></i> Click to upload preview image</p>
               <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
             </div>
             <img id="imagePreview" class="image-preview" <% if (article?.image) { %>src="<%= article?.image %>" style="display: block;"<% } else { %>style="display: none;"<% } %>>
@@ -294,5 +295,6 @@
       });
     });
   </script>
+  <script>if (typeof lucide !== 'undefined') lucide.createIcons();</script>
 </body>
 </html>

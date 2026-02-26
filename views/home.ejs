@@ -23,7 +23,7 @@
 </section>
 
 <section class="section container">
-  <h2 class="section-title"><span class="accent">&#9889;</span> <span data-i18n="latest_news">Latest News</span></h2>
+  <h2 class="section-title"><span class="accent"><i data-lucide="newspaper"></i></span> <span data-i18n="latest_news">Latest News</span></h2>
 
   <% if (news.length === 0) { %>
     <div class="empty-state">
@@ -50,7 +50,7 @@
           data-date="<%= article.created_at %>"
           data-image="<%= article.image || '' %>">
           <% if (article.pinned) { %>
-            <span class="pin-badge">&#128204; <span data-i18n="pinned">Pinned</span></span>
+            <span class="pin-badge"><i data-lucide="pin"></i> <span data-i18n="pinned">Pinned</span></span>
           <% } %>
           <% if (article.image) { %>
             <div class="news-image" style="background-image: url('<%= article.image %>')"></div>
@@ -173,7 +173,7 @@
 <% if (gamesList && gamesList.length > 0) { %>
 <section class="section section-dark" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
   <div class="container">
-    <h2 class="section-title" style="margin-bottom: 1.5rem;"><span class="accent">&#127918;</span> <span data-i18n="hosted_games">Hosted Games</span></h2>
+    <h2 class="section-title" style="margin-bottom: 1.5rem;"><span class="accent"><i data-lucide="gamepad-2"></i></span> <span data-i18n="hosted_games">Hosted Games</span></h2>
     <div class="games-list-container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;">
       <% gamesList.forEach(function(game) { %>
         <div class="game-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 160px; transition: transform var(--transition), border-color var(--transition); cursor: pointer;">

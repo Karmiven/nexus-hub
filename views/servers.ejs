@@ -2,7 +2,7 @@
 
 <section class="page-header">
   <div class="container">
-    <h1 class="page-title">&#127918; <span data-i18n="game_servers">Game Servers</span></h1>
+    <h1 class="page-title"><i data-lucide="gamepad-2"></i> <span data-i18n="game_servers">Game Servers</span></h1>
     <p class="page-desc" data-i18n="servers_desc">Browse all our hosted game servers. Click on any server for more details.</p>
   </div>
 </section>
@@ -44,9 +44,9 @@
           </div>
           <div class="server-card-footer">
             <% if (srv.redirect_enabled && srv.redirect_url) { %>
-              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-primary"><span data-i18n="launch">Launch</span> &#8594;</a>
+              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-primary"><span data-i18n="launch">Launch</span> <i data-lucide="arrow-right"></i></a>
             <% } else { %>
-              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-outline"><span data-i18n="details">Details</span> &#8594;</a>
+              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-outline"><span data-i18n="details">Details</span> <i data-lucide="arrow-right"></i></a>
             <% } %>
             <span class="last-checked"><span data-i18n="last_checked">Checked</span>: <%= new Date(srv.last_checked).toLocaleTimeString() %></span>
           </div>

@@ -2,7 +2,7 @@
 
 > **🚧 Work In Progress** — This project is under active development. Features may change, break, or be incomplete.
 
-A self-hosted gaming server hub for managing, monitoring, and showcasing game servers running on Proxmox VMs. Built with Node.js, Express, and a multi-theme CSS system with 5 atmospheric visual themes.
+A self-hosted gaming server hub for managing, monitoring, and showcasing game servers running on Proxmox VMs. Built with Node.js, Express, and a multi-theme CSS system with 6 atmospheric visual themes.
 
 ![Node.js](https://img.shields.io/badge/Node.js-24+-green?logo=node.js)
 ![Express](https://img.shields.io/badge/Express-4.18-blue?logo=express)
@@ -30,23 +30,26 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
   - *Server & Community*: status check interval, community chat toggle, max chat messages
   - *Games List*: add/remove games with name + icon upload (stored as base64 data URIs)
 
-### Theming — 5 Visual Themes
 
-Themes are selected via a dropdown in the navbar. Saved to `localStorage` and applied instantly via CSS custom properties (28+ variables per theme).
+### Theming — 6 Visual Themes
+
+Themes are selected via a dropdown in the navbar. Saved to `localStorage` and applied instantly via CSS custom properties (28+ variables per theme). All themes now use the same font families and element sizing for perfect layout stability—only colors, shadows, and effects change.
 
 | Theme | Vibe |
 |---|---|
 | **Dark** | Blue-cyan neon — default dark gaming aesthetic |
 | **Light** | Clean & bright — high-contrast light mode |
 | **Cyberpunk Purple** | Night City — neon pink/cyan, animated grid overlay, glitch effects, sharp corners |
-| **Matrix Green** | Wake up, Neo — terminal green, scanlines, CRT glow, monospace fonts |
+| **Matrix Green** | Wake up, Neo — terminal green, scanlines, CRT glow |
 | **Retro 90s Vaporwave** | Miami Sunsets — purple/pink/cyan neon, VHS noise, chromatic aberration |
+| **Vampire** | Gothic dusk — deep reds, subtle grain, dramatic shadows |
 
 Special effects per theme:
 - **Cyberpunk**: Animated CSS grid background, glitch animation on button hover
 - **Matrix / Retro**: Scanline overlay (animated)
 - **Retro**: VHS noise via SVG `feTurbulence` filter, chromatic aberration on headings
-- **All themes**: Glassmorphism navbar, smooth 0.35s transitions between themes
+- **Vampire**: Subtle animated grain overlay, gothic text shadows
+- **All themes**: Glassmorphism navbar, smooth 0.35s transitions between themes, no font or layout jumps
 
 ### Internationalization (i18n)
 - Full bilingual support: **English** and **Russian**
@@ -76,7 +79,7 @@ Special effects per theme:
 | Security | helmet, express-rate-limit |
 | File Uploads | multer |
 | Image Cropping | Cropper.js (CDN) |
-| CSS | Custom CSS with 28+ CSS variables per theme, 5 themes, special effects (scanlines, VHS noise, glitch) |
+| CSS | Custom CSS with 28+ CSS variables per theme, 6 themes, special effects (scanlines, VHS noise, glitch, grain), layout-stable theme switching |
 | i18n | Custom client-side I18n class + `data-i18n` attributes |
 
 ---
@@ -122,7 +125,7 @@ nexushub/
 │
 ├── views/
 │   ├── partials/
-│   │   ├── header.ejs       # Navbar, theme dropdown (5 themes), language selector
+│   │   ├── header.ejs       # Navbar, theme dropdown (6 themes), language selector
 │   │   └── footer.ejs       # Footer with quick links
 │   ├── home.ejs             # Homepage: hero, news, games showcase
 │   ├── servers.ejs          # Server browser
@@ -147,7 +150,7 @@ nexushub/
 │
 ├── public/
 │   ├── css/
-│   │   ├── style.css        # Main stylesheet (~2300 lines) — 5 theme tokens, effects, all components
+│   │   ├── style.css        # Main stylesheet (~2300 lines) — 6 theme tokens, effects, all components
 │   │   └── desktop.css      # Desktop navbar overrides
 │   └── js/
 │       ├── main.js          # Theme switcher (dropdown), language selector, page transitions, polling
