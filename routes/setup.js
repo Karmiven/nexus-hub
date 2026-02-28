@@ -52,8 +52,6 @@ router.post('/', async (req, res) => {
       [admin_username, admin_email, hashedPassword, 'admin']
     );
 
-    db.saveToFile();
-
     req.flash('success', 'Setup complete! You can now log in.');
     res.redirect('/auth/login');
   } catch (error) {

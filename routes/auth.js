@@ -3,6 +3,17 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const { isGuest, isAuthenticated } = require('../middleware/auth');
+const rateLimit = require('express-rate-limit');
+
+// Rate limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: 'Too many login attempts, please try again later.',
+  validate: { trustProxy: false },
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 // Login page
 router.get('/login', isGuest, (req, res) => {
@@ -10,11 +21,19 @@ router.get('/login', isGuest, (req, res) => {
 });
 
 // Login handler
-router.post('/login', isGuest, async (req, res) => {
-  const { username, password } = req.body;
+router.post('/login', isGuest, loginLimiter, async (req, res) => {
+  let { username, password } = req.body;
 
   if (!username || !password) {
     req.flash('error', 'Please fill in all fields.');
+    return res.redirect('/auth/login');
+  }
+
+  // Sanitize username - allow alphanumeric, underscore, and Unicode letters
+  username = String(username).replace(/[^\p{L}\p{N}_]/gu, '');
+  
+  if (username.length < 2 || username.length > 30) {
+    req.flash('error', 'Invalid username length.');
     return res.redirect('/auth/login');
   }
 
@@ -55,53 +74,6 @@ router.post('/login', isGuest, async (req, res) => {
   }
   return res.redirect('/');
 });
-
-// Register page (disabled)
-// router.get('/register', isGuest, (req, res) => {
-//   res.render('auth/register', { title: 'Register' });
-// });
-
-// Register handler (disabled)
-/*
-router.post('/register', isGuest, async (req, res) => {
-  const { username, email, password, password_confirm } = req.body;
-
-  if (!username || !email || !password || !password_confirm) {
-    req.flash('error', 'Please fill in all fields.');
-    return res.redirect('/auth/register');
-  }
-
-  if (password !== password_confirm) {
-    req.flash('error', 'Passwords do not match.');
-    return res.redirect('/auth/register');
-  }
-
-  if (password.length < 6) {
-    req.flash('error', 'Password must be at least 6 characters.');
-    return res.redirect('/auth/register');
-  }
-
-  const existingUser = db.get('SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
-  if (existingUser) {
-    req.flash('error', 'Username or email already exists.');
-    return res.redirect('/auth/register');
-  }
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    db.run(
-      'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-      [username, email, hashedPassword, 'user']
-    );
-    req.flash('success', 'Registration successful! Please log in.');
-    return res.redirect('/auth/login');
-  } catch (error) {
-    console.error('Registration error:', error);
-    req.flash('error', 'An error occurred during registration.');
-    return res.redirect('/auth/register');
-  }
-});
-*/
 
 // Logout handler
 router.get('/logout', isAuthenticated, (req, res) => {

@@ -39,6 +39,7 @@ const limiter = rateLimit({
   message: 'Too many requests, please try again later.',
   validate: { trustProxy: false }
 });
+
 app.use('/api/', limiter);
 
 // ── Middleware ──
@@ -49,27 +50,28 @@ app.use(session({
   secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 }
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', 
+    httpOnly: true,
+    sameSite: 'strict',
+    maxAge: 24 * 60 * 60 * 1000 
+  }
 }));
 app.use(flash());
 
 // Flash messages & global settings middleware
-let cachedNavbarTitle = null;
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.user = req.session.user || null;
 
-  // Global navbar title from settings
-  if (cachedNavbarTitle === null) {
-    try {
-      const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
-      cachedNavbarTitle = navbarTitle?.value || 'NexusHub';
-    } catch (e) {
-      cachedNavbarTitle = 'NexusHub';
-    }
+  // Global navbar title from settings (sync read — microsecond-fast with SQLite)
+  try {
+    const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
+    res.locals.navbarTitle = navbarTitle?.value || 'NexusHub';
+  } catch (e) {
+    res.locals.navbarTitle = 'NexusHub';
   }
-  res.locals.navbarTitle = cachedNavbarTitle;
   next();
 });
 

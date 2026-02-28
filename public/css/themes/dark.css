@@ -1,0 +1,41 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme: Dark (Warm Midnight)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="dark"] {
+  --bg-primary: #0c0e14;
+  --bg-secondary: #12151e;
+  --surface: #181c28;
+  --surface-2: #1f2433;
+  --surface-hover: #272d3f;
+
+  --text-primary: #e8e4df;
+  --text-secondary: #8b8a8e;
+  --text-muted: #555660;
+  --text-on-primary: #ffffff;
+
+  --primary: #5b8af5;
+  --primary-hover: #4a78e0;
+  --primary-active: #3d66c9;
+  --accent: #7c6cf0;
+  --accent-hover: #6a5ad6;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(91, 138, 245, 0.3);
+
+  --success: #34d399;
+  --danger: #f07070;
+  --warning: #f0b944;
+
+  --glow-color: rgba(91, 138, 245, 0.15);
+  --glow-soft: 0 4px 24px -2px var(--glow-color);
+  --glow-strong: 0 0 8px var(--primary), 0 0 32px rgba(91, 138, 245, 0.2);
+
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 8px 24px -8px rgba(0,0,0,0.5);
+  --glass-bg: rgba(18, 21, 30, 0.82);
+  --scanline-color: transparent;
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-chat: var(--font-main);
+  --fx-crt-glow: none;
+}

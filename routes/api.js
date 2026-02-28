@@ -13,23 +13,27 @@ router.get('/servers', (req, res) => {
 
 // Get single server status
 router.get('/servers/:id/status', async (req, res) => {
-  const server = db.get('SELECT * FROM servers WHERE id = ?', [req.params.id]);
-  if (!server) {
-    return res.status(404).json({ success: false, error: 'Server not found' });
-  }
-
-  const result = await tcpPing(server.ip, server.port);
-  res.json({
-    success: true,
-    server: {
-      id: server.id,
-      name: server.name,
-      status: result.online ? 'online' : 'offline',
-      latency: result.latency,
-      player_count: server.player_count,
-      max_players: server.max_players
+  try {
+    const server = db.get('SELECT * FROM servers WHERE id = ?', [req.params.id]);
+    if (!server) {
+      return res.status(404).json({ success: false, error: 'Server not found' });
     }
-  });
+
+    const result = await tcpPing(server.ip, server.port);
+    res.json({
+      success: true,
+      server: {
+        id: server.id,
+        name: server.name,
+        status: result.online ? 'online' : 'offline',
+        latency: result.latency,
+        player_count: server.player_count,
+        max_players: server.max_players
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to check server status' });
+  }
 });
 
 // ── Language API ──

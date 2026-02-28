@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
-const bcrypt = require('bcryptjs');
 const { isAdmin } = require('../middleware/auth');
 const { checkAllServers } = require('../utils/statusChecker');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+
+// IP validation regex patterns
+const IPV4_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
+const IPV6_REGEX = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$|^([\da-fA-F]{1,4}:){1,7}:$|^([\da-fA-F]{1,4}:){1,6}:[\da-fA-F]{1,4}$|^([\da-fA-F]{1,4}:){1,5}(:[\da-fA-F]{1,4}){1,2}$|^([\da-fA-F]{1,4}:){1,4}(:[\da-fA-F]{1,4}){1,3}$|^([\da-fA-F]{1,4}:){1,3}(:[\da-fA-F]{1,4}){1,4}$|^([\da-fA-F]{1,4}:){1,2}(:[\da-fA-F]{1,4}){1,5}$|^[\da-fA-F]{1,4}:((:[\da-fA-F]{1,4}){1,6})$|^:((:[\da-fA-F]{1,4}){1,7}|:)$/;
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'news');
@@ -85,6 +88,12 @@ router.post('/news/create', upload.single('image'), (req, res) => {
     croppedImageData
   } = req.body;
   
+  // Validate required fields
+  if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
+    req.flash('error', 'All title and content fields are required.');
+    return res.redirect('/admin/news');
+  }
+  
   // Use cropped image data (base64) if provided, otherwise use uploaded file
   let imageData = '';
   if (croppedImageData) {
@@ -120,6 +129,12 @@ router.post('/news/:id', upload.single('image'), (req, res) => {
   const article = db.get('SELECT * FROM news WHERE id = ?', [req.params.id]);
   if (!article) {
     req.flash('error', 'Article not found.');
+    return res.redirect('/admin/news');
+  }
+  
+  // Validate required fields
+  if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
+    req.flash('error', 'All title and content fields are required.');
     return res.redirect('/admin/news');
   }
   
@@ -176,10 +191,30 @@ router.post('/servers/refresh', async (req, res) => {
 
 router.post('/servers', (req, res) => {
   const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order } = req.body;
+  
+  // Validate required fields
+  if (!name || !game || !ip || !port) {
+    req.flash('error', 'Name, game, IP, and port are required.');
+    return res.redirect('/admin/servers');
+  }
+  
+  // Validate port is a number
+  const portNum = parseInt(port);
+  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    req.flash('error', 'Port must be a valid number between 1 and 65535.');
+    return res.redirect('/admin/servers');
+  }
+  
+  // Validate IP format (proper IPv4 or IPv6)
+  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
+    req.flash('error', 'Invalid IP address format.');
+    return res.redirect('/admin/servers');
+  }
+  
   db.run(
     `INSERT INTO servers (name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [name, game, ip, parseInt(port),
+    [name, game, ip, portNum,
     description || '', image || '',
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, parseInt(sort_order) || 0]
@@ -200,10 +235,30 @@ router.get('/servers/:id/edit', (req, res) => {
 
 router.post('/servers/:id', (req, res) => {
   const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order } = req.body;
+  
+  // Validate required fields
+  if (!name || !game || !ip || !port) {
+    req.flash('error', 'Name, game, IP, and port are required.');
+    return res.redirect('/admin/servers');
+  }
+  
+  // Validate port is a number
+  const portNum = parseInt(port);
+  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    req.flash('error', 'Port must be a valid number between 1 and 65535.');
+    return res.redirect('/admin/servers');
+  }
+  
+  // Validate IP format (proper IPv4 or IPv6)
+  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
+    req.flash('error', 'Invalid IP address format.');
+    return res.redirect('/admin/servers');
+  }
+  
   db.run(
     `UPDATE servers SET name = ?, game = ?, ip = ?, port = ?, description = ?, image = ?,
      redirect_enabled = ?, redirect_url = ?, show_player_count = ?, sort_order = ? WHERE id = ?`,
-    [name, game, ip, parseInt(port),
+    [name, game, ip, portNum,
     description || '', image || '',
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, parseInt(sort_order) || 0,

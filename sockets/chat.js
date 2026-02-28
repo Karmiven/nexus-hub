@@ -83,7 +83,7 @@ module.exports = function(io) {
     });
 
     // Handle typing indicator
-    socket.on('chat:typing', (data) => {
+    socket.on('chat:typing', () => {
       const registeredUsername = activeUsers.get(socket.id);
       if (registeredUsername) {
         socket.broadcast.emit('chat:typing', { username: registeredUsername });

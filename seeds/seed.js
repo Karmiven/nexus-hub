@@ -120,8 +120,6 @@ async function seed() {
   console.log('✅ Admin user created: ' + (process.env.ADMIN_USERNAME || 'Admin'));
   console.log('✅ Sample data created successfully!');
 
-  // Save database before exit
-  db.saveToFile();
   process.exit(0);
 }
 

@@ -1,0 +1,64 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme: Retro 90s Vaporwave (Sunset Mall)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="retro-90s-vaporwave"] {
+  --bg-primary: #150a28;
+  --bg-secondary: #22104a;
+  --surface: #301468;
+  --surface-2: #421e8c;
+  --surface-hover: #5628aa;
+
+  --text-primary: #ffffff;
+  --text-secondary: #ff78cc;
+  --text-muted: #9966cc;
+  --text-on-primary: #150a28;
+
+  --primary: #00d4ff;
+  --primary-hover: #33ddff;
+  --primary-active: #00a8cc;
+  --accent: #ff78cc;
+  --accent-hover: #ff99dd;
+
+  --border: rgba(0, 212, 255, 0.12);
+  --border-hover: rgba(185, 103, 255, 0.4);
+
+  --success: #00ffa0;
+  --danger: #ff3333;
+  --warning: #ffee66;
+
+  --glow-color: rgba(0, 212, 255, 0.2);
+  --glow-soft: 0 4px 20px -2px var(--glow-color), 0 2px 12px rgba(255, 120, 204, 0.1);
+  --glow-strong: 0 0 8px var(--primary), 0 0 24px var(--accent);
+
+  --card-shadow: 6px 6px 0px rgba(255, 120, 204, 0.2);
+  --glass-bg: rgba(48, 20, 104, 0.7);
+  --scanline-color: rgba(255, 255, 255, 0.03);
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-chat: var(--font-main);
+  --fx-crt-glow: drop-shadow(2px 0 0 rgba(255,120,204,0.6)) drop-shadow(-2px 0 0 rgba(0,212,255,0.6));
+}
+
+/* ── Scanlines effect ── */
+:root[data-theme="retro-90s-vaporwave"] body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: linear-gradient(to bottom, transparent 50%, var(--scanline-color) 51%);
+  background-size: 100% 4px;
+  z-index: 9999;
+  pointer-events: none;
+  animation: scanlineScroll 12s linear infinite;
+}
+
+/* ── Noise texture ── */
+:root[data-theme="retro-90s-vaporwave"] body {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* ── Chromatic aberration on titles ── */
+:root[data-theme="retro-90s-vaporwave"] h1,
+:root[data-theme="retro-90s-vaporwave"] .section-title {
+  text-shadow: 2px 0 var(--accent), -2px 0 var(--primary);
+}

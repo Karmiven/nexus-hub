@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme: Cyberpunk Purple (Night City)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="cyberpunk-purple"] {
+  --bg-primary: #08010f;
+  --bg-secondary: #0f0320;
+  --surface: #170538;
+  --surface-2: #220850;
+  --surface-hover: #310c6e;
+
+  --text-primary: #f0e8ff;
+  --text-secondary: #b895e6;
+  --text-muted: #6e45a3;
+  --text-on-primary: #000000;
+
+  --primary: #ff1f5a;
+  --primary-hover: #e0184f;
+  --primary-active: #c41244;
+  --accent: #00e5ff;
+  --accent-hover: #33ebff;
+
+  --border: rgba(255, 31, 90, 0.15);
+  --border-hover: rgba(0, 229, 255, 0.4);
+
+  --success: #00ff9d;
+  --danger: #ff1f5a;
+  --warning: #ffe02e;
+
+  --glow-color: rgba(255, 31, 90, 0.25);
+  --glow-soft: 0 4px 20px -2px var(--glow-color);
+  --glow-strong: 0 0 6px var(--primary), 0 0 24px rgba(255, 31, 90, 0.3), 0 0 48px rgba(0, 229, 255, 0.1);
+
+  --card-shadow: 0 4px 24px -4px rgba(255, 31, 90, 0.15);
+  --glass-bg: rgba(23, 5, 56, 0.8);
+  --scanline-color: rgba(0, 229, 255, 0.025);
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-chat: var(--font-main);
+  --fx-crt-glow: drop-shadow(0 0 2px rgba(255,31,90,0.4));
+}
+
+/* ── Cyberpunk grid effect ── */
+:root[data-theme="cyberpunk-purple"] body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background-image:
+    linear-gradient(transparent 96%, rgba(255, 31, 90, 0.08) 100%),
+    linear-gradient(90deg, transparent 96%, rgba(255, 31, 90, 0.08) 100%);
+  background-size: 48px 48px;
+  animation: cyberGridMove 30s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes cyberGridMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+
+:root[data-theme="cyberpunk-purple"] .btn-primary:hover {
+  animation: cyberGlitch 0.4s ease both;
+  background-color: var(--accent);
+  color: #000;
+  box-shadow: var(--glow-strong);
+}
+
+@keyframes cyberGlitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-1px, 1px) }
+  40% { transform: translate(1px, -1px) }
+  60% { transform: translate(-1px, -1px) }
+  80% { transform: translate(1px, 1px) }
+  100% { transform: translate(0) }
+}
+
+:root[data-theme="cyberpunk-purple"] ::selection {
+  background: var(--primary);
+}

@@ -1,4 +1,4 @@
-/* Desktop navbar — overrides mobile grid */
+/* Desktop navbar — overrides for wide screens */
 @media (min-width: 769px) {
   .nav-item {
     display: list-item;
@@ -13,39 +13,9 @@
     margin-left: 0.35rem;
   }
 
+  /* Slightly wider selectors on desktop */
   .nav-item-theme-lang .language-selector,
   .nav-item-theme-lang .theme-selector {
     min-width: 68px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xs);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    padding: 0.35rem 0.6rem;
-    cursor: pointer;
-    transition: all var(--transition);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    font-family: var(--font-body);
-  }
-
-  .nav-item-theme-lang .language-selector:hover,
-  .nav-item-theme-lang .theme-selector:hover {
-    border-color: var(--primary);
-    background: var(--surface-hover);
-  }
-
-  .nav-item-theme-lang .language-selector:focus,
-  .nav-item-theme-lang .theme-selector:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 2px var(--glow-color);
-  }
-
-  .nav-item-theme-lang .language-selector option,
-  .nav-item-theme-lang .theme-selector option {
-    background: var(--surface);
-    color: var(--text-primary);
   }
 }

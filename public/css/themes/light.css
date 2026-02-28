@@ -1,0 +1,41 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme: Light (Paper & Ink)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="light"] {
+  --bg-primary: #f6f5f1;
+  --bg-secondary: #efeee9;
+  --surface: #ffffff;
+  --surface-2: #f0efea;
+  --surface-hover: #e5e3dc;
+
+  --text-primary: #1a1a1f;
+  --text-secondary: #5c5c66;
+  --text-muted: #9e9ea6;
+  --text-on-primary: #ffffff;
+
+  --primary: #3566d5;
+  --primary-hover: #2a55b8;
+  --primary-active: #1f449d;
+  --accent: #6c5ce7;
+  --accent-hover: #5a4bd4;
+
+  --border: rgba(0, 0, 0, 0.07);
+  --border-hover: rgba(53, 102, 213, 0.3);
+
+  --success: #059669;
+  --danger: #dc3545;
+  --warning: #ca8a04;
+
+  --glow-color: rgba(53, 102, 213, 0.1);
+  --glow-soft: 0 4px 20px -2px var(--glow-color);
+  --glow-strong: 0 0 12px rgba(53, 102, 213, 0.15);
+
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px -4px rgba(0,0,0,0.08);
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --scanline-color: transparent;
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-chat: var(--font-main);
+  --fx-crt-glow: none;
+}

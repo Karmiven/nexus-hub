@@ -1,0 +1,58 @@
+/* ═══════════════════════════════════════════════════════════════
+   Theme: Matrix Green (Wake up, Neo)
+   ═══════════════════════════════════════════════════════════════ */
+
+:root[data-theme="matrix-green"] {
+  --bg-primary: #000000;
+  --bg-secondary: #010a03;
+  --surface: #041208;
+  --surface-2: #081e0e;
+  --surface-hover: #0d2e16;
+
+  --text-primary: #00ff41;
+  --text-secondary: #009922;
+  --text-muted: #004a10;
+  --text-on-primary: #000000;
+
+  --primary: #00ff41;
+  --primary-hover: #33ff66;
+  --primary-active: #00cc33;
+  --accent: #00cc33;
+  --accent-hover: #00ff41;
+
+  --border: rgba(0, 255, 65, 0.08);
+  --border-hover: rgba(0, 255, 65, 0.3);
+
+  --success: #00ff41;
+  --danger: #ff1a1a;
+  --warning: #ffcc00;
+
+  --glow-color: rgba(0, 255, 65, 0.15);
+  --glow-soft: 0 0 12px var(--glow-color);
+  --glow-strong: 0 0 6px var(--primary), 0 0 20px rgba(0, 255, 65, 0.25);
+
+  --card-shadow: 0 0 16px rgba(0, 255, 65, 0.06);
+  --glass-bg: rgba(4, 18, 8, 0.88);
+  --scanline-color: rgba(0, 255, 65, 0.05);
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-chat: var(--font-main);
+  --fx-crt-glow: drop-shadow(0 0 3px rgba(0,255,65,0.6));
+}
+
+/* ── Scanlines effect ── */
+:root[data-theme="matrix-green"] body::after {
+  content: "";
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: linear-gradient(to bottom, transparent 50%, var(--scanline-color) 51%);
+  background-size: 100% 4px;
+  z-index: 9999;
+  pointer-events: none;
+  animation: scanlineScroll 12s linear infinite;
+}
+
+:root[data-theme="matrix-green"] ::selection {
+  background: #003b00;
+  color: #00ff41;
+}
