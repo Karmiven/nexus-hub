@@ -9,6 +9,7 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const flash = require('connect-flash');
@@ -41,7 +42,7 @@ app.use(helmet({
       connectSrc: ["'self'", "ws:", "wss:"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
-      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+      ...(process.env.NODE_ENV === 'production' ? { upgradeInsecureRequests: [] } : {})
     }
   },
   crossOriginEmbedderPolicy: false
@@ -58,12 +59,26 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 app.use('/auth/', limiter);
 
+// ── Session secret (persist across restarts) ──
+function getSessionSecret() {
+  if (process.env.SESSION_SECRET) return process.env.SESSION_SECRET;
+  const secretPath = path.join(__dirname, 'data', '.session-secret');
+  try {
+    return fs.readFileSync(secretPath, 'utf8').trim();
+  } catch {
+    const secret = require('crypto').randomBytes(32).toString('hex');
+    fs.mkdirSync(path.dirname(secretPath), { recursive: true });
+    fs.writeFileSync(secretPath, secret, { mode: 0o600 });
+    return secret;
+  }
+}
+
 // ── Middleware ──
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
 app.use(session({
-  secret: process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex'),
+  secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -75,18 +90,26 @@ app.use(session({
 }));
 app.use(flash());
 
+const { csrfTokenMiddleware, csrfProtection } = require('./middleware/csrf');
+app.use(csrfTokenMiddleware);
+app.use(csrfProtection);
+
 // Flash messages & global settings middleware
 app.use((req, res, next) => {
   res.locals.success = req.flash('success');
   res.locals.error = req.flash('error');
   res.locals.user = req.session.user || null;
 
-  // Global navbar title from settings (sync read — microsecond-fast with SQLite)
+  // Global settings for templates (sync read — microsecond-fast with SQLite)
   try {
-    const navbarTitle = db.get("SELECT value FROM settings WHERE key = 'navbar_title'");
-    res.locals.navbarTitle = navbarTitle?.value || 'NexusHub';
+    const rows = db.all("SELECT key, value FROM settings WHERE key IN ('navbar_title', 'monitoring_public')");
+    const s = {};
+    for (const r of rows) s[r.key] = r.value;
+    res.locals.navbarTitle = s.navbar_title || 'NexusHub';
+    res.locals.monitoringPublic = String(s.monitoring_public) === '1';
   } catch (e) {
     res.locals.navbarTitle = 'NexusHub';
+    res.locals.monitoringPublic = false;
   }
   next();
 });
@@ -101,6 +124,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Setup Middleware ──
 let isInstalledCache = false;
+// Allow other modules to reset the cache (e.g. when an admin user is deleted)
+app.set('resetInstalledCache', () => { isInstalledCache = false; });
 app.use((req, res, next) => {
   // Skip check for static files and setup route itself
   if (req.path.startsWith('/css') || req.path.startsWith('/js') || req.path.startsWith('/img') || req.path.startsWith('/setup')) {
@@ -145,6 +170,11 @@ app.use('/auth', authRoutes);
 app.use('/community', communityRoutes);
 app.use('/api', apiRoutes);
 app.use('/monitoring', monitoring.router);
+
+// ── Health Check ──
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
 
 // ── Socket.io Chat ──
 require('./sockets/chat')(io);

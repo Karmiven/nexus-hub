@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
+const rateLimit = require('express-rate-limit');
+
+const setupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 min
+  max: 10,
+  message: 'Too many setup attempts, please try again later.'
+});
 
 // Check if already installed
 function isInstalled() {
@@ -18,7 +25,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /setup - Process setup form
-router.post('/', async (req, res) => {
+router.post('/', setupLimiter, async (req, res) => {
   if (isInstalled()) {
     return res.redirect('/');
   }
