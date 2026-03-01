@@ -28,7 +28,7 @@
               <span class="info-label" data-i18n="game">Game</span>
               <span class="info-value"><%= srv.game %></span>
             </div>
-            <% if (user && user.role === 'admin') { %>
+            <% if (srv.show_ip_address) { %>
             <div class="info-row">
               <span class="info-label" data-i18n="address">Address</span>
               <span class="info-value mono"><%= srv.ip %>:<%= srv.port %></span>

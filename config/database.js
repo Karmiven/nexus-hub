@@ -72,6 +72,7 @@ async function initDatabase() {
       redirect_enabled INTEGER DEFAULT 0,
       redirect_url TEXT DEFAULT '',
       show_player_count INTEGER DEFAULT 0,
+      show_ip_address INTEGER DEFAULT 1,
       player_count INTEGER DEFAULT 0,
       max_players INTEGER DEFAULT 0,
       status TEXT DEFAULT 'offline',
@@ -80,6 +81,14 @@ async function initDatabase() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
   `);
+
+  // Migration: add show_ip_address column if it doesn't exist
+  try {
+    const serverCols = db.pragma("table_info(servers)").map(c => c.name);
+    if (!serverCols.includes('show_ip_address')) {
+      db.exec("ALTER TABLE servers ADD COLUMN show_ip_address INTEGER DEFAULT 1");
+    }
+  } catch (e) { /* column already exists */ }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS chat_messages (

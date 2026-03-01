@@ -80,6 +80,12 @@
           </label>
         </div>
         <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" name="show_ip_address" value="1" <%= !server || server.show_ip_address ? 'checked' : '' %>>
+            <span data-i18n="admin_show_ip">Показывать IP адрес в списке серверов</span>
+          </label>
+        </div>
+        <div class="form-group">
           <label for="sort_order" data-i18n="admin_sort_order">Порядок сортировки (меньше = выше)</label>
           <input type="number" id="sort_order" name="sort_order" class="form-input" value="<%= server ? server.sort_order : 0 %>" min="0">
         </div>
