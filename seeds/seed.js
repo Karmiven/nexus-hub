@@ -2,13 +2,21 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 
+const crypto = require('crypto');
+
 async function seed() {
   console.log('🌱 Starting database seeding...');
   await db.initDatabase();
   console.log('✅ Database initialized');
 
-  // Create admin user
-  const adminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 12);
+  // Create admin user — require env var or generate a secure random password
+  let rawPassword = process.env.ADMIN_PASSWORD;
+  let generated = false;
+  if (!rawPassword) {
+    rawPassword = crypto.randomBytes(16).toString('base64url');
+    generated = true;
+  }
+  const adminPassword = await bcrypt.hash(rawPassword, 12);
   db.run(
     'INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
     [process.env.ADMIN_USERNAME || 'Admin', 'admin@nexushub.local', adminPassword, 'admin']
@@ -118,6 +126,10 @@ async function seed() {
   }
 
   console.log('✅ Admin user created: ' + (process.env.ADMIN_USERNAME || 'Admin'));
+  if (generated) {
+    console.log('⚠️  No ADMIN_PASSWORD env var set — generated password: ' + rawPassword);
+    console.log('   Save this password now! It will not be shown again.');
+  }
   console.log('✅ Sample data created successfully!');
 
   process.exit(0);

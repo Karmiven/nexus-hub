@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { ProxmoxClient } = require('../utils/proxmox');
-const { isAdmin } = require('../middleware/auth');
+const { isAdmin, isAuthenticated } = require('../middleware/auth');
+const { decrypt } = require('../utils/crypto');
 
 /**
  * Build a ProxmoxClient from DB settings (or .env fallback)
@@ -25,7 +26,7 @@ function getProxmoxClient() {
     if (s.proxmox_host) host = s.proxmox_host;
     if (s.proxmox_port) port = parseInt(s.proxmox_port) || 8006;
     if (s.proxmox_token_id) tokenId = s.proxmox_token_id;
-    if (s.proxmox_token_secret) tokenSecret = s.proxmox_token_secret;
+    if (s.proxmox_token_secret) tokenSecret = decrypt(s.proxmox_token_secret);
     if (s.proxmox_node) node = s.proxmox_node;
   } catch (e) { /* DB not ready */ }
 
@@ -44,8 +45,22 @@ function getSelectedGuests() {
   return [];
 }
 
+// ── Guard: public if monitoring_public=1, otherwise auth+admin ──
+function monitoringAccess(req, res, next) {
+  const row = db.get("SELECT value FROM settings WHERE key = 'monitoring_public'");
+  const isPublic = String(row?.value) === '1';
+  if (isPublic) return next();
+  // Not public — require authenticated admin
+  if (req.session?.user?.role === 'admin') return next();
+  if (req.session?.user) {
+    return res.status(404).render('errors/404', { title: 'Page Not Found' });
+  }
+  req.flash('error', 'Please log in to access this page.');
+  return res.redirect('/auth/login');
+}
+
 // ── JSON API: selected guests status ──
-router.get('/resources', async (req, res) => {
+router.get('/resources', monitoringAccess, async (req, res) => {
   try {
     const pve = getProxmoxClient();
     if (!pve.isConfigured()) {
@@ -117,7 +132,7 @@ router.post('/discover-guests', isAdmin, async (req, res) => {
 });
 
 // ── Dashboard page ──
-router.get('/dashboard', (req, res) => {
+router.get('/dashboard', monitoringAccess, (req, res) => {
   const pve = getProxmoxClient();
   const selected = getSelectedGuests();
   res.render('monitoring/dashboard', {

@@ -1,15 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const net = require('net');
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
 const { checkAllServers } = require('../utils/statusChecker');
+const { encrypt } = require('../utils/crypto');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-
-// IP validation regex patterns
-const IPV4_REGEX = /^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)\.?\b){4}$/;
-const IPV6_REGEX = /^([\da-fA-F]{1,4}:){7}[\da-fA-F]{1,4}$|^([\da-fA-F]{1,4}:){1,7}:$|^([\da-fA-F]{1,4}:){1,6}:[\da-fA-F]{1,4}$|^([\da-fA-F]{1,4}:){1,5}(:[\da-fA-F]{1,4}){1,2}$|^([\da-fA-F]{1,4}:){1,4}(:[\da-fA-F]{1,4}){1,3}$|^([\da-fA-F]{1,4}:){1,3}(:[\da-fA-F]{1,4}){1,4}$|^([\da-fA-F]{1,4}:){1,2}(:[\da-fA-F]{1,4}){1,5}$|^[\da-fA-F]{1,4}:((:[\da-fA-F]{1,4}){1,6})$|^:((:[\da-fA-F]{1,4}){1,7}|:)$/;
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'news');
@@ -54,6 +52,8 @@ function getSettingsMap() {
 }
 
 // ── Helper: validate server input ──
+const HOSTNAME_RE = /^(?!-)([A-Za-z0-9-]{1,63}\.)*[A-Za-z]{2,}$/;
+
 function validateServerInput(body) {
   const { name, game, ip, port } = body;
   if (!name || !game || !ip || !port) {
@@ -63,10 +63,47 @@ function validateServerInput(body) {
   if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
     return 'Port must be a valid number between 1 and 65535.';
   }
-  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
-    return 'Invalid IP address format.';
+  if (net.isIP(ip) === 0 && !HOSTNAME_RE.test(ip)) {
+    return 'Invalid IP address or hostname format.';
   }
   return null;
+}
+
+// ── Helper: validate news input ──
+const MAX_NEWS_CONTENT_SIZE = 50000; // 50KB per field
+
+function validateNewsInput(body) {
+  const { title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru } = body;
+  if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
+    return 'All title and content fields are required.';
+  }
+  const fields = [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru];
+  if (fields.some(f => String(f).length > MAX_NEWS_CONTENT_SIZE)) {
+    return 'Content is too long (max 50KB per field).';
+  }
+  return null;
+}
+
+function resolveNewsImage(croppedImageData, uploadedFile, existingImage = '') {
+  // If cropped base64 data URI is provided, save it as a file to avoid DB bloat
+  if (croppedImageData && croppedImageData.startsWith('data:image/')) {
+    try {
+      const matches = croppedImageData.match(/^data:image\/(\w+);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        // Limit decoded size to 5MB
+        if (buffer.length > 5 * 1024 * 1024) return existingImage;
+        const filename = 'cropped-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + '.' + ext;
+        fs.writeFileSync(path.join(uploadsDir, filename), buffer);
+        return '/uploads/news/' + filename;
+      }
+    } catch (e) {
+      console.error('Failed to save cropped image:', e.message);
+    }
+  }
+  if (uploadedFile) return '/uploads/news/' + uploadedFile.filename;
+  return existingImage;
 }
 
 // ── Dashboard ──
@@ -104,37 +141,19 @@ router.get('/news/:id/data', (req, res) => {
 });
 
 router.post('/news/create', upload.single('image'), (req, res) => {
-  const { 
-    title_en, title_ru, 
-    content_short_en, content_short_ru, 
-    content_full_en, content_full_ru, 
-    pinned,
-    croppedImageData
-  } = req.body;
-  
-  // Validate required fields
-  if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
-    req.flash('error', 'All title and content fields are required.');
+  const { title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, pinned, croppedImageData } = req.body;
+
+  const validationError = validateNewsInput(req.body);
+  if (validationError) {
+    req.flash('error', validationError);
     return res.redirect('/admin/news');
   }
-  
-  // Use cropped image data (base64) if provided, otherwise use uploaded file
-  let imageData = '';
-  if (croppedImageData) {
-    imageData = croppedImageData;
-  } else if (req.file) {
-    imageData = '/uploads/news/' + req.file.filename;
-  }
-  
+
+  const imageData = resolveNewsImage(croppedImageData, req.file);
+
   db.run(
     'INSERT INTO news (title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, image, pinned, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [
-      title_en, title_ru,
-      content_short_en, content_short_ru,
-      content_full_en, content_full_ru,
-      imageData, pinned ? 1 : 0,
-      req.session.user.username
-    ]
+    [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.session.user.username]
   );
 
   req.flash('success', 'News article created.');
@@ -142,34 +161,22 @@ router.post('/news/create', upload.single('image'), (req, res) => {
 });
 
 router.post('/news/:id', upload.single('image'), (req, res) => {
-  const { 
-    title_en, title_ru, 
-    content_short_en, content_short_ru, 
-    content_full_en, content_full_ru, 
-    pinned,
-    croppedImageData
-  } = req.body;
-  
+  const { title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, pinned, croppedImageData } = req.body;
+
   const article = db.get('SELECT * FROM news WHERE id = ?', [req.params.id]);
   if (!article) {
     req.flash('error', 'Article not found.');
     return res.redirect('/admin/news');
   }
-  
-  // Validate required fields
-  if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
-    req.flash('error', 'All title and content fields are required.');
+
+  const validationError = validateNewsInput(req.body);
+  if (validationError) {
+    req.flash('error', validationError);
     return res.redirect('/admin/news');
   }
-  
-  // Use cropped image data (base64) if provided, otherwise use uploaded file, otherwise keep existing
-  let imageData = article.image || '';
-  if (croppedImageData) {
-    imageData = croppedImageData;
-  } else if (req.file) {
-    imageData = '/uploads/news/' + req.file.filename;
-  }
-  
+
+  const imageData = resolveNewsImage(croppedImageData, req.file, article.image);
+
   db.run(
     'UPDATE news SET title_en = ?, title_ru = ?, content_short_en = ?, content_short_ru = ?, content_full_en = ?, content_full_ru = ?, image = ?, pinned = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.params.id]
@@ -285,6 +292,7 @@ router.post('/settings', (req, res) => {
   const keys = [
     'site_name', 'site_description', 'navbar_title',
     'status_check_interval', 'max_chat_messages', 'community_enabled',
+    'registration_enabled', 'monitoring_public',
     'hero_title', 'hero_subtitle', 'hero_style', 'games_list'
   ];
 
@@ -315,6 +323,9 @@ router.post('/users/:id/delete', (req, res) => {
     return res.redirect('/admin/users');
   }
   db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+  // Reset installed cache so the setup guard re-checks admin count
+  const resetCache = req.app.get('resetInstalledCache');
+  if (resetCache) resetCache();
   req.flash('success', 'User deleted.');
   res.redirect('/admin/users');
 });
@@ -331,9 +342,12 @@ router.post('/proxmox/save-connection', (req, res) => {
     proxmox_host: host || '',
     proxmox_port: port || '8006',
     proxmox_token_id: tokenId || '',
-    proxmox_token_secret: tokenSecret || '',
     proxmox_node: node || ''
   };
+  // Only overwrite the secret if user provided a new one
+  if (tokenSecret) {
+    keys.proxmox_token_secret = encrypt(tokenSecret);
+  }
   for (const [key, value] of Object.entries(keys)) {
     db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
   }

@@ -4,9 +4,13 @@ const db = require('../config/database');
 const activeUsers = new Map(); // socket.id -> username
 const usedNicknames = new Set(); // Set of lowercase usernames
 
-// Simple per-socket rate limiting for messages
-const MESSAGE_COOLDOWN_MS = 500; // min 500ms between messages
+// Per-socket rate limiting (min interval between messages)
+const MESSAGE_COOLDOWN_MS = 500;
 const lastMessageTime = new Map(); // socket.id -> timestamp
+
+// Per-username rate limiting (max messages per minute)
+const MAX_MESSAGES_PER_MINUTE = 15;
+const userMessageTimestamps = new Map(); // lowercase username -> [timestamps]
 
 module.exports = function(io) {
   io.on('connection', (socket) => {
@@ -60,13 +64,21 @@ module.exports = function(io) {
       if (now - lastTime < MESSAGE_COOLDOWN_MS) return;
       lastMessageTime.set(socket.id, now);
 
-      // Sanitize
-      const message = String(data.message).slice(0, 500).replace(/[<>&"'/]/g, c => {
-        const entities = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' };
-        return entities[c] || c;
-      });
+      // Per-username rate limit: max N messages per minute
+      const lowerUser = registeredUsername.toLowerCase();
+      const timestamps = userMessageTimestamps.get(lowerUser) || [];
+      const recentTimestamps = timestamps.filter(t => now - t < 60000);
+      if (recentTimestamps.length >= MAX_MESSAGES_PER_MINUTE) {
+        socket.emit('chat:error', 'Too many messages. Please slow down.');
+        return;
+      }
+      recentTimestamps.push(now);
+      userMessageTimestamps.set(lowerUser, recentTimestamps);
 
-      if (!message.trim()) return;
+      // Store raw text (no HTML encoding — escaping is done client-side)
+      const message = String(data.message).slice(0, 500).trim();
+
+      if (!message) return;
 
       const result = db.run(
         'INSERT INTO chat_messages (username, message, channel) VALUES (?, ?, ?)',
@@ -111,6 +123,7 @@ module.exports = function(io) {
       if (username) {
         activeUsers.delete(socket.id);
         usedNicknames.delete(username.toLowerCase());
+        userMessageTimestamps.delete(username.toLowerCase());
         io.emit('chat:online_users', Array.from(activeUsers.values()));
       }
       lastMessageTime.delete(socket.id);

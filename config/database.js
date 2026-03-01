@@ -150,10 +150,19 @@ function exec(sql) {
   db.exec(sql);
 }
 
+/**
+ * Helper: create a transaction function for batch operations
+ * Usage: const batch = transaction((stmt) => { stmt.run(...); });
+ */
+function transaction(fn) {
+  if (!db) throw new Error('Database not initialized');
+  return db.transaction(fn);
+}
+
 function stopAutoSave() {
   if (db) {
     db.close();
   }
 }
 
-module.exports = { initDatabase, all, get, run, exec, stopAutoSave };
+module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave };

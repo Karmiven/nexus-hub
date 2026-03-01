@@ -116,11 +116,14 @@ function queryMinecraft(host, port, timeout = 5000) {
 
 /**
  * Check all servers in database and update their status (in parallel)
+ * Pings are done concurrently, then all DB updates run in a single transaction.
  */
 async function checkAllServers() {
   const servers = db.all('SELECT * FROM servers');
+  if (!servers.length) return;
 
-  const results = await Promise.allSettled(
+  // 1. Collect results in parallel (network I/O)
+  const updates = await Promise.allSettled(
     servers.map(async (srv) => {
       try {
         let status = 'offline';
@@ -142,19 +145,27 @@ async function checkAllServers() {
           }
         }
 
-        db.run(
-          'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
-          [status, playerCount, maxPlayers, srv.id]
-        );
+        return { id: srv.id, status, playerCount, maxPlayers };
       } catch (err) {
         console.error(`Error checking server ${srv.name}:`, err.message);
-        db.run(
-          'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
-          ['offline', 0, 0, srv.id]
-        );
+        return { id: srv.id, status: 'offline', playerCount: 0, maxPlayers: 0 };
       }
     })
   );
+
+  // 2. Batch all DB writes in a single transaction
+  const batchUpdate = db.transaction((rows) => {
+    for (const result of rows) {
+      if (result.status !== 'fulfilled') continue;
+      const { id, status, playerCount, maxPlayers } = result.value;
+      db.run(
+        'UPDATE servers SET status = ?, player_count = ?, max_players = ?, last_checked = CURRENT_TIMESTAMP WHERE id = ?',
+        [status, playerCount, maxPlayers, id]
+      );
+    }
+  });
+
+  batchUpdate(updates);
 }
 
 /**
@@ -162,7 +173,7 @@ async function checkAllServers() {
  */
 function startStatusChecker() {
   const intervalSetting = db.get("SELECT value FROM settings WHERE key = 'status_check_interval'");
-  const intervalSeconds = parseInt(intervalSetting?.value) || 60;
+  const intervalSeconds = Math.max(parseInt(intervalSetting?.value) || 60, 10);
 
   // Check immediately on start
   checkAllServers().then(() => {
