@@ -4,6 +4,10 @@ const db = require('../config/database');
 const activeUsers = new Map(); // socket.id -> username
 const usedNicknames = new Set(); // Set of lowercase usernames
 
+// Simple per-socket rate limiting for messages
+const MESSAGE_COOLDOWN_MS = 500; // min 500ms between messages
+const lastMessageTime = new Map(); // socket.id -> timestamp
+
 module.exports = function(io) {
   io.on('connection', (socket) => {
 
@@ -18,10 +22,13 @@ module.exports = function(io) {
 
     // Handle user joining
     socket.on('chat:join', (username, callback) => {
+      if (typeof callback !== 'function') return;
       if (!username) return callback({ success: false, error: 'Nickname is required' });
       
-      const sanitizedUsername = String(username).slice(0, 30).replace(/[<>]/g, '').trim();
-      if (!sanitizedUsername) return callback({ success: false, error: 'Invalid nickname' });
+      const sanitizedUsername = String(username).slice(0, 30).replace(/[<>&"'/]/g, '').trim();
+      if (!sanitizedUsername || sanitizedUsername.length < 2) {
+        return callback({ success: false, error: 'Nickname must be at least 2 characters' });
+      }
       
       const lowerUsername = sanitizedUsername.toLowerCase();
       
@@ -47,8 +54,17 @@ module.exports = function(io) {
 
       if (!data.message) return;
 
+      // Rate limit: enforce cooldown between messages
+      const now = Date.now();
+      const lastTime = lastMessageTime.get(socket.id) || 0;
+      if (now - lastTime < MESSAGE_COOLDOWN_MS) return;
+      lastMessageTime.set(socket.id, now);
+
       // Sanitize
-      const message = String(data.message).slice(0, 500).replace(/[<>]/g, '');
+      const message = String(data.message).slice(0, 500).replace(/[<>&"'/]/g, c => {
+        const entities = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' };
+        return entities[c] || c;
+      });
 
       if (!message.trim()) return;
 
@@ -97,6 +113,7 @@ module.exports = function(io) {
         usedNicknames.delete(username.toLowerCase());
         io.emit('chat:online_users', Array.from(activeUsers.values()));
       }
+      lastMessageTime.delete(socket.id);
     });
   });
 };

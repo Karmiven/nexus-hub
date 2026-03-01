@@ -45,6 +45,30 @@ const upload = multer({
 // All admin routes require admin role
 router.use(isAdmin);
 
+// ── Helper: read all settings as object ──
+function getSettingsMap() {
+  const rows = db.all('SELECT * FROM settings');
+  const settings = {};
+  for (const row of rows) settings[row.key] = row.value;
+  return settings;
+}
+
+// ── Helper: validate server input ──
+function validateServerInput(body) {
+  const { name, game, ip, port } = body;
+  if (!name || !game || !ip || !port) {
+    return 'Name, game, IP, and port are required.';
+  }
+  const portNum = parseInt(port);
+  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    return 'Port must be a valid number between 1 and 65535.';
+  }
+  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
+    return 'Invalid IP address format.';
+  }
+  return null;
+}
+
 // ── Dashboard ──
 router.get('/', (req, res) => {
   const servers = db.all('SELECT * FROM servers ORDER BY sort_order ASC');
@@ -192,24 +216,12 @@ router.post('/servers/refresh', async (req, res) => {
 router.post('/servers', (req, res) => {
   const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order } = req.body;
   
-  // Validate required fields
-  if (!name || !game || !ip || !port) {
-    req.flash('error', 'Name, game, IP, and port are required.');
+  const validationError = validateServerInput(req.body);
+  if (validationError) {
+    req.flash('error', validationError);
     return res.redirect('/admin/servers');
   }
-  
-  // Validate port is a number
   const portNum = parseInt(port);
-  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    req.flash('error', 'Port must be a valid number between 1 and 65535.');
-    return res.redirect('/admin/servers');
-  }
-  
-  // Validate IP format (proper IPv4 or IPv6)
-  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
-    req.flash('error', 'Invalid IP address format.');
-    return res.redirect('/admin/servers');
-  }
   
   db.run(
     `INSERT INTO servers (name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order)
@@ -236,24 +248,12 @@ router.get('/servers/:id/edit', (req, res) => {
 router.post('/servers/:id', (req, res) => {
   const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, sort_order } = req.body;
   
-  // Validate required fields
-  if (!name || !game || !ip || !port) {
-    req.flash('error', 'Name, game, IP, and port are required.');
+  const validationError = validateServerInput(req.body);
+  if (validationError) {
+    req.flash('error', validationError);
     return res.redirect('/admin/servers');
   }
-  
-  // Validate port is a number
   const portNum = parseInt(port);
-  if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    req.flash('error', 'Port must be a valid number between 1 and 65535.');
-    return res.redirect('/admin/servers');
-  }
-  
-  // Validate IP format (proper IPv4 or IPv6)
-  if (!IPV4_REGEX.test(ip) && !IPV6_REGEX.test(ip)) {
-    req.flash('error', 'Invalid IP address format.');
-    return res.redirect('/admin/servers');
-  }
   
   db.run(
     `UPDATE servers SET name = ?, game = ?, ip = ?, port = ?, description = ?, image = ?,
@@ -277,11 +277,7 @@ router.post('/servers/:id/delete', (req, res) => {
 
 // ── Settings ──
 router.get('/settings', (req, res) => {
-  const settings = {};
-  const rows = db.all('SELECT * FROM settings');
-  for (const row of rows) {
-    settings[row.key] = row.value;
-  }
+  const settings = getSettingsMap();
   res.render('admin/settings', { title: 'Settings', settings });
 });
 
@@ -325,11 +321,7 @@ router.post('/users/:id/delete', (req, res) => {
 
 // ── Proxmox Admin Page ──
 router.get('/proxmox', (req, res) => {
-  const settings = {};
-  const rows = db.all('SELECT * FROM settings');
-  for (const row of rows) {
-    settings[row.key] = row.value;
-  }
+  const settings = getSettingsMap();
   res.render('admin/proxmox', { title: 'Proxmox', settings });
 });
 

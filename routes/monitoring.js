@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { ProxmoxClient } = require('../utils/proxmox');
+const { isAdmin } = require('../middleware/auth');
 
 /**
  * Build a ProxmoxClient from DB settings (or .env fallback)
@@ -14,17 +15,18 @@ function getProxmoxClient() {
   let node = process.env.PROXMOX_NODE || '';
 
   try {
-    const dbHost = db.get("SELECT value FROM settings WHERE key = 'proxmox_host'");
-    const dbPort = db.get("SELECT value FROM settings WHERE key = 'proxmox_port'");
-    const dbTokenId = db.get("SELECT value FROM settings WHERE key = 'proxmox_token_id'");
-    const dbTokenSecret = db.get("SELECT value FROM settings WHERE key = 'proxmox_token_secret'");
-    const dbNode = db.get("SELECT value FROM settings WHERE key = 'proxmox_node'");
+    // Batch-read all proxmox settings in one query
+    const rows = db.all(
+      "SELECT key, value FROM settings WHERE key IN ('proxmox_host', 'proxmox_port', 'proxmox_token_id', 'proxmox_token_secret', 'proxmox_node')"
+    );
+    const s = {};
+    for (const r of rows) s[r.key] = r.value;
 
-    if (dbHost?.value) host = dbHost.value;
-    if (dbPort?.value) port = parseInt(dbPort.value) || 8006;
-    if (dbTokenId?.value) tokenId = dbTokenId.value;
-    if (dbTokenSecret?.value) tokenSecret = dbTokenSecret.value;
-    if (dbNode?.value) node = dbNode.value;
+    if (s.proxmox_host) host = s.proxmox_host;
+    if (s.proxmox_port) port = parseInt(s.proxmox_port) || 8006;
+    if (s.proxmox_token_id) tokenId = s.proxmox_token_id;
+    if (s.proxmox_token_secret) tokenSecret = s.proxmox_token_secret;
+    if (s.proxmox_node) node = s.proxmox_node;
   } catch (e) { /* DB not ready */ }
 
   return new ProxmoxClient({ host, port, tokenId, tokenSecret, node });
@@ -64,7 +66,7 @@ router.get('/resources', async (req, res) => {
 });
 
 // ── JSON API: test connection (accepts inline creds from admin form) ──
-router.post('/test-connection', async (req, res) => {
+router.post('/test-connection', isAdmin, async (req, res) => {
   try {
     const { host, port, tokenId, tokenSecret, node } = req.body || {};
     let pve;
@@ -86,7 +88,7 @@ router.post('/test-connection', async (req, res) => {
 });
 
 // ── JSON API: discover guests (for admin picker) ──
-router.post('/discover-guests', async (req, res) => {
+router.post('/discover-guests', isAdmin, async (req, res) => {
   try {
     const { host, port, tokenId, tokenSecret, node } = req.body || {};
     let pve;

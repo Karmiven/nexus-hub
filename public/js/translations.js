@@ -55,6 +55,7 @@ const translations = {
     type_message: 'Type a message...',
     send: 'Send',
     is_typing: '{user} is typing...',
+    online_users: 'Online',
     
     // Auth
     welcome_back: 'Welcome Back',
@@ -393,6 +394,7 @@ const translations = {
     type_message: 'Напишите сообщение...',
     send: 'Отправить',
     is_typing: '{user} печатает...',
+    online_users: 'Онлайн',
     
     // Auth
     welcome_back: 'С возвращением',

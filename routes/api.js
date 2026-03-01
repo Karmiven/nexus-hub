@@ -4,9 +4,14 @@ const db = require('../config/database');
 const { tcpPing } = require('../utils/statusChecker');
 
 // Get all servers with status (JSON)
+// Don't expose IP/port to unauthenticated users
 router.get('/servers', (req, res) => {
+  const isAdmin = req.session?.user?.role === 'admin';
+  const fields = isAdmin
+    ? 'id, name, game, ip, port, status, player_count, max_players, last_checked, redirect_enabled, redirect_url'
+    : 'id, name, game, status, player_count, max_players, last_checked, redirect_enabled, redirect_url';
   const servers = db.all(
-    'SELECT id, name, game, ip, port, status, player_count, max_players, last_checked, redirect_enabled, redirect_url FROM servers ORDER BY sort_order ASC'
+    `SELECT ${fields} FROM servers ORDER BY sort_order ASC`
   );
   res.json({ success: true, servers });
 });

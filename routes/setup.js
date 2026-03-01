@@ -30,13 +30,27 @@ router.post('/', async (req, res) => {
     return res.redirect('/setup');
   }
 
+  // Sanitize username
+  const cleanUsername = String(admin_username).replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 30);
+  if (cleanUsername.length < 2) {
+    req.flash('error', 'Username must be at least 2 characters (letters, numbers, underscores).');
+    return res.redirect('/setup');
+  }
+
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(admin_email)) {
+    req.flash('error', 'Invalid email format.');
+    return res.redirect('/setup');
+  }
+
   if (admin_password !== admin_password_confirm) {
     req.flash('error', 'Passwords do not match.');
     return res.redirect('/setup');
   }
 
-  if (admin_password.length < 6) {
-    req.flash('error', 'Password must be at least 6 characters long.');
+  if (admin_password.length < 8) {
+    req.flash('error', 'Password must be at least 8 characters long.');
     return res.redirect('/setup');
   }
 
@@ -49,7 +63,7 @@ router.post('/', async (req, res) => {
     const hashedPassword = await bcrypt.hash(admin_password, 12);
     db.run(
       'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-      [admin_username, admin_email, hashedPassword, 'admin']
+      [cleanUsername, admin_email.trim().toLowerCase(), hashedPassword, 'admin']
     );
 
     req.flash('success', 'Setup complete! You can now log in.');

@@ -10,7 +10,6 @@ const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // 5 attempts per window
   message: 'Too many login attempts, please try again later.',
-  validate: { trustProxy: false },
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -75,13 +74,24 @@ router.post('/login', isGuest, loginLimiter, async (req, res) => {
   return res.redirect('/');
 });
 
-// Logout handler
+// Logout handler (POST to prevent CSRF via img/link prefetch)
+router.post('/logout', isAuthenticated, (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.redirect('/');
+    }
+    res.clearCookie('connect.sid');
+    res.redirect('/');
+  });
+});
+
+// Also support GET for backward compatibility, but redirect to POST form
 router.get('/logout', isAuthenticated, (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       return res.redirect('/');
     }
-    // Session destroyed successfully
+    res.clearCookie('connect.sid');
     res.redirect('/');
   });
 });

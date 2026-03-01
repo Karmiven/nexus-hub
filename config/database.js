@@ -53,18 +53,12 @@ async function initDatabase() {
 
   // Database schema is initialized with bilingual support
 
-  // Add last_login and last_ip columns if they don't exist
-  const userCols = db.pragma("table_info(users)");
-  
-  const hasLastLogin = userCols.some(col => col.name === 'last_login');
-  const hasLastIp = userCols.some(col => col.name === 'last_ip');
-  
-  if (!hasLastLogin) {
-    db.exec("ALTER TABLE users ADD COLUMN last_login DATETIME");
-  }
-  if (!hasLastIp) {
-    db.exec("ALTER TABLE users ADD COLUMN last_ip TEXT");
-  }
+  // Ensure columns exist for older databases upgraded in-place
+  try {
+    const userCols = db.pragma("table_info(users)").map(c => c.name);
+    if (!userCols.includes('last_login')) db.exec("ALTER TABLE users ADD COLUMN last_login DATETIME");
+    if (!userCols.includes('last_ip'))    db.exec("ALTER TABLE users ADD COLUMN last_ip TEXT");
+  } catch (e) { /* columns already exist */ }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS servers (

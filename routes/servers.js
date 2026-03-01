@@ -22,6 +22,15 @@ router.get('/:id', (req, res) => {
 
   // If redirect is enabled and URL is set, redirect to external site
   if (server.redirect_enabled && server.redirect_url) {
+    // Validate redirect URL to prevent open redirect attacks
+    try {
+      const redirectUrl = new URL(server.redirect_url);
+      if (!['http:', 'https:'].includes(redirectUrl.protocol)) {
+        return res.status(400).render('errors/404', { title: 'Invalid Redirect' });
+      }
+    } catch {
+      return res.status(400).render('errors/404', { title: 'Invalid Redirect' });
+    }
     return res.redirect(server.redirect_url);
   }
 
