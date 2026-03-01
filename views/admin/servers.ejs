@@ -25,6 +25,7 @@
         <h2 data-i18n="admin_all_servers">Все сервера</h2>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
           <form action="/admin/servers/refresh" method="POST" style="display:inline;">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button type="submit" class="btn btn-sm btn-outline"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_status">Обновить статус</span></button>
           </form>
           <button type="button" class="btn btn-primary btn-sm" onclick="window.location='/admin/servers/new'">+ <span data-i18n="admin_add_server">Добавить сервер</span></button>
@@ -63,6 +64,7 @@
                 <td class="actions-cell">
                   <a href="/admin/servers/<%= srv.id %>/edit" class="btn btn-xs btn-outline" data-i18n="admin_edit_short">Ред.</a>
                   <form action="/admin/servers/<%= srv.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_server') : 'Удалить этот сервер?')">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                   </form>
                 </td>

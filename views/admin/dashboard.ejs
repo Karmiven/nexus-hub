@@ -88,7 +88,7 @@ async function refreshAllServers() {
   btn.disabled = true;
   btn.querySelector('span').textContent = '...';
   try {
-    const res = await fetch('/admin/servers/refresh', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    const res = await fetch('/admin/servers/refresh', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest', 'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || '' } });
     const data = await res.json();
     if (data.success) {
       location.reload();

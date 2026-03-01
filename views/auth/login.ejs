@@ -7,6 +7,7 @@
       <p class="auth-subtitle" data-i18n="login_subtitle">Log in to your NexusHub account</p>
     </div>
     <form action="/auth/login" method="POST" class="auth-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="form-group">
         <label for="username" data-i18n="username">Username</label>
         <input type="text" id="username" name="username" class="form-input" required autofocus>

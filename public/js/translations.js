@@ -64,6 +64,18 @@ const translations = {
     password: 'Password',
     log_in: 'Log In',
     
+    // Registration
+    join_nexushub: 'Join NexusHub',
+    register_subtitle: 'Create your account and join the community',
+    username_required: 'Username *',
+    email_optional: 'Email (optional, for notifications)',
+    password_required: 'Password *',
+    confirm_password: 'Confirm Password *',
+    create_account: 'Create Account',
+    have_account: 'Already have an account?',
+    no_account: "Don't have an account?",
+    register_now: 'Register',
+    
     // Profile
     profile_title: 'Profile',
     account_info: 'Account Info',
@@ -276,6 +288,17 @@ const translations = {
     admin_settings_games_hint: 'Add games that will be displayed on the homepage. Icons are automatically resized to 64x64px.',
     admin_settings_game_name: 'Game Name',
     admin_settings_game_icon: 'Icon',
+    admin_settings_game_choose: 'Choose',
+    admin_settings_game_chosen: 'Chosen',
+    admin_settings_game_add: 'Add',
+    admin_settings_game_remove: 'Remove',
+    admin_settings_game_name_required: 'Enter game name',
+    admin_settings_game_icon_required: 'Select an icon',
+    admin_settings_game_name_placeholder: 'e.g. Minecraft',
+    admin_settings_registration_enable: 'Enable User Registration',
+    admin_settings_registration_hint: 'If disabled, new users will not be able to register.',
+    admin_settings_monitoring_enable: 'Open Monitoring for All Users',
+    admin_settings_monitoring_hint: 'If disabled, the monitoring page is only accessible to admins.',
 
     // Admin - Proxmox
     admin_tab_proxmox: 'Proxmox',
@@ -402,6 +425,18 @@ const translations = {
     username: 'Имя пользователя',
     password: 'Пароль',
     log_in: 'Войти',
+    
+    // Registration
+    join_nexushub: 'Присоединяйтесь к NexusHub',
+    register_subtitle: 'Создайте аккаунт и присоединяйтесь к сообществу',
+    username_required: 'Имя пользователя *',
+    email_optional: 'Email (необязательно, для уведомлений)',
+    password_required: 'Пароль *',
+    confirm_password: 'Подтвердите пароль *',
+    create_account: 'Создать аккаунт',
+    have_account: 'Уже есть аккаунт?',
+    no_account: 'Нет аккаунта?',
+    register_now: 'Зарегистрироваться',
     
     // Profile
     profile_title: 'Профиль',
@@ -615,6 +650,17 @@ const translations = {
     admin_settings_games_hint: 'Добавьте игры, которые будут отображаться на главной странице. Иконки автоматически сжимаются до 64x64px.',
     admin_settings_game_name: 'Название игры',
     admin_settings_game_icon: 'Иконка',
+    admin_settings_game_choose: 'Выбрать',
+    admin_settings_game_chosen: 'Выбрано',
+    admin_settings_game_add: 'Добавить',
+    admin_settings_game_remove: 'Удалить',
+    admin_settings_game_name_required: 'Введите название игры',
+    admin_settings_game_icon_required: 'Выберите иконку',
+    admin_settings_game_name_placeholder: 'Например: Minecraft',
+    admin_settings_registration_enable: 'Включить регистрацию пользователей',
+    admin_settings_registration_hint: 'Если выключено, новые пользователи не смогут зарегистрироваться.',
+    admin_settings_monitoring_enable: 'Открыть мониторинг для всех',
+    admin_settings_monitoring_hint: 'Если выключено, страница мониторинга доступна только администраторам.',
 
     // Admin - Proxmox
     admin_tab_proxmox: 'Proxmox',

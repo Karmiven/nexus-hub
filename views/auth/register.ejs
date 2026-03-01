@@ -7,6 +7,7 @@
       <p class="auth-subtitle" data-i18n="register_subtitle">Create your account and join the community</p>
     </div>
     <form action="/auth/register" method="POST" class="auth-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="form-group">
         <label for="username" data-i18n="username_required">Username *</label>
         <input type="text" id="username" name="username" class="form-input" required autofocus minlength="3" maxlength="30">

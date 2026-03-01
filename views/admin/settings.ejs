@@ -17,6 +17,7 @@
 <section class="section container settings-container">
   <div class="form-card settings-card">
     <form action="/admin/settings" method="POST" class="admin-form settings-grid">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <!-- Left column: Site & Appearance -->
       <div class="settings-col-left">
         <fieldset class="form-fieldset">
@@ -103,6 +104,28 @@
             <label for="max_chat_messages" data-i18n="admin_settings_chat_max">Макс. сообщений в чате</label>
             <input type="number" id="max_chat_messages" name="max_chat_messages" class="form-input" value="<%= settings.max_chat_messages || 200 %>" min="50" max="1000">
           </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="registration_enabled" value="0">
+              <input type="checkbox" name="registration_enabled" value="1" <%= String(settings.registration_enabled) === '1' ? 'checked' : '' %>>
+              <span data-i18n="admin_settings_registration_enable">Включить регистрацию пользователей</span>
+            </label>
+            <small class="form-hint" data-i18n="admin_settings_registration_hint">Если выключено, новые пользователи не смогут зарегистрироваться.</small>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="monitoring_public" value="0">
+              <input type="checkbox" name="monitoring_public" value="1" <%= String(settings.monitoring_public) === '1' ? 'checked' : '' %>>
+              <span data-i18n="admin_settings_monitoring_enable">Открыть мониторинг для всех</span>
+            </label>
+            <small class="form-hint" data-i18n="admin_settings_monitoring_hint">Если выключено, страница мониторинга доступна только администраторам.</small>
+          </div>
         </fieldset>
 
         <fieldset class="form-fieldset" style="margin-top: 1.5rem;">
@@ -117,14 +140,14 @@
             <div style="display: flex; gap: 0.5rem; align-items: flex-end; background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-sm); border: 1px dashed var(--border);">
               <div style="flex-grow: 1;">
                 <label class="form-label" style="font-size: 0.8rem;" data-i18n="admin_settings_game_name">Название игры</label>
-                <input type="text" id="newGameName" class="form-input form-input-sm" placeholder="Например: Minecraft">
+                <input type="text" id="newGameName" class="form-input form-input-sm" data-i18n-placeholder="admin_settings_game_name_placeholder" placeholder="e.g. Minecraft">
               </div>
               <div>
                 <label class="form-label" style="font-size: 0.8rem;" data-i18n="admin_settings_game_icon">Иконка</label>
                 <input type="file" id="newGameIcon" accept="image/*" style="display: none;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('newGameIcon').click()" id="newGameIconBtn"><i data-lucide="folder-open"></i> Выбрать</button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('newGameIcon').click()" id="newGameIconBtn"><i data-lucide="folder-open"></i> <span data-i18n="admin_settings_game_choose">Выбрать</span></button>
               </div>
-              <button type="button" class="btn btn-sm btn-primary" onclick="addGame()">+ Добавить</button>
+              <button type="button" class="btn btn-sm btn-primary" onclick="addGame()">+ <span data-i18n="admin_settings_game_add">Добавить</span></button>
             </div>
             
             <input type="hidden" id="games_list" name="games_list" value="<%= settings.games_list || '[]' %>">
@@ -413,7 +436,8 @@
     reader.onload = (event) => {
       // Save the raw base64 string to preserve original transparency and quality
       currentIconBase64 = event.target.result;
-      newGameIconBtn.innerHTML = '<i data-lucide="check"></i> Выбрано';
+      const _chosenText = window.i18n?.t('admin_settings_game_chosen') || 'Выбрано';
+      newGameIconBtn.innerHTML = '<i data-lucide="check"></i> ' + _chosenText;
       if (typeof lucide !== 'undefined') lucide.createIcons();
       newGameIconBtn.classList.add('btn-success');
       newGameIconBtn.classList.remove('btn-outline');
@@ -436,7 +460,7 @@
       div.innerHTML = `
         <img src="${game.icon}" alt="${game.name}" style="width: 32px; height: 32px; object-fit: contain;">
         <span style="flex-grow: 1; font-weight: 600;">${game.name}</span>
-        <button type="button" class="btn btn-xs btn-danger" onclick="removeGame(${index})">Удалить</button>
+        <button type="button" class="btn btn-xs btn-danger" onclick="removeGame(${index})">${window.i18n?.t('admin_settings_game_remove') || 'Удалить'}</button>
       `;
       gamesListContainer.appendChild(div);
     });
@@ -445,8 +469,8 @@
 
   window.addGame = function() {
     const name = newGameName.value.trim();
-    if (!name) return alert('Введите название игры');
-    if (!currentIconBase64) return alert('Выберите иконку');
+    if (!name) return alert(window.i18n?.t('admin_settings_game_name_required') || 'Enter game name');
+    if (!currentIconBase64) return alert(window.i18n?.t('admin_settings_game_icon_required') || 'Select an icon');
 
     games.push({ name, icon: currentIconBase64 });
     renderGames();
@@ -455,7 +479,8 @@
     newGameName.value = '';
     newGameIcon.value = '';
     currentIconBase64 = '';
-    newGameIconBtn.innerHTML = '<i data-lucide="folder-open"></i> Выбрать';
+    const _chooseText = window.i18n?.t('admin_settings_game_choose') || 'Выбрать';
+    newGameIconBtn.innerHTML = '<i data-lucide="folder-open"></i> ' + _chooseText;
     if (typeof lucide !== 'undefined') lucide.createIcons();
     newGameIconBtn.classList.remove('btn-success');
     newGameIconBtn.classList.add('btn-outline');

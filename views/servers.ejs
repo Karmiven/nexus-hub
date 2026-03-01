@@ -28,10 +28,12 @@
               <span class="info-label" data-i18n="game">Game</span>
               <span class="info-value"><%= srv.game %></span>
             </div>
+            <% if (user && user.role === 'admin') { %>
             <div class="info-row">
               <span class="info-label" data-i18n="address">Address</span>
               <span class="info-value mono"><%= srv.ip %>:<%= srv.port %></span>
             </div>
+            <% } %>
             <% if (srv.show_player_count && srv.status === 'online') { %>
               <div class="info-row">
                 <span class="info-label" data-i18n="players">Players</span>

@@ -40,13 +40,13 @@
         %>
         <article class="news-card<%= article.pinned ? ' pinned' : '' %>" onclick="openNewsModal(this)" style="cursor:pointer;"
           data-id="<%= article.id %>"
-          data-title-en="<%= article.title_en.replace(/"/g, '&quot;') %>"
-          data-title-ru="<%= article.title_ru.replace(/"/g, '&quot;') %>"
-          data-content-short-en="<%= article.content_short_en.replace(/"/g, '&quot;') %>"
-          data-content-short-ru="<%= article.content_short_ru.replace(/"/g, '&quot;') %>"
-          data-content-full-en="<%= article.content_full_en.replace(/"/g, '&quot;').replace(/\n/g, '\\n') %>"
-          data-content-full-ru="<%= article.content_full_ru.replace(/"/g, '&quot;').replace(/\n/g, '\\n') %>"
-          data-author="<%= article.author.replace(/"/g, '&quot;') %>"
+          data-title-en="<%- encodeURIComponent(article.title_en) %>"
+          data-title-ru="<%- encodeURIComponent(article.title_ru) %>"
+          data-content-short-en="<%- encodeURIComponent(article.content_short_en) %>"
+          data-content-short-ru="<%- encodeURIComponent(article.content_short_ru) %>"
+          data-content-full-en="<%- encodeURIComponent(article.content_full_en) %>"
+          data-content-full-ru="<%- encodeURIComponent(article.content_full_ru) %>"
+          data-author="<%- encodeURIComponent(article.author) %>"
           data-date="<%= article.created_at %>"
           data-image="<%= article.image || '' %>">
           <% if (article.pinned) { %>
@@ -91,15 +91,27 @@
         return (window.i18n && window.i18n.getCurrentLanguage()) || 'en';
       }
 
+      function decodeAttr(element, key) {
+        var raw = element.getAttribute('data-' + key) || '';
+        try { return decodeURIComponent(raw); } catch(e) { return raw; }
+      }
+
       function openNewsModal(element) {
         const lang = getNewsLang();
-        const title = element.dataset['title' + lang.charAt(0).toUpperCase() + lang.slice(1)] || element.dataset.titleEn;
-        const contentFull = (element.dataset['contentFull' + lang.charAt(0).toUpperCase() + lang.slice(1)] || element.dataset.contentFullEn).replace(/\\n/g, '\n');
+        const suffix = lang.charAt(0).toUpperCase() + lang.slice(1);
+        const title = decodeAttr(element, 'title-' + lang) || decodeAttr(element, 'title-en');
+        const contentFull = decodeAttr(element, 'content-full-' + lang) || decodeAttr(element, 'content-full-en');
 
         document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + element.dataset.author;
+        document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + decodeAttr(element, 'author');
         document.getElementById('modalDate').textContent = new Date(element.dataset.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-        document.getElementById('modalContent').innerHTML = contentFull.replace(/\n/g, '<br>');
+        // Safe: use textContent per line to prevent XSS
+        const modalContent = document.getElementById('modalContent');
+        modalContent.textContent = '';
+        contentFull.split('\n').forEach(function(line, i) {
+          if (i > 0) modalContent.appendChild(document.createElement('br'));
+          modalContent.appendChild(document.createTextNode(line));
+        });
         document.getElementById('newsModal').style.display = 'flex';
       }
       
@@ -134,11 +146,11 @@
             body.style.transform = 'translateY(6px)';
 
             setTimeout(() => {
-              // Swap content
+              // Swap content (decode from URI-encoded data attributes)
               const titleEl = body.querySelector('.news-title');
               const excerptEl = body.querySelector('.news-excerpt');
-              if (titleEl) titleEl.textContent = card.dataset['title' + suffix] || card.dataset.titleEn;
-              if (excerptEl) excerptEl.textContent = card.dataset['contentShort' + suffix] || card.dataset.contentShortEn;
+              if (titleEl) titleEl.textContent = decodeAttr(card, 'title-' + lang) || decodeAttr(card, 'title-en');
+              if (excerptEl) excerptEl.textContent = decodeAttr(card, 'content-short-' + lang) || decodeAttr(card, 'content-short-en');
 
               // Fade in
               body.style.opacity = '1';

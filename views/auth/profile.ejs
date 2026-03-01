@@ -33,6 +33,7 @@
     <div class="profile-card">
       <h2 data-i18n="notification_prefs">Notification Preferences</h2>
       <form action="/auth/profile/notifications" method="POST" class="auth-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <div class="form-group">
           <label class="checkbox-label">
             <input type="checkbox" name="notify_email" value="1" <%= profile.notify_email ? 'checked' : '' %>>

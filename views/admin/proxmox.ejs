@@ -41,7 +41,7 @@
           </div>
           <div class="form-group">
             <label for="proxmox_token_secret">API Token Secret</label>
-            <input type="password" id="proxmox_token_secret" name="proxmox_token_secret" class="form-input" value="<%= settings.proxmox_token_secret || '' %>" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            <input type="password" id="proxmox_token_secret" name="proxmox_token_secret" class="form-input" value="" placeholder="<%= settings.proxmox_token_secret ? '••••••••  (saved — leave blank to keep)' : 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx' %>">
           </div>
           <div class="form-group">
             <label for="proxmox_node" data-i18n="pve_node_label">Имя ноды (необязательно)</label>
@@ -232,6 +232,8 @@
 </style>
 
 <script>
+  var _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
   function getFormValues() {
     return {
       host: document.getElementById('proxmox_host').value.trim(),
@@ -260,7 +262,7 @@
     try {
       var res = await fetch('/monitoring/test-connection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': _csrfToken },
         body: JSON.stringify(getFormValues())
       });
       var data = await res.json();
@@ -289,7 +291,7 @@
       var vals = getFormValues();
       var res = await fetch('/admin/proxmox/save-connection', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': _csrfToken },
         body: JSON.stringify(vals)
       });
       var data = await res.json();
@@ -314,7 +316,7 @@
     try {
       var res = await fetch('/monitoring/discover-guests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': _csrfToken },
         body: JSON.stringify(getFormValues())
       });
       var data = await res.json();
@@ -421,7 +423,7 @@
     try {
       var res = await fetch('/admin/proxmox/save-guests', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': _csrfToken },
         body: JSON.stringify({ guests: selected })
       });
       var data = await res.json();

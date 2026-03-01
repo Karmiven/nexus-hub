@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/themes/dark.css">
@@ -12,7 +13,7 @@
   <link rel="stylesheet" href="/css/themes/retro-90s-vaporwave.css">
   <link rel="stylesheet" href="/css/themes/vampire.css">
   <link rel="stylesheet" href="/css/desktop.css">
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&family=VT323&display=swap" rel="stylesheet">
   <script src="/js/translations.js"></script>
@@ -48,7 +49,9 @@
         <li class="nav-item nav-item-home"><a href="/" class="nav-link" data-i18n="nav_home">Home</a></li>
         <li class="nav-item nav-item-servers"><a href="/servers" class="nav-link" data-i18n="nav_servers">Servers</a></li>
         <li class="nav-item nav-item-community"><a href="/community" class="nav-link" data-i18n="nav_community">Community</a></li>
+        <% if (monitoringPublic || (user && user.role === 'admin')) { %>
         <li class="nav-item nav-item-monitoring"><a href="/monitoring/dashboard" class="nav-link" data-i18n="nav_monitoring">Monitoring</a></li>
+        <% } %>
 
         <li class="nav-item nav-item-admin <%= (user && user.role === 'admin') ? '' : 'nav-item-placeholder' %>">
           <% if (user && user.role === 'admin') { %>
@@ -58,7 +61,10 @@
 
         <li class="nav-item nav-item-auth">
           <% if (user) { %>
-            <a href="/auth/logout" class="nav-link btn-nav-outline" data-i18n="nav_logout">Logout</a>
+            <form action="/auth/logout" method="POST" style="display:inline;margin:0;padding:0;">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="nav-link btn-nav-outline" data-i18n="nav_logout">Logout</button>
+            </form>
           <% } else { %>
             <a href="/auth/login" class="nav-link btn-nav-outline" data-i18n="nav_login">Login</a>
           <% } %>

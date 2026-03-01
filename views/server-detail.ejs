@@ -23,10 +23,12 @@
         <span class="detail-label" data-i18n="game">Game</span>
         <span class="detail-value"><%= server.game %></span>
       </div>
+      <% if (user && user.role === 'admin') { %>
       <div class="detail-item">
         <span class="detail-label" data-i18n="server_address">Server Address</span>
         <span class="detail-value mono"><%= server.ip %>:<%= server.port %></span>
       </div>
+      <% } %>
       <% if (server.show_player_count && server.status === 'online') { %>
         <div class="detail-item">
           <span class="detail-label" data-i18n="players_online">Players Online</span>
@@ -47,9 +49,11 @@
     <% } %>
 
     <div class="detail-actions">
+      <% if (user && user.role === 'admin') { %>
       <button class="btn btn-primary" data-i18n="copy_address" onclick="copyToClipboard('<%= server.ip %>:<%= server.port %>')">
         Copy Address
       </button>
+      <% } %>
       <% if (server.redirect_enabled && server.redirect_url) { %>
         <a href="<%= server.redirect_url %>" target="_blank" class="btn btn-accent" data-i18n="open_launcher">
           Open Launcher <i data-lucide="external-link"></i>

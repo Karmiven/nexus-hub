@@ -245,7 +245,8 @@ function initLanguageSelector() {
     fetch('/api/language', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || ''
       },
       body: JSON.stringify({ language: e.target.value })
     }).catch(() => {});

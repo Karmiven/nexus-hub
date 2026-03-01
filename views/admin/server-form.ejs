@@ -17,6 +17,7 @@
 <section class="section container">
   <div class="form-card">
     <form action="<%= server ? '/admin/servers/' + server.id : '/admin/servers' %>" method="POST" class="admin-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="form-row">
         <div class="form-group">
           <label for="name" data-i18n="admin_server_name">Название сервера *</label>

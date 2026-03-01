@@ -51,6 +51,7 @@
                 <td class="actions-cell">
                   <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
                   <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_article') : 'Удалить эту статью?')">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                   </form>
                 </td>
@@ -72,6 +73,7 @@
     </div>
 
     <form id="newsForm" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; overflow: hidden;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="modal-body-scroll">
         <div class="bilingual-form-unified">
 

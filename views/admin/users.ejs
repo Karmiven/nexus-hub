@@ -49,6 +49,7 @@
               <td><%= new Date(u.created_at).toLocaleDateString() %></td>
               <td class="actions-cell">
                 <form action="/admin/users/<%= u.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm((window.i18n ? window.i18n.t('admin_confirm_delete_user') : 'Удалить пользователя') + ' <%= u.username %>?')">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                 </form>
               </td>

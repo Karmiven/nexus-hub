@@ -17,6 +17,7 @@
 <section class="section container">
   <div class="form-card">
     <form action="<%= article ? '/admin/news/' + article.id : '/admin/news' %>" method="POST" class="admin-form">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="form-group">
         <label for="title" data-i18n="admin_article_title">Заголовок *</label>
         <input type="text" id="title" name="title" class="form-input" required value="<%= article ? article.title : '' %>">

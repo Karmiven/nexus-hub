@@ -184,6 +184,7 @@
       <h1 class="page-title"><%= article ? 'Edit' : 'Create' %> Bilingual News</h1>
       
       <form action="<%= article ? '/admin/news/' + article.id : '/admin/news/create' %>" method="POST" enctype="multipart/form-data" class="bilingual-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <!-- English Column -->
         <div class="language-column">
           <div class="language-header">
