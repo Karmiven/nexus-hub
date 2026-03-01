@@ -1,10 +1,10 @@
 # ⚡ NexusHub
 
-> **🚧 Work In Progress** — This project is under active development. Features may change, break, or be incomplete.
+> **🚧 Work In Progress** — Under active development. Some features may be incomplete.
 
-A self-hosted gaming server hub for managing, monitoring, and showcasing game servers running on Proxmox VMs. Built with Node.js, Express, and a multi-theme CSS system with 6 atmospheric visual themes.
+Self-hosted gaming server hub for managing, monitoring, and showcasing game servers. Built with Node.js + Express + SQLite, featuring real-time chat, Proxmox VM/LXC monitoring, and 6 visual themes.
 
-![Node.js](https://img.shields.io/badge/Node.js-24+-green?logo=node.js)
+![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)
 ![Express](https://img.shields.io/badge/Express-4.18-blue?logo=express)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 ![Status](https://img.shields.io/badge/Status-WIP-orange)
@@ -13,70 +13,14 @@ A self-hosted gaming server hub for managing, monitoring, and showcasing game se
 
 ## Features
 
-### Public Pages
-- **Homepage** — Hero section with customizable animated title (7 styles: Glitch, Gradient, Neon Pulse, Typewriter, Chrome, Retro, Hologram), latest news feed, hosted games showcase, live server stats
-- **Server Browser** — Live online/offline status via TCP ping, player counts (Minecraft), redirect-to-launcher support
-- **Server Detail** — Per-server info page with copy-address button and optional external launcher link
-- **Community Chat** — Real-time chat powered by Socket.io with typing indicators, online users list, nickname persistence
-- **News System** — Bilingual news articles (EN/RU) with separate fields for title, short content, and full content; pinned articles, image cropping, and modal reading view with animated language switching
-
-
-### Admin Panel (RU/EN UI)
-- **Dashboard** — Stats overview (news count, server count, online servers, registered users) + server status monitor
-- **News Management** — Full CRUD with bilingual editor (EN/RU side-by-side), image upload with 16:9 cropper (Cropper.js), pin/unpin, inline preview (mini card + full article)
-- **Server Management** — Add/edit/delete servers, configure redirect URLs, toggle player count display, manual status refresh
-- **User Management** — View all users, see last login/IP, delete accounts
-- **Settings** — Two-column layout with:
-  - *Site & Appearance*: site name, description, navbar title, hero title/subtitle, hero animation style (7 options with live preview)
-  - *Server & Community*: status check interval, community chat toggle, max chat messages
-  - *Games List*: add/remove games with name + icon upload (stored as base64 data URIs)
-
-#### Proxmox Monitoring (LXC/VM)
-- **Guest Discovery**: Now sorts containers/VMs by Node > VMID, and visually groups them by node in the admin UI
-- **Permission Hints**: If no guests are found, the UI shows a detailed hint with the exact Proxmox permissions required (`VM.Audit`, `Sys.Audit`, `Datastore.Audit`) and step-by-step instructions (EN/RU)
-- **i18n**: All Proxmox-related admin UI and permission hints are fully translated (EN/RU)
-
----
-## Changelog
-
-### 2026-02-26
-- Proxmox guest discovery: sort by Node > VMID, group by node in UI
-- Show detailed permission requirements if no guests found (EN/RU)
-- All Proxmox admin UI and hints now fully i18n (EN/RU)
-
----
-### Theming — 6 Visual Themes
-
-Themes are selected via a dropdown in the navbar. Saved to `localStorage` and applied instantly via CSS custom properties (28+ variables per theme). All themes now use the same font families and element sizing for perfect layout stability—only colors, shadows, and effects change.
-
-| Theme | Vibe |
-|---|---|
-| **Dark** | Blue-cyan neon — default dark gaming aesthetic |
-| **Light** | Clean & bright — high-contrast light mode |
-| **Cyberpunk Purple** | Night City — neon pink/cyan, animated grid overlay, glitch effects, sharp corners |
-| **Matrix Green** | Wake up, Neo — terminal green, scanlines, CRT glow |
-| **Retro 90s Vaporwave** | Miami Sunsets — purple/pink/cyan neon, VHS noise, chromatic aberration |
-| **Vampire** | Gothic dusk — deep reds, subtle grain, dramatic shadows |
-
-Special effects per theme:
-- **Cyberpunk**: Animated CSS grid background, glitch animation on button hover
-- **Matrix / Retro**: Scanline overlay (animated)
-- **Retro**: VHS noise via SVG `feTurbulence` filter, chromatic aberration on headings
-- **Vampire**: Subtle animated grain overlay, gothic text shadows
-- **All themes**: Glassmorphism navbar, smooth 0.35s transitions between themes, no font or layout jumps
-
-### Internationalization (i18n)
-- Full bilingual support: **English** and **Russian**
-- Language switcher in the navbar — all text updates dynamically without page reload
-- `data-i18n` attribute system with custom `I18n` class handling translations client-side
-- News articles support separate EN/RU content with animated language switching
-
-### Security
-- bcrypt password hashing
-- Express session authentication
-- Helmet.js security headers
-- Rate limiting on API endpoints
-- Admin routes return 404 for non-admin users (stealth mode)
+- **Server Browser** — Live online/offline status (TCP ping), Minecraft player counts, redirect-to-launcher support
+- **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting
+- **News System** — Bilingual articles (EN/RU), image upload with 16:9 cropper, pinned posts
+- **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats, grouped by node
+- **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with unique visual effects
+- **i18n** — Full EN/RU support, dynamic language switching without page reload
+- **Admin Panel** — News/servers/users/settings CRUD, hero animation styles (7 options), games showcase editor
+- **Security** — Helmet CSP, bcrypt auth, rate limiting, admin routes hidden as 404, session-based auth
 
 ---
 
@@ -84,278 +28,98 @@ Special effects per theme:
 
 | Layer | Technology |
 |---|---|
-| Runtime | Node.js (v18+, tested on v24) |
-| Framework | Express.js 4.18 |
-| Database | SQLite via **sql.js** (in-memory with file persistence) |
-| Templating | EJS |
-| Real-time | Socket.io 4.x |
+| Runtime | Node.js v18+ |
+| Framework | Express.js 4 |
+| Database | SQLite via **better-sqlite3** (WAL mode) |
+| Templates | EJS |
+| Real-time | Socket.io 4 |
 | Auth | bcryptjs + express-session |
-| Security | helmet, express-rate-limit |
-| File Uploads | multer |
-| Image Cropping | Cropper.js (CDN) |
-| CSS | Custom CSS with 28+ CSS variables per theme, 6 themes, special effects (scanlines, VHS noise, glitch, grain), layout-stable theme switching |
-| i18n | Custom client-side I18n class + `data-i18n` attributes |
+| Security | Helmet, express-rate-limit |
+| Uploads | Multer + Cropper.js |
+| i18n | Custom client-side class + `data-i18n` attributes |
+
+---
+
+## Quick Start
+
+```bash
+# 1. Install
+npm install
+
+# 2. Configure .env
+PORT=3000
+SESSION_SECRET=your-random-secret-here
+
+# 3. (Optional) Seed sample data
+npm run seed
+
+# 4. Start
+npm run dev    # development (nodemon)
+npm start      # production
+```
+
+Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` to create an admin account.
+
+If you used `npm run seed`, default credentials are `Admin` / `admin123`.
 
 ---
 
 ## Project Structure
 
 ```
-nexushub/
-├── server.js                # Express app entry point
-├── package.json
-├── .env                     # Environment variables
-│
-├── config/
-│   └── database.js          # sql.js setup, schema init, auto-save every 5s
-│
-├── middleware/
-│   └── auth.js              # isAuthenticated, isAdmin, isGuest guards
-│
+├── server.js              # App entry point
+├── config/database.js     # better-sqlite3 setup, schema, migrations
+├── middleware/auth.js      # isAuthenticated, isAdmin, isGuest
 ├── routes/
-│   ├── home.js              # Homepage (hero, news, games list, stats)
-│   ├── servers.js           # Server listing & detail pages
-│   ├── admin.js             # Admin CRUD (news/servers/users/settings/games)
-│   ├── auth.js              # Login & logout
-│   ├── community.js         # Chat page
-│   ├── monitoring.js        # Resource monitoring dashboard
-│   └── api.js               # JSON API endpoints
-│
-├── sockets/
-│   └── chat.js              # Socket.io chat handler (typing, online users)
-│
+│   ├── home.js            # Homepage (hero, news, stats)
+│   ├── servers.js         # Server browser & detail pages
+│   ├── community.js       # Chat page
+│   ├── admin.js           # Admin CRUD (news/servers/users/settings)
+│   ├── auth.js            # Login & logout
+│   ├── monitoring.js      # Proxmox monitoring dashboard & API
+│   ├── api.js             # Public JSON API
+│   └── setup.js           # First-run setup wizard
+├── sockets/chat.js        # Socket.io chat (typing, online users, rate limit)
 ├── utils/
-│   ├── statusChecker.js     # TCP ping, Minecraft query, periodic checks
-│   └── resourceMonitor.js   # Server resource monitoring
-│
-├── seeds/
-│   └── seed.js              # Seed admin user + sample data
-│
-├── data/
-│   └── nexushub.db          # SQLite database file (auto-created)
-│
-├── uploads/
-│   └── news/                # Uploaded news images
-│
-├── views/
-│   ├── partials/
-│   │   ├── header.ejs       # Navbar, theme dropdown (6 themes), language selector
-│   │   └── footer.ejs       # Footer with quick links
-│   ├── home.ejs             # Homepage: hero, news, games showcase
-│   ├── servers.ejs          # Server browser
-│   ├── server-detail.ejs    # Individual server page
-│   ├── community.ejs        # Real-time chat with online users
-│   ├── auth/
-│   │   ├── login.ejs        # Login page
-│   │   ├── register.ejs     # Registration page
-│   │   └── profile.ejs      # User profile
-│   ├── admin/
-│   │   ├── dashboard.ejs    # Admin overview
-│   │   ├── news-unified.ejs # Bilingual news editor with preview modal
-│   │   ├── servers.ejs      # Server management table
-│   │   ├── server-form.ejs  # Add/edit server form
-│   │   ├── users.ejs        # User management table
-│   │   └── settings.ejs     # Site settings + hero styles + games list
-│   ├── monitoring/
-│   │   └── dashboard.ejs    # Resource monitoring
-│   └── errors/
-│       ├── 404.ejs
-│       └── 500.ejs
-│
+│   ├── statusChecker.js   # TCP ping, Minecraft query, periodic checks
+│   └── proxmox.js         # Proxmox VE API client (token auth)
+├── views/                 # EJS templates (admin/, auth/, monitoring/, errors/)
 ├── public/
-│   ├── css/
-│   │   ├── style.css        # Main stylesheet (~2300 lines) — 6 theme tokens, effects, all components
-│   │   └── desktop.css      # Desktop navbar overrides
-│   └── js/
-│       ├── main.js          # Theme switcher (dropdown), language selector, page transitions, polling
-│       └── translations.js  # I18n class + EN/RU translation keys
-│
-└── locales/                  # Reserved for future server-side i18n
+│   ├── css/               # style.css + desktop.css + 6 theme files
+│   └── js/                # main.js (client logic) + translations.js (i18n)
+├── data/                  # nexushub.db (auto-created)
+└── uploads/news/          # Uploaded images
 ```
 
 ---
 
-## Quick Start
+## API
 
-### Prerequisites
-
-- **Node.js** v18+ (tested on v24)
-- **npm** v9+
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Configure Environment
-
-Create a `.env` file in the project root:
-
-```env
-PORT=3000
-SESSION_SECRET=your-random-secret-here
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=YourSecurePassword123
-```
-
-### 3. Seed the Database
-
-Creates the admin user and populates sample news articles & servers:
-
-```bash
-npm run seed
-```
-
-### 4. Start the Server
-
-**Development** (auto-reload with nodemon):
-
-```bash
-npm run dev
-```
-
-**Production**:
-
-```bash
-npm start
-```
-
-### 5. Open in Browser
-
-| Page | URL |
-|---|---|
-| Homepage | `http://localhost:3000` |
-| Servers | `http://localhost:3000/servers` |
-| Community Chat | `http://localhost:3000/community` |
-| Monitoring | `http://localhost:3000/monitoring/dashboard` |
-| Admin Panel | `http://localhost:3000/admin` |
-| Login | `http://localhost:3000/auth/login` |
-
-> **Default admin credentials:** `admin` / `admin123` — change these in `.env` before running the seed script.
-
----
-
-## Admin Panel
-
-The admin panel is **hidden** from non-admin users — accessing `/admin` without admin privileges returns a 404 page (not a 403).
-
-1. Log in at `/auth/login` with admin credentials
-2. Navigate to `/admin`
-
-### Adding a Game Server
-
-Admin → Servers → **+ Add Server**:
-
-| Field | Description | Example |
+| Method | Endpoint | Description |
 |---|---|---|
-| Server Name | Display name | AzerothCore WoW |
-| Game | Game title | World of Warcraft |
-| IP Address | Server IP | 192.168.1.100 |
-| Port | Game port | 8085 |
-| Description | Brief info | WotLK 3.3.5a private server |
-| Redirect Enabled | Opens external link instead of IP | ✅ |
-| Redirect URL | External launcher URL | `https://your-launcher.com` |
-| Show Player Count | Minecraft servers only | ✅ |
-| Sort Order | Display priority (lower = higher) | 1 |
-
-### Managing the Games List
-
-Admin → Settings → **Games List**:
-
-- Add games with a name and icon image (any format, stored as base64)
-- Icons with transparent backgrounds (PNG) are fully supported
-- Games appear on the homepage in a showcase grid
-- Remove games with the delete button
-
-### Server Status Checking
-
-- **TCP ping** (`net.Socket`) checks if `IP:PORT` is reachable
-- **Minecraft** servers with player count enabled use the MC Server List Ping protocol to fetch online players
-- Automatic checks run at a configurable interval (default: 60 seconds, adjustable in Settings)
-- Manual refresh available from Admin → Servers → 🔄 **Refresh Status**
-
-### Hero Title Customization
-
-Admin → Settings → *Hero Title*:
-
-Seven animation styles are available with a live preview:
-
-| Style | Effect |
-|---|---|
-| **Glitch** | Cyberpunk glitch distortion |
-| **Gradient** | Animated color gradient |
-| **Neon Pulse** | Pulsing neon glow |
-| **Typewriter** | Character-by-character typing |
-| **Chrome** | Metallic chrome reflection |
-| **Retro** | Pixelated retro gaming |
-| **Hologram** | Holographic shimmer |
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description | Auth |
-|---|---|---|---|
-| `GET` | `/api/servers` | All servers with live status | — |
-| `GET` | `/api/servers/:id/status` | Single server status | — |
-| `GET` | `/api/news?limit=10` | Latest news articles | — |
-| `POST` | `/api/language` | Set preferred language (en/ru) | — |
-
----
-
-## Database
-
-NexusHub uses **sql.js** — a pure JavaScript SQLite implementation that runs in-memory and persists to `data/nexushub.db`. Auto-saves every 5 seconds when changes are detected.
-
-### Tables
-
-| Table | Key Fields |
-|---|---|
-| `users` | id, username, email, password (bcrypt), role, notify_email, notify_discord, last_login, last_ip, created_at |
-| `news` | id, title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, image, author, pinned, created_at, updated_at |
-| `servers` | id, name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, player_count, max_players, status, last_checked, sort_order, created_at |
-| `chat_messages` | id, username, message, channel, created_at |
-| `settings` | key (PK), value — key-value store for all site configuration |
-
-### Settings Keys
-
-| Key | Default | Description |
-|---|---|---|
-| `site_name` | NexusHub | Site title |
-| `site_description` | — | Site description |
-| `navbar_title` | NexusHub | Brand name in navbar |
-| `hero_title` | NexusHub | Hero section title |
-| `hero_subtitle` | — | Hero section subtitle |
-| `hero_style` | glitch | Hero title animation style |
-| `status_check_interval` | 60 | Server ping interval (seconds) |
-| `community_enabled` | 1 | Toggle community chat |
-| `max_chat_messages` | 200 | Chat history limit |
-| `registration_enabled` | 1 | Toggle user registration |
-| `games_list` | [] | JSON array of `{name, icon}` objects |
+| `GET` | `/api/servers` | All servers with status (IP/port hidden for non-admins) |
+| `GET` | `/api/servers/:id/status` | Single server status with latency |
+| `GET` | `/api/news?limit=10` | Latest news articles (EN/RU) |
+| `POST` | `/api/language` | Set language preference (`en` / `ru`) |
+| `GET` | `/monitoring/resources` | Proxmox guest stats (CPU/RAM/disk) |
 
 ---
 
 ## Deployment
 
-### PM2 (Recommended for Production)
+### PM2
 
 ```bash
-npm install -g pm2
 pm2 start server.js --name nexushub
-pm2 startup
-pm2 save
+pm2 startup && pm2 save
 ```
 
-### Nginx Reverse Proxy
-
-Required for WebSocket (Socket.io) support:
+### Nginx (for WebSocket support)
 
 ```nginx
 server {
     listen 80;
     server_name yourdomain.com;
-
     client_max_body_size 10M;
 
     location / {
@@ -366,39 +130,31 @@ server {
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_cache_bypass $http_upgrade;
     }
 }
 ```
-
-### Proxmox Tips
-
-- Run each game server in its own **LXC container or VM** for isolation
-- NexusHub itself needs minimal resources (~256–512 MB RAM)
-- Use Proxmox firewall rules to expose only necessary game ports
-- Set a strong `SESSION_SECRET` in production
-
----
-
-## Known Limitations (WIP)
-
-- Client-side i18n only — no server-side translation for flash messages or API responses
-- No Docker image published yet
-- Monitoring dashboard is basic — planned expansion for Proxmox API integration
-- Hero title styles (neon-pulse, typewriter, chrome, retro, hologram) use hardcoded colors for their specific effects
 
 ---
 
 ## Roadmap
 
+- [x] Real-time server status monitoring (TCP ping + Minecraft protocol)
+- [x] Community chat with Socket.io
+- [x] Bilingual news system (EN/RU)
+- [x] 6 visual themes with special effects
+- [x] Proxmox monitoring (LXC/QEMU discovery, live stats)
+- [x] Admin panel with full CRUD
+- [x] Helmet CSP + rate limiting + session security
+- [x] First-run setup wizard
+- [ ] User registration with email verification
 - [ ] Telegram bot notifications for server status changes
 - [ ] Discord webhook integration
-- [ ] Server-side i18n (SSR translations)
+- [ ] Server-side i18n (flash messages, API responses)
 - [ ] More languages beyond EN/RU
 - [ ] Dashboard charts and analytics
 - [ ] Docker support with docker-compose
 - [ ] Automated database backups
-- [ ] Proxmox API integration for VM control
+- [ ] Proxmox VM/CT control (start/stop/restart)
 - [ ] HTTPS / Let's Encrypt automation
 
 ---
