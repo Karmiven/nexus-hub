@@ -12,6 +12,20 @@ const lastMessageTime = new Map(); // socket.id -> timestamp
 const MAX_MESSAGES_PER_MINUTE = 15;
 const userMessageTimestamps = new Map(); // lowercase username -> [timestamps]
 
+// Typing indicator debounce (server-side, prevents spam)
+const TYPING_COOLDOWN_MS = 2000;
+const lastTypingTime = new Map(); // socket.id -> timestamp
+
+// Server-side HTML escaping to prevent stored XSS
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 module.exports = function(io) {
   io.on('connection', (socket) => {
 
@@ -75,8 +89,8 @@ module.exports = function(io) {
       recentTimestamps.push(now);
       userMessageTimestamps.set(lowerUser, recentTimestamps);
 
-      // Store raw text (no HTML encoding — escaping is done client-side)
-      const message = String(data.message).slice(0, 500).trim();
+      // Escape HTML server-side to prevent stored XSS
+      const message = escapeHtml(String(data.message).slice(0, 500).trim());
 
       if (!message) return;
 
@@ -101,21 +115,26 @@ module.exports = function(io) {
         const maxMessages = parseInt(
           db.get("SELECT value FROM settings WHERE key = 'max_chat_messages'")?.value || '200'
         );
-        db.run(
-          `DELETE FROM chat_messages WHERE channel = 'general' AND id NOT IN (
-            SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT ?
-          )`,
+        // Use OFFSET-based delete instead of NOT IN subquery for better performance
+        const oldest = db.get(
+          `SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT 1 OFFSET ?`,
           [maxMessages]
         );
+        if (oldest) {
+          db.run(`DELETE FROM chat_messages WHERE channel = 'general' AND id <= ?`, [oldest.id]);
+        }
       }
     });
 
-    // Handle typing indicator
+    // Handle typing indicator with server-side debounce
     socket.on('chat:typing', () => {
       const registeredUsername = activeUsers.get(socket.id);
-      if (registeredUsername) {
-        socket.broadcast.emit('chat:typing', { username: registeredUsername });
-      }
+      if (!registeredUsername) return;
+      const now = Date.now();
+      const lastTyping = lastTypingTime.get(socket.id) || 0;
+      if (now - lastTyping < TYPING_COOLDOWN_MS) return;
+      lastTypingTime.set(socket.id, now);
+      socket.broadcast.emit('chat:typing', { username: registeredUsername });
     });
 
     socket.on('disconnect', () => {
@@ -127,6 +146,7 @@ module.exports = function(io) {
         io.emit('chat:online_users', Array.from(activeUsers.values()));
       }
       lastMessageTime.delete(socket.id);
+      lastTypingTime.delete(socket.id);
     });
   });
 };

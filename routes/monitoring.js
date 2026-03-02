@@ -76,7 +76,7 @@ router.get('/resources', monitoringAccess, async (req, res) => {
     res.json({ success: true, guests, timestamp: new Date().toISOString() });
   } catch (err) {
     console.error('Proxmox monitoring error:', err.message);
-    res.status(500).json({ success: false, error: err.message });
+    res.status(500).json({ success: false, error: 'Failed to fetch monitoring data' });
   }
 });
 

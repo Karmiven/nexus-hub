@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const rateLimit = require('express-rate-limit');
+const catchAsync = require('../utils/catchAsync');
 
 const setupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
@@ -25,7 +26,7 @@ router.get('/', (req, res) => {
 });
 
 // POST /setup - Process setup form
-router.post('/', setupLimiter, async (req, res) => {
+router.post('/', setupLimiter, catchAsync(async (req, res) => {
   if (isInstalled()) {
     return res.redirect('/');
   }
@@ -80,6 +81,6 @@ router.post('/', setupLimiter, async (req, res) => {
     req.flash('error', 'An error occurred during setup. Please try again.');
     res.redirect('/setup');
   }
-});
+}));
 
 module.exports = router;

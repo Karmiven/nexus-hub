@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const { isGuest, isAuthenticated } = require('../middleware/auth');
+const catchAsync = require('../utils/catchAsync');
 const rateLimit = require('express-rate-limit');
 
 // Rate limiter for login attempts
@@ -29,7 +30,7 @@ router.get('/login', isGuest, (req, res) => {
 });
 
 // Login handler
-router.post('/login', isGuest, loginLimiter, async (req, res) => {
+router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   let { username, password } = req.body;
 
   if (!username || !password) {
@@ -58,9 +59,8 @@ router.post('/login', isGuest, loginLimiter, async (req, res) => {
     return res.redirect('/auth/login');
   }
 
-  // Update last login and IP
-  let clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip || req.connection?.remoteAddress || 'unknown';
-  // Normalize IPv6 loopback to readable form
+  // Update last login and IP (trust proxy is configured, so req.ip is correct)
+  let clientIP = req.ip || 'unknown';
   if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') clientIP = '127.0.0.1';
   if (clientIP.startsWith('::ffff:')) clientIP = clientIP.slice(7);
   db.run(
@@ -68,20 +68,29 @@ router.post('/login', isGuest, loginLimiter, async (req, res) => {
     [clientIP, user.id]
   );
 
-  req.session.user = {
+  // Regenerate session ID to prevent session fixation attacks
+  const userData = {
     id: user.id,
     username: user.username,
     email: user.email,
     role: user.role
   };
+  const redirectTo = user.role === 'admin' ? '/admin' : '/';
 
-  req.flash('success', `Welcome back, ${user.username}!`);
-
-  if (user.role === 'admin') {
-    return res.redirect('/admin');
-  }
-  return res.redirect('/');
-});
+  req.session.regenerate((err) => {
+    if (err) {
+      console.error('Session regeneration error:', err);
+      req.flash('error', 'Session error. Please try again.');
+      return res.redirect('/auth/login');
+    }
+    req.session.user = userData;
+    req.session.save((saveErr) => {
+      if (saveErr) console.error('Session save error:', saveErr);
+      // flash won't work after regenerate without save, so set it after save
+      return res.redirect(redirectTo);
+    });
+  });
+}));
 
 // Register page
 router.get('/register', isGuest, (req, res) => {
@@ -95,7 +104,7 @@ router.get('/register', isGuest, (req, res) => {
 });
 
 // Register handler
-router.post('/register', isGuest, registerLimiter, async (req, res) => {
+router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) => {
   // Check if registration is enabled
   const regSetting = db.get("SELECT value FROM settings WHERE key = 'registration_enabled'");
   if (regSetting?.value === '0') {
@@ -166,7 +175,7 @@ router.post('/register', isGuest, registerLimiter, async (req, res) => {
     req.flash('error', 'An error occurred during registration.');
     res.redirect('/auth/register');
   }
-});
+}));
 
 // Profile page
 router.get('/profile', isAuthenticated, (req, res) => {

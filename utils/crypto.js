@@ -10,15 +10,27 @@ const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
 /**
- * Derive a 32-byte key from a string (SESSION_SECRET fallback)
+ * Derive a 32-byte key. Prefers ENCRYPTION_KEY env var (64 hex chars).
+ * Falls back to SESSION_SECRET. Refuses to use a hardcoded default.
  */
 function getKey() {
   const envKey = process.env.ENCRYPTION_KEY;
   if (envKey && envKey.length === 64) {
     return Buffer.from(envKey, 'hex');
   }
-  // Derive from SESSION_SECRET using scrypt-like hash
-  const secret = process.env.SESSION_SECRET || 'nexushub-default-key';
+  // Derive from SESSION_SECRET — never use a static default
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    // Try the auto-generated session-secret file
+    const path = require('path');
+    const fs = require('fs');
+    const secretPath = path.join(__dirname, '..', 'data', '.session-secret');
+    try {
+      const fileSecret = fs.readFileSync(secretPath, 'utf8').trim();
+      if (fileSecret) return crypto.createHash('sha256').update(fileSecret).digest();
+    } catch { /* file does not exist yet */ }
+    throw new Error('ENCRYPTION_KEY or SESSION_SECRET must be set for encryption to work.');
+  }
   return crypto.createHash('sha256').update(secret).digest();
 }
 

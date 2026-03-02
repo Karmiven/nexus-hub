@@ -46,6 +46,10 @@ function csrfProtection(req, res, next) {
     return res.redirect('back');
   }
 
+  // Rotate token after successful validation to limit reuse window
+  req.session._csrf = crypto.randomBytes(24).toString('hex');
+  res.locals.csrfToken = req.session._csrf;
+
   next();
 }
 

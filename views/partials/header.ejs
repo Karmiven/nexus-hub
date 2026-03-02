@@ -6,12 +6,8 @@
   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
   <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/themes/dark.css">
-  <link rel="stylesheet" href="/css/themes/light.css">
-  <link rel="stylesheet" href="/css/themes/cyberpunk-purple.css">
-  <link rel="stylesheet" href="/css/themes/matrix-green.css">
-  <link rel="stylesheet" href="/css/themes/retro-90s-vaporwave.css">
-  <link rel="stylesheet" href="/css/themes/vampire.css">
+  <!-- Load only the active theme dynamically instead of all 6 at once -->
+  <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css">
   <link rel="stylesheet" href="/css/desktop.css">
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,6 +21,9 @@
     (function(){
       var t=localStorage.getItem('theme')||'dark';
       document.documentElement.setAttribute('data-theme',t);
+      // Update theme stylesheet to load only the active theme
+      var link=document.getElementById('theme-stylesheet');
+      if(link) link.href='/css/themes/'+t+'.css';
     })();
   </script>
   <style>

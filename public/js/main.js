@@ -210,6 +210,9 @@ function initThemeToggle() {
  */
 function setTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
+  // Update theme stylesheet to load only the active theme CSS
+  var link = document.getElementById('theme-stylesheet');
+  if (link) link.href = '/css/themes/' + theme + '.css';
   // Switch canvas effect via theme-effects engine
   if (window.themeEffects) {
     window.themeEffects.switch(theme);

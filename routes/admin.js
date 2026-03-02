@@ -1,8 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const net = require('net');
+const crypto = require('crypto');
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
+const catchAsync = require('../utils/catchAsync');
 const { checkAllServers } = require('../utils/statusChecker');
 const { encrypt } = require('../utils/crypto');
 const multer = require('multer');
@@ -21,10 +23,16 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    // Use crypto.randomBytes instead of Math.random for unpredictable filenames
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
+
+// Allowed image MIME types (whitelist)
+const ALLOWED_IMAGE_MIMES = new Set([
+  'image/jpeg', 'image/png', 'image/gif', 'image/webp'
+]);
 
 const upload = multer({
   storage: storage,
@@ -32,10 +40,11 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    // Strict MIME whitelist (no SVG — XSS vector)
+    if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only image files are allowed!'), false);
+      cb(new Error('Only JPEG, PNG, GIF, and WebP images are allowed.'), false);
     }
   }
 });
@@ -88,13 +97,20 @@ function resolveNewsImage(croppedImageData, uploadedFile, existingImage = '') {
   // If cropped base64 data URI is provided, save it as a file to avoid DB bloat
   if (croppedImageData && croppedImageData.startsWith('data:image/')) {
     try {
-      const matches = croppedImageData.match(/^data:image\/(\w+);base64,(.+)$/);
+      const matches = croppedImageData.match(/^data:image\/(jpeg|jpg|png|gif|webp);base64,(.+)$/);
       if (matches) {
         const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
         const buffer = Buffer.from(matches[2], 'base64');
         // Limit decoded size to 5MB
         if (buffer.length > 5 * 1024 * 1024) return existingImage;
-        const filename = 'cropped-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + '.' + ext;
+        // Validate magic bytes: PNG, JPEG, GIF, WebP
+        const isValidImage =
+          (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) || // PNG
+          (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) ||                       // JPEG
+          (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) ||                       // GIF
+          (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46);   // WebP (RIFF)
+        if (!isValidImage) return existingImage;
+        const filename = 'cropped-' + Date.now() + '-' + crypto.randomBytes(8).toString('hex') + '.' + ext;
         fs.writeFileSync(path.join(uploadsDir, filename), buffer);
         return '/uploads/news/' + filename;
       }
@@ -213,7 +229,7 @@ router.get('/servers/new', (req, res) => {
 });
 
 // ── Force Status Refresh (must be before :id routes) ──
-router.post('/servers/refresh', async (req, res) => {
+router.post('/servers/refresh', catchAsync(async (req, res) => {
   try {
     await checkAllServers();
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
@@ -228,7 +244,7 @@ router.post('/servers/refresh', async (req, res) => {
     req.flash('error', 'Failed to refresh server statuses.');
   }
   res.redirect('/admin/servers');
-});
+}));
 
 router.post('/servers', (req, res) => {
   const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
@@ -318,6 +334,9 @@ router.post('/settings', (req, res) => {
     }
   }
 
+  // Invalidate cached settings so changes take effect immediately
+  db.invalidateSettingsCache();
+
   req.flash('success', 'Settings saved.');
   res.redirect('/admin/settings');
 });
@@ -387,11 +406,11 @@ router.get('/analytics/pageviews', (req, res) => {
   const rows = db.all(`
     SELECT date(created_at) as day, COUNT(DISTINCT ip) as views
     FROM page_views
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
       AND path NOT LIKE '/admin%'
     GROUP BY date(created_at)
     ORDER BY day ASC
-  `);
+  `, [days]);
   res.json(rows);
 });
 
@@ -402,12 +421,12 @@ router.get('/analytics/popular-pages', (req, res) => {
   const rows = db.all(`
     SELECT path, COUNT(DISTINCT ip) as views
     FROM page_views
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
       AND path NOT LIKE '/admin%'
     GROUP BY path
     ORDER BY views DESC
     LIMIT ?
-  `, [limit]);
+  `, [days, limit]);
   res.json(rows);
 });
 
@@ -417,10 +436,10 @@ router.get('/analytics/registrations', (req, res) => {
   const rows = db.all(`
     SELECT date(created_at) as day, COUNT(*) as count
     FROM users
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
     GROUP BY date(created_at)
     ORDER BY day ASC
-  `);
+  `, [days]);
   res.json(rows);
 });
 
@@ -430,10 +449,10 @@ router.get('/analytics/chat-activity', (req, res) => {
   const rows = db.all(`
     SELECT date(created_at) as day, COUNT(*) as messages
     FROM chat_messages
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
     GROUP BY date(created_at)
     ORDER BY day ASC
-  `);
+  `, [days]);
   res.json(rows);
 });
 
@@ -445,10 +464,10 @@ router.get('/analytics/server-uptime', (req, res) => {
            SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online_checks,
            COUNT(*) as total_checks
     FROM server_status_log
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
     GROUP BY server_id, date(created_at)
     ORDER BY server_name ASC, day ASC
-  `);
+  `, [days]);
 
   // Group by server, collect all unique days
   const servers = {};
@@ -478,10 +497,10 @@ router.get('/analytics/server-timeline', (req, res) => {
            SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online,
            SUM(CASE WHEN status = 'offline' THEN 1 ELSE 0 END) as offline
     FROM server_status_log
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
     GROUP BY date(created_at)
     ORDER BY day ASC
-  `);
+  `, [days]);
   res.json(rows);
 });
 
@@ -491,11 +510,11 @@ router.get('/analytics/hourly-traffic', (req, res) => {
   const rows = db.all(`
     SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(DISTINCT ip) as views
     FROM page_views
-    WHERE created_at >= datetime('now', '-${days} days')
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
       AND path NOT LIKE '/admin%'
     GROUP BY hour
     ORDER BY hour ASC
-  `);
+  `, [days]);
   // Fill all 24 hours
   const hourMap = {};
   for (let h = 0; h < 24; h++) hourMap[h] = 0;

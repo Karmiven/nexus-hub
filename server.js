@@ -14,12 +14,25 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const flash = require('connect-flash');
 const helmet = require('helmet');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
 const db = require('./config/database');
 const { initDatabase } = db;
 const { startStatusChecker } = require('./utils/statusChecker');
+
+// ── Validate critical env vars at startup ──
+(function validateEnv() {
+  const warnings = [];
+  if (!process.env.SESSION_SECRET) {
+    warnings.push('SESSION_SECRET not set — using auto-generated file secret');
+  }
+  if (process.env.NODE_ENV === 'production' && !process.env.ENCRYPTION_KEY) {
+    warnings.push('ENCRYPTION_KEY not set in production — encryption will derive key from SESSION_SECRET');
+  }
+  warnings.forEach(w => console.warn(`⚠️  ${w}`));
+})();
 
 const app = express();
 const server = http.createServer(app);
@@ -45,8 +58,12 @@ app.use(helmet({
       ...(process.env.NODE_ENV === 'production' ? { upgradeInsecureRequests: [] } : {})
     }
   },
-  crossOriginEmbedderPolicy: false
+  crossOriginEmbedderPolicy: false,
+  crossOriginResourcePolicy: { policy: 'same-origin' }
 }));
+
+// ── Compression ──
+app.use(compression());
 
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
@@ -77,7 +94,8 @@ function getSessionSecret() {
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 app.use(cookieParser());
-app.use(session({
+
+const sessionMiddleware = session({
   secret: getSessionSecret(),
   resave: false,
   saveUninitialized: false,
@@ -87,7 +105,8 @@ app.use(session({
     sameSite: 'strict',
     maxAge: 24 * 60 * 60 * 1000 
   }
-}));
+});
+app.use(sessionMiddleware);
 app.use(flash());
 
 const { csrfTokenMiddleware, csrfProtection } = require('./middleware/csrf');
@@ -100,17 +119,16 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error');
   res.locals.user = req.session.user || null;
 
-  // Global settings for templates (sync read — microsecond-fast with SQLite)
+  // Use cached settings to avoid DB hit on every request
   try {
-    const rows = db.all("SELECT key, value FROM settings WHERE key IN ('navbar_title', 'monitoring_public', 'site_timezone')");
-    const s = {};
-    for (const r of rows) s[r.key] = r.value;
+    const s = db.getCachedSettings('navbar_title', 'monitoring_public', 'site_timezone');
     res.locals.navbarTitle = s.navbar_title || 'NexusHub';
     res.locals.monitoringPublic = String(s.monitoring_public) === '1';
     res.locals.siteTimezone = s.site_timezone || 'Europe/Moscow';
   } catch (e) {
     res.locals.navbarTitle = 'NexusHub';
     res.locals.monitoringPublic = false;
+    res.locals.siteTimezone = 'Europe/Moscow';
   }
   next();
 });
@@ -118,10 +136,23 @@ app.use((req, res, next) => {
 // ── View Engine ──
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+if (process.env.NODE_ENV === 'production') {
+  app.set('view cache', true);
+}
 
-// ── Static Files ──
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// ── Static Files (with cache headers in production) ──
+app.use(express.static(path.join(__dirname, 'public'), {
+  maxAge: process.env.NODE_ENV === 'production' ? '7d' : 0,
+  etag: true
+}));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res) => {
+    // Security headers for user-uploaded content
+    res.set('X-Content-Type-Options', 'nosniff');
+    res.set('Content-Security-Policy', "default-src 'none'; img-src 'self'");
+    res.set('Cross-Origin-Resource-Policy', 'same-origin');
+  }
+}));
 
 // ── Setup Middleware ──
 let isInstalledCache = false;
@@ -153,7 +184,26 @@ app.use((req, res, next) => {
   next();
 });
 
-// ── Analytics middleware (track page views) ──
+// ── Analytics middleware (buffered page view tracking) ──
+const _analyticsBuffer = [];
+const ANALYTICS_FLUSH_INTERVAL = 5000; // flush every 5 seconds
+
+setInterval(() => {
+  if (_analyticsBuffer.length === 0) return;
+  const batch = _analyticsBuffer.splice(0, _analyticsBuffer.length);
+  try {
+    const batchInsert = db.transaction((rows) => {
+      for (const row of rows) {
+        db.run(
+          'INSERT INTO page_views (path, method, user_id, ip, user_agent) VALUES (?, ?, ?, ?, ?)',
+          row
+        );
+      }
+    });
+    batchInsert(batch);
+  } catch (e) { /* analytics should never break the app */ }
+}, ANALYTICS_FLUSH_INTERVAL);
+
 app.use((req, res, next) => {
   // Only track GET requests to actual pages (not static assets, API, or XHR)
   if (
@@ -169,12 +219,9 @@ app.use((req, res, next) => {
     !req.xhr &&
     req.headers['x-requested-with'] !== 'XMLHttpRequest'
   ) {
-    try {
-      db.run(
-        'INSERT INTO page_views (path, method, user_id, ip, user_agent) VALUES (?, ?, ?, ?, ?)',
-        [req.path, req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255)]
-      );
-    } catch (e) { /* analytics should never break the app */ }
+    _analyticsBuffer.push(
+      [req.path, req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255)]
+    );
   }
   next();
 });
@@ -203,7 +250,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
-// ── Socket.io Chat ──
+// ── Socket.io Chat (with session sharing) ──
+io.engine.use(sessionMiddleware);
 require('./sockets/chat')(io);
 
 // ── 404 Handler ──
@@ -213,8 +261,21 @@ app.use((req, res) => {
 
 // ── Error Handler ──
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('errors/500', { title: 'Server Error' });
+  const isDev = process.env.NODE_ENV !== 'production';
+  console.error('[ERROR]', err.stack || err.message || err);
+
+  // JSON response for API / AJAX requests
+  if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json'))) {
+    return res.status(err.status || 500).json({
+      success: false,
+      error: isDev ? err.message : 'Internal server error'
+    });
+  }
+
+  res.status(err.status || 500).render('errors/500', {
+    title: 'Server Error',
+    error: isDev ? err : null
+  });
 });
 
 // ── Start ──

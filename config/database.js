@@ -132,11 +132,16 @@ async function initDatabase() {
     );
   `);
 
-  // Index for fast analytics queries
+  // Indexes for fast queries
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_created ON server_status_log(created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_server ON server_status_log(server_id);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_messages_channel_created ON chat_messages(channel, created_at);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_news_pinned_created ON news(pinned, created_at);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_servers_sort ON servers(sort_order);`);
 
   // Insert default settings
   const defaults = {
@@ -156,20 +161,31 @@ async function initDatabase() {
   console.log('✅ Database initialized');
 }
 
+// Prepared statement cache for performance
+const stmtCache = new Map();
+
+function prepare(sql) {
+  if (!db) throw new Error('Database not initialized');
+  let stmt = stmtCache.get(sql);
+  if (!stmt) {
+    stmt = db.prepare(sql);
+    stmtCache.set(sql, stmt);
+  }
+  return stmt;
+}
+
 /**
  * Helper: run a SELECT and return all rows as plain objects
  */
 function all(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  return db.prepare(sql).all(params);
+  return prepare(sql).all(params);
 }
 
 /**
  * Helper: run a SELECT and return first row or null
  */
 function get(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  const row = db.prepare(sql).get(params);
+  const row = prepare(sql).get(params);
   return row || null;
 }
 
@@ -177,8 +193,7 @@ function get(sql, params = []) {
  * Helper: run INSERT/UPDATE/DELETE, return { changes, lastInsertRowid }
  */
 function run(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  const info = db.prepare(sql).run(params);
+  const info = prepare(sql).run(params);
   return { changes: info.changes, lastInsertRowid: info.lastInsertRowid };
 }
 
@@ -199,10 +214,34 @@ function transaction(fn) {
   return db.transaction(fn);
 }
 
+// ── Settings cache (avoids DB hit on every request) ──
+let _settingsCache = null;
+let _settingsCacheTime = 0;
+const SETTINGS_CACHE_TTL = 30000; // 30 seconds
+
+function getCachedSettings(...keys) {
+  const now = Date.now();
+  if (!_settingsCache || now - _settingsCacheTime > SETTINGS_CACHE_TTL) {
+    const rows = all('SELECT key, value FROM settings');
+    _settingsCache = {};
+    for (const r of rows) _settingsCache[r.key] = r.value;
+    _settingsCacheTime = now;
+  }
+  if (keys.length === 0) return _settingsCache;
+  const result = {};
+  for (const k of keys) result[k] = _settingsCache[k];
+  return result;
+}
+
+function invalidateSettingsCache() {
+  _settingsCache = null;
+  _settingsCacheTime = 0;
+}
+
 function stopAutoSave() {
   if (db) {
     db.close();
   }
 }
 
-module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave };
+module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave, getCachedSettings, invalidateSettingsCache };
