@@ -62,7 +62,7 @@
             <p class="news-excerpt"><%= contentShort %></p>
             <div class="news-meta">
               <span class="news-author"><%= article.author %></span>
-              <span class="news-date"><%= new Date(article.created_at).toLocaleDateString() %></span>
+              <span class="news-date"><span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span></span>
             </div>
           </div>
         </article>
@@ -104,7 +104,7 @@
 
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + decodeAttr(element, 'author');
-        document.getElementById('modalDate').textContent = new Date(element.dataset.date).toLocaleDateString(lang === 'ru' ? 'ru-RU' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        document.getElementById('modalDate').textContent = window.formatTimestamp ? window.formatTimestamp(element.dataset.date, 'date') : new Date(element.dataset.date).toLocaleDateString();
         // Safe: use textContent per line to prevent XSS
         const modalContent = document.getElementById('modalContent');
         modalContent.textContent = '';

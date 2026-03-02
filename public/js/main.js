@@ -11,7 +11,84 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   initFlashMessages();
   initServerPolling();
+  formatLocalTimes();
 });
+
+/**
+ * Get the site-wide timezone set by admin
+ */
+function getSiteTimezone() {
+  return window.SITE_TIMEZONE || Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
+/**
+ * Get locale string based on current language
+ */
+function getLocaleForLang() {
+  var lang = (typeof window.i18n !== 'undefined') ? window.i18n.getCurrentLanguage() : 'en';
+  return lang === 'ru' ? 'ru-RU' : 'en-US';
+}
+
+/**
+ * Format a single date according to format type and user timezone
+ */
+/**
+ * Parse a timestamp string, treating ambiguous formats (no Z/offset) as UTC
+ * because SQLite CURRENT_TIMESTAMP stores UTC.
+ */
+function parseTimestamp(dateStr) {
+  if (!dateStr) return new Date(NaN);
+  var s = String(dateStr).trim();
+  // If it already has timezone info (Z, +, - offset), parse as-is
+  if (/Z$/i.test(s) || /[+-]\d{2}:\d{2}$/.test(s) || /[+-]\d{4}$/.test(s)) {
+    return new Date(s);
+  }
+  // SQLite format: "2026-03-02 14:00:00" — treat as UTC by appending Z
+  // Replace space between date and time with T for ISO format
+  s = s.replace(' ', 'T');
+  if (!/T/.test(s)) s += 'T00:00:00';
+  return new Date(s + 'Z');
+}
+
+function formatTimestamp(dateStr, format) {
+  var tz = getSiteTimezone();
+  var locale = getLocaleForLang();
+  var d = parseTimestamp(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+
+  try {
+    if (format === 'time') {
+      return d.toLocaleTimeString(locale, { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+    } else if (format === 'date') {
+      return d.toLocaleDateString(locale, { timeZone: tz, year: 'numeric', month: 'short', day: 'numeric' });
+    } else {
+      return d.toLocaleString(locale, { timeZone: tz, year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+  } catch (e) {
+    // Fallback if timezone is invalid
+    if (format === 'time') return d.toLocaleTimeString(locale);
+    if (format === 'date') return d.toLocaleDateString(locale);
+    return d.toLocaleString(locale);
+  }
+}
+
+/**
+ * Format all elements with class 'local-time' using the user's timezone
+ */
+function formatLocalTimes() {
+  document.querySelectorAll('.local-time').forEach(function(el) {
+    var ts = el.getAttribute('data-timestamp');
+    var fmt = el.getAttribute('data-format') || 'datetime';
+    if (ts) {
+      el.textContent = formatTimestamp(ts, fmt);
+    }
+  });
+}
+
+// Expose globally so dynamic pages (community chat, monitoring) can use it
+window.formatLocalTimes = formatLocalTimes;
+window.formatTimestamp = formatTimestamp;
+window.parseTimestamp = parseTimestamp;
 
 /**
  * Initialize Lucide icons across the page
@@ -154,6 +231,7 @@ function initLanguageSelector() {
 
   languageSelector.addEventListener('change', (e) => {
     window.i18n.setLanguage(e.target.value);
+    formatLocalTimes();
   
     // Update session language via API
     fetch('/api/language', {

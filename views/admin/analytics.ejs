@@ -179,8 +179,7 @@
     }
 
     function formatDate(dateStr) {
-      var d = new Date(dateStr + 'T00:00:00');
-      return d.toLocaleDateString(window.i18n && window.i18n.currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric' });
+      return window.formatTimestamp ? window.formatTimestamp(dateStr + 'T00:00:00', 'date') : new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
     function fetchData(endpoint) {

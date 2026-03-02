@@ -102,11 +102,12 @@ app.use((req, res, next) => {
 
   // Global settings for templates (sync read — microsecond-fast with SQLite)
   try {
-    const rows = db.all("SELECT key, value FROM settings WHERE key IN ('navbar_title', 'monitoring_public')");
+    const rows = db.all("SELECT key, value FROM settings WHERE key IN ('navbar_title', 'monitoring_public', 'site_timezone')");
     const s = {};
     for (const r of rows) s[r.key] = r.value;
     res.locals.navbarTitle = s.navbar_title || 'NexusHub';
     res.locals.monitoringPublic = String(s.monitoring_public) === '1';
+    res.locals.siteTimezone = s.site_timezone || 'Europe/Moscow';
   } catch (e) {
     res.locals.navbarTitle = 'NexusHub';
     res.locals.monitoringPublic = false;

@@ -298,6 +298,8 @@ const translations = {
     admin_settings_hero_style: 'Title Style',
     admin_settings_preview: 'Preview',
     admin_settings_server: 'Server & Community',
+    admin_settings_timezone: 'Site Timezone',
+    admin_settings_timezone_hint: 'All dates and times on the site will be displayed in the selected timezone.',
     admin_settings_check_interval: 'Status Check Interval (sec.)',
     admin_settings_check_hint: 'How often to ping servers. Lower = more frequent, but more resources.',
     admin_settings_chat_enable: 'Enable Community Chat',
@@ -682,6 +684,8 @@ const translations = {
     admin_settings_hero_style: 'Стиль заголовка',
     admin_settings_preview: 'Предпросмотр',
     admin_settings_server: 'Сервер и сообщество',
+    admin_settings_timezone: 'Часовой пояс сайта',
+    admin_settings_timezone_hint: 'Все даты и время на сайте будут отображаться в выбранном часовом поясе.',
     admin_settings_check_interval: 'Интервал проверки статуса (сек.)',
     admin_settings_check_hint: 'Как часто пинговать сервера. Меньше = чаще, но больше ресурсов.',
     admin_settings_chat_enable: 'Включить чат сообщества',
@@ -825,6 +829,9 @@ class I18n {
       
       // Update language selector if exists
       this.updateLanguageSelector();
+
+      // Dispatch event so dynamic pages can re-render
+      window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     }
   }
 

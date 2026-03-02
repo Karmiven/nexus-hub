@@ -50,7 +50,7 @@
             <% } else { %>
               <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-outline"><span data-i18n="details">Details</span> <i data-lucide="arrow-right"></i></a>
             <% } %>
-            <span class="last-checked"><span data-i18n="last_checked">Checked</span>: <%= new Date(srv.last_checked).toLocaleTimeString() %></span>
+            <span class="last-checked"><span data-i18n="last_checked">Checked</span>: <span class="local-time" data-timestamp="<%= srv.last_checked %>" data-format="time"></span></span>
           </div>
         </div>
       <% }); %>

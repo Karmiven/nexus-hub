@@ -303,7 +303,8 @@ router.post('/settings', (req, res) => {
     'site_name', 'site_description', 'navbar_title',
     'status_check_interval', 'max_chat_messages', 'community_enabled',
     'registration_enabled', 'monitoring_public',
-    'hero_title', 'hero_subtitle', 'hero_style', 'games_list'
+    'hero_title', 'hero_subtitle', 'hero_style', 'games_list',
+    'site_timezone'
   ];
 
   for (const key of keys) {

@@ -37,7 +37,7 @@
       <% } %>
       <div class="detail-item">
         <span class="detail-label" data-i18n="last_checked">Last Checked</span>
-        <span class="detail-value"><%= new Date(server.last_checked).toLocaleString() %></span>
+        <span class="detail-value"><span class="local-time" data-timestamp="<%= server.last_checked %>" data-format="datetime"></span></span>
       </div>
     </div>
 

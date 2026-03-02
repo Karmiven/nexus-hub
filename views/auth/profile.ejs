@@ -25,7 +25,7 @@
         </div>
         <div class="detail-item">
           <span class="detail-label" data-i18n="joined">Joined</span>
-          <span class="detail-value"><%= new Date(profile.created_at).toLocaleDateString() %></span>
+          <span class="detail-value"><span class="local-time" data-timestamp="<%= profile.created_at %>" data-format="date"></span></span>
         </div>
       </div>
     </div>
@@ -47,6 +47,7 @@
         <button type="submit" class="btn btn-primary" data-i18n="save_preferences">Save Preferences</button>
       </form>
     </div>
+
   </div>
 </section>
 

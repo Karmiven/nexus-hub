@@ -104,7 +104,7 @@
                   <%= srv.status === 'online' ? 'Online' : 'Offline' %>
                 </span>
               </td>
-              <td><%= new Date(srv.last_checked).toLocaleString() %></td>
+              <td><span class="local-time" data-timestamp="<%= srv.last_checked %>" data-format="datetime"></span></td>
             </tr>
           <% }); %>
         </tbody>

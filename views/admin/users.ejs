@@ -45,9 +45,9 @@
               <td>
                 <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
               </td>
-              <td><%= u.last_login ? new Date(u.last_login).toLocaleString() : '<span data-i18n="admin_never">Никогда</span>' %></td>
+              <td><% if (u.last_login) { %><span class="local-time" data-timestamp="<%= u.last_login %>" data-format="datetime"></span><% } else { %><span data-i18n="admin_never">Никогда</span><% } %></td>
               <td class="mono"><%= u.last_ip || '-' %></td>
-              <td><%= new Date(u.created_at).toLocaleDateString() %></td>
+              <td><span class="local-time" data-timestamp="<%= u.created_at %>" data-format="date"></span></td>
               <td class="actions-cell">
                 <form action="/admin/users/<%= u.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm((window.i18n ? window.i18n.t('admin_confirm_delete_user') : 'Удалить пользователя') + ' <%= u.username %>?')">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">

@@ -48,7 +48,7 @@
                 <td><strong><%= item.title_en %> / <%= item.title_ru %></strong></td>
                 <td><%= item.author %></td>
                 <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><% if (item.pinned) { %><span data-i18n="admin_pinned_yes">Да</span><% } else { %><span data-i18n="admin_pinned_no">—</span><% } %></span></td>
-                <td><%= new Date(item.created_at).toLocaleDateString() %></td>
+                <td><span class="local-time" data-timestamp="<%= item.created_at %>" data-format="date"></span></td>
                 <td class="actions-cell">
                   <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
                   <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_article') : 'Удалить эту статью?')">
@@ -710,7 +710,7 @@
       image: document.getElementById('finalImage')?.src || '',
       pinned: document.getElementById('pinned').checked,
       author: '<%= typeof user !== "undefined" && user ? user.username : "Admin" %>',
-      date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+      date: window.formatTimestamp ? window.formatTimestamp(new Date().toISOString(), 'date') : new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
     };
   }
 

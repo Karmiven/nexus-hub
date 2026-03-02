@@ -21,7 +21,7 @@
         <% messages.forEach(function(msg) { %>
           <div class="chat-msg">
             <span class="chat-user"><%= msg.username %></span>
-            <span class="chat-time"><%= new Date(msg.created_at).toLocaleTimeString() %></span>
+            <span class="chat-time"><span class="local-time" data-timestamp="<%= msg.created_at %>" data-format="time"></span></span>
             <p class="chat-text"><%= msg.message %></p>
           </div>
         <% }); %>
@@ -159,10 +159,11 @@
     div.className = 'chat-msg';
     div.innerHTML = `
       <span class="chat-user">${escapeHtml(msg.username)}</span>
-      <span class="chat-time">${new Date(msg.created_at).toLocaleTimeString()}</span>
+      <span class="chat-time"><span class="local-time" data-timestamp="${msg.created_at}" data-format="time"></span></span>
       <p class="chat-text">${escapeHtml(msg.message)}</p>
     `;
     messagesDiv.appendChild(div);
+    if (window.formatLocalTimes) window.formatLocalTimes();
     scrollToBottom();
   });
 
