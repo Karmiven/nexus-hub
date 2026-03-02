@@ -5,35 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
+  <script>
+    // Apply saved theme IMMEDIATELY — before any CSS loads — to prevent white flash
+    (function(){
+      var t = localStorage.getItem('theme') || 'dark';
+      var lang = localStorage.getItem('language') || 'en';
+      document.documentElement.setAttribute('data-theme', t);
+      window.__savedTheme = t;
+      window.__savedLang = lang;
+    })();
+  </script>
   <link rel="stylesheet" href="/css/style.css">
-  <!-- Load only the active theme dynamically instead of all 6 at once -->
   <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css">
   <link rel="stylesheet" href="/css/desktop.css">
+  <script>
+    // Update theme stylesheet href ASAP (after <link> exists)
+    (function(){
+      var t = window.__savedTheme || 'dark';
+      var link = document.getElementById('theme-stylesheet');
+      if (link) link.href = '/css/themes/' + t + '.css';
+    })();
+  </script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&family=VT323&display=swap" rel="stylesheet">
   <script src="/js/translations.js"></script>
   <script src="/js/theme-effects.js"></script>
   <script>
-    // Site timezone set by admin
     window.SITE_TIMEZONE = '<%= typeof siteTimezone !== "undefined" ? siteTimezone : "Europe/Moscow" %>';
-    // Apply saved theme BEFORE paint to prevent white flash
-    (function(){
-      var t=localStorage.getItem('theme')||'dark';
-      document.documentElement.setAttribute('data-theme',t);
-      // Update theme stylesheet to load only the active theme
-      var link=document.getElementById('theme-stylesheet');
-      if(link) link.href='/css/themes/'+t+'.css';
-    })();
   </script>
   <style>
-    /* Page transition */
+    /* ========== Anti-FOUC: hide page until theme CSS is loaded ========== */
+    /* Body is invisible initially; JS reveals it once everything is ready */
     body {
-      opacity: 0;
-      transition: opacity 0.15s ease;
+      visibility: hidden;
     }
-    body.page-ready {
+    body.page-rendered {
+      visibility: visible;
+    }
+
+    /* Content area fades in for SPA-like feel; navbar stays solid */
+    .main-content {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    .main-content.content-ready {
       opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .footer {
+      opacity: 0;
+    }
+    .footer.content-ready {
+      opacity: 1;
+      transition: opacity 0.3s ease 0.05s;
+    }
+
+    /* Fix logo icon size — prevent layout shift when lucide replaces <i> with <svg> */
+    .logo-icon {
+      width: 1.3rem;
+      height: 1.3rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-icon i[data-lucide] {
+      width: 1.3rem;
+      height: 1.3rem;
+      display: block;
     }
   </style>
 </head>
@@ -90,6 +131,15 @@
       </ul>
     </div>
   </nav>
+  <script>
+    // Pre-set selectors SYNCHRONOUSLY before paint
+    (function(){
+      var ts = document.getElementById('themeSwitcher');
+      if (ts && window.__savedTheme) ts.value = window.__savedTheme;
+      var ls = document.getElementById('languageSelector');
+      if (ls && window.__savedLang) ls.value = window.__savedLang;
+    })();
+  </script>
 
   <% if (success && success.length > 0) { %>
     <div class="flash flash-success"><%= success[0] %></div>
