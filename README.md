@@ -171,6 +171,27 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 
 ---
 
+## Visual Themes
+
+NexusHub features 6 immersive visual themes, each with unique animated background effects and an interactive speed control slider (0.1x–3x) to adjust animation speed to your preference.
+
+| Theme | Effect | Palette |
+|---|---|---|
+| **Dark** | Floating glowing particles with smooth trails and pulse effects | Deep blues & cyans with glowing accents |
+| **Light** | Soft gradient blocks fading in/out for subtle elegance | Bright whites, pastels, and soft shadows |
+| **Cyberpunk Purple** | Neon grid lines with glitch effects and chromatic distortion | Electric purples, magentas, and neon pink |
+| **Matrix Green** | Classic falling digital rain with authentic Matrix-style glyph effect | Deep blacks with bright green text |
+| **Retro Vaporwave** | Rotating 3D-like colored cubes with nostalgic 90s vibes | Vibrant pinks, teals, and sunset gradients |
+| **Vampire** | Eerie animated swirling fog with blood-red accents | Dark reds, blacks, and crimson highlights |
+
+**Features:**
+- **Real-time speed control slider** — Adjust animation velocity on-the-fly (0.1x–3x)
+- **Persistent preferences** — Speed setting saved to browser localStorage
+- **Canvas-based performance** — GPU-accelerated rendering for smooth 60fps animations
+- **Seamless theme switching** — Effects reinitialize instantly when changing themes
+
+---
+
 ## Environment Variables
 
 | Variable | Required | Default | Description |
