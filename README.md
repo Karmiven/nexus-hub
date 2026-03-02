@@ -19,7 +19,7 @@ Self-hosted gaming server hub for managing, monitoring, and showcasing game serv
 - **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats, grouped by node
 - **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with unique visual effects
 - **i18n** — Full EN/RU support, dynamic language switching without page reload
-- **Admin Panel** — News/servers/users/settings CRUD, hero animation styles (7 options), games showcase editor
+- **Admin Panel** — News/servers/users/settings CRUD, hero animation styles (7 options), games showcase editor, analytics dashboard with charts
 - **User Registration** — Self-service registration (admin-toggleable), profile page with notification settings
 - **Security** — Helmet CSP, CSRF protection, bcrypt auth, encrypted secrets, rate limiting, session-based auth
 
@@ -111,7 +111,7 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 ├── views/                 # EJS templates (admin/, auth/, monitoring/, errors/)
 ├── public/
 │   ├── css/               # style.css + desktop.css + 6 theme files
-│   └── js/                # main.js (client logic) + translations.js (i18n)
+│   └── js/                # main.js + translations.js (i18n) + theme-effects.js
 ├── data/                  # nexushub.db + .session-secret (auto-created, gitignored)
 └── uploads/news/          # Uploaded images (news article images saved as files)
 ```
@@ -262,7 +262,7 @@ server {
 - [ ] Discord webhook integration
 - [ ] Server-side i18n (flash messages, API responses)
 - [ ] More languages beyond EN/RU
-- [ ] Dashboard charts and analytics
+- [x] Dashboard charts and analytics (Chart.js)
 - [ ] Docker support with docker-compose
 - [ ] Automated database backups
 - [ ] Proxmox VM/CT control (start/stop/restart)

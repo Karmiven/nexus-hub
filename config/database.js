@@ -107,6 +107,37 @@ async function initDatabase() {
     );
   `);
 
+  // ── Analytics tables ──
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS page_views (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      path TEXT NOT NULL,
+      method TEXT DEFAULT 'GET',
+      user_id INTEGER,
+      ip TEXT,
+      user_agent TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS server_status_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL,
+      server_name TEXT NOT NULL,
+      status TEXT NOT NULL,
+      player_count INTEGER DEFAULT 0,
+      latency INTEGER DEFAULT -1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  // Index for fast analytics queries
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_created ON server_status_log(created_at);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_server ON server_status_log(server_id);`);
+
   // Insert default settings
   const defaults = {
     site_name: 'NexusHub',

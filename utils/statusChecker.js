@@ -166,6 +166,26 @@ async function checkAllServers() {
   });
 
   batchUpdate(updates);
+
+  // 3. Log status history for analytics (separate transaction to not break updates)
+  try {
+    const serverMap = {};
+    for (const srv of servers) serverMap[srv.id] = srv.name;
+
+    const batchLog = db.transaction((rows) => {
+      for (const result of rows) {
+        if (result.status !== 'fulfilled') continue;
+        const { id, status, playerCount } = result.value;
+        db.run(
+          'INSERT INTO server_status_log (server_id, server_name, status, player_count) VALUES (?, ?, ?, ?)',
+          [id, serverMap[id] || 'Unknown', status, playerCount]
+        );
+      }
+    });
+    batchLog(updates);
+  } catch (e) {
+    // Analytics logging should never break the status checker
+  }
 }
 
 /**

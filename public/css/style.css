@@ -1555,6 +1555,108 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   margin-bottom: 2.25rem;
 }
 
+.stats-grid-7 {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.stats-grid-4x2 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 992px) {
+  .stats-grid-4x2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .stats-grid-4x2 { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANALYTICS CHARTS
+   ═══════════════════════════════════════════════════════════════ */
+
+.analytics-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.analytics-period-select {
+  padding: 0.35rem 0.7rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.analytics-period-select:focus {
+  border-color: var(--accent);
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  animation: cardEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.chart-card-wide {
+  grid-column: 1 / -1;
+}
+
+.chart-header {
+  padding: 0.85rem 1.15rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  font-family: var(--font-display);
+}
+
+.chart-body {
+  padding: 1rem;
+  height: 260px;
+  position: relative;
+}
+
+.chart-body-doughnut {
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-card-wide {
+    grid-column: 1;
+  }
+  .stats-grid-7 {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+  .analytics-controls {
+    flex-wrap: wrap;
+  }
+}
+
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1582,7 +1684,7 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .stat-info .stat-number,
 .stat-content .stat-number {
   font-family: var(--font-display);
-  font-size: 1.6rem;
+  font-size: 1.85rem;
   font-weight: 900;
   color: var(--accent);
   line-height: 1.2;
@@ -1590,15 +1692,34 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 
 .stat-info .stat-label,
 .stat-content .stat-label {
-  font-size: 0.72rem;
-  color: var(--text-muted);
+  font-size: 0.78rem;
+  color: var(--text);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: block;
-  max-width: 160px;
+  max-width: 180px;
+  font-weight: 500;
+}
+
+.stat-icon {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.stat-card-analytics-link {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
+.stat-card-analytics-link:hover {
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  border-color: var(--accent);
 }
 
 

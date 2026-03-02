@@ -113,6 +113,13 @@ router.get('/', (req, res) => {
   const userCount = db.get('SELECT COUNT(*) as count FROM users');
   const onlineCount = db.get("SELECT COUNT(*) as count FROM servers WHERE status = 'online'");
 
+  // Total unique page views (by IP)
+  const totalViews = db.get('SELECT COUNT(DISTINCT ip) as count FROM page_views') || { count: 0 };
+  // Today's unique views (by IP)
+  const todayViews = db.get("SELECT COUNT(DISTINCT ip) as count FROM page_views WHERE date(created_at) = date('now')") || { count: 0 };
+  // Chat messages count
+  const chatCount = db.get('SELECT COUNT(*) as count FROM chat_messages') || { count: 0 };
+
   res.render('admin/dashboard', {
     title: 'Admin Dashboard',
     servers,
@@ -120,7 +127,10 @@ router.get('/', (req, res) => {
       newsCount: newsCount?.count || 0,
       userCount: userCount?.count || 0,
       onlineServers: onlineCount?.count || 0,
-      totalServers: servers.length
+      totalServers: servers.length,
+      totalViews: totalViews.count || 0,
+      todayViews: todayViews.count || 0,
+      chatMessages: chatCount.count || 0
     }
   });
 });
@@ -359,6 +369,149 @@ router.post('/proxmox/save-guests', (req, res) => {
   const list = Array.isArray(guests) ? guests : [];
   db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['proxmox_guests', JSON.stringify(list)]);
   res.json({ success: true });
+});
+
+// ── Analytics Page ──
+router.get('/analytics', (req, res) => {
+  res.render('admin/analytics', { title: 'Analytics' });
+});
+
+// ══════════════════════════════════════════════════════════════
+//   ANALYTICS API
+// ══════════════════════════════════════════════════════════════
+
+// Page views over last N days (line chart)
+router.get('/analytics/pageviews', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const rows = db.all(`
+    SELECT date(created_at) as day, COUNT(DISTINCT ip) as views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-${days} days')
+      AND path NOT LIKE '/admin%'
+    GROUP BY date(created_at)
+    ORDER BY day ASC
+  `);
+  res.json(rows);
+});
+
+// Top pages (horizontal bar chart)
+router.get('/analytics/popular-pages', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const limit = Math.min(parseInt(req.query.limit) || 10, 20);
+  const rows = db.all(`
+    SELECT path, COUNT(DISTINCT ip) as views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-${days} days')
+      AND path NOT LIKE '/admin%'
+    GROUP BY path
+    ORDER BY views DESC
+    LIMIT ?
+  `, [limit]);
+  res.json(rows);
+});
+
+// User registrations over time (line chart)
+router.get('/analytics/registrations', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 30, 90);
+  const rows = db.all(`
+    SELECT date(created_at) as day, COUNT(*) as count
+    FROM users
+    WHERE created_at >= datetime('now', '-${days} days')
+    GROUP BY date(created_at)
+    ORDER BY day ASC
+  `);
+  res.json(rows);
+});
+
+// Chat activity per day (bar chart)
+router.get('/analytics/chat-activity', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const rows = db.all(`
+    SELECT date(created_at) as day, COUNT(*) as messages
+    FROM chat_messages
+    WHERE created_at >= datetime('now', '-${days} days')
+    GROUP BY date(created_at)
+    ORDER BY day ASC
+  `);
+  res.json(rows);
+});
+
+// Server uptime percentage (bar chart with daily breakdown)
+router.get('/analytics/server-uptime', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const rows = db.all(`
+    SELECT server_name, date(created_at) as day,
+           SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online_checks,
+           COUNT(*) as total_checks
+    FROM server_status_log
+    WHERE created_at >= datetime('now', '-${days} days')
+    GROUP BY server_id, date(created_at)
+    ORDER BY server_name ASC, day ASC
+  `);
+
+  // Group by server, collect all unique days
+  const servers = {};
+  const allDays = new Set();
+  for (const r of rows) {
+    if (!servers[r.server_name]) servers[r.server_name] = {};
+    servers[r.server_name][r.day] = r.total_checks > 0 ? Math.round((r.online_checks / r.total_checks) * 100) : 0;
+    allDays.add(r.day);
+  }
+
+  const sortedDays = Array.from(allDays).sort();
+  const result = {
+    days: sortedDays,
+    servers: Object.entries(servers).map(([name, dayData]) => ({
+      name,
+      data: sortedDays.map(d => dayData[d] !== undefined ? dayData[d] : null)
+    }))
+  };
+  res.json(result);
+});
+
+// Server status timeline (area chart)
+router.get('/analytics/server-timeline', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 7, 30);
+  const rows = db.all(`
+    SELECT date(created_at) as day,
+           SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online,
+           SUM(CASE WHEN status = 'offline' THEN 1 ELSE 0 END) as offline
+    FROM server_status_log
+    WHERE created_at >= datetime('now', '-${days} days')
+    GROUP BY date(created_at)
+    ORDER BY day ASC
+  `);
+  res.json(rows);
+});
+
+// Hourly traffic distribution (radar / bar chart)
+router.get('/analytics/hourly-traffic', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const rows = db.all(`
+    SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(DISTINCT ip) as views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-${days} days')
+      AND path NOT LIKE '/admin%'
+    GROUP BY hour
+    ORDER BY hour ASC
+  `);
+  // Fill all 24 hours
+  const hourMap = {};
+  for (let h = 0; h < 24; h++) hourMap[h] = 0;
+  for (const r of rows) hourMap[r.hour] = r.views;
+  const result = Object.entries(hourMap).map(([h, v]) => ({ hour: parseInt(h), views: v }));
+  res.json(result);
+});
+
+// Cleanup old analytics data (keep last 90 days)
+router.post('/analytics/cleanup', (req, res) => {
+  const pvDeleted = db.run("DELETE FROM page_views WHERE created_at < datetime('now', '-90 days')");
+  const slDeleted = db.run("DELETE FROM server_status_log WHERE created_at < datetime('now', '-90 days')");
+  res.json({
+    success: true,
+    pageViewsDeleted: pvDeleted.changes,
+    statusLogsDeleted: slDeleted.changes
+  });
 });
 
 module.exports = router;

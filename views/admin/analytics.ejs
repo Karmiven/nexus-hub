@@ -1,0 +1,492 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title"><i data-lucide="bar-chart-3"></i> <span data-i18n="admin_analytics_title">Аналитика</span></h1>
+    <nav class="admin-nav">
+      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
+      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
+      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
+      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
+      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
+      <a href="/admin/analytics" class="admin-tab active" data-i18n="admin_tab_analytics">Аналитика</a>
+      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
+    </nav>
+  </div>
+</section>
+
+<section class="section container">
+  <!-- Period selector -->
+  <div class="admin-section-header" style="margin-bottom: 1.25rem;">
+    <h2><i data-lucide="activity"></i> <span data-i18n="admin_analytics_overview">Обзор</span></h2>
+    <div class="analytics-controls">
+      <select id="analyticsDays" class="analytics-period-select">
+        <option value="7" data-i18n="admin_period_7d">7 дней</option>
+        <option value="14" selected data-i18n="admin_period_14d">14 дней</option>
+        <option value="30" data-i18n="admin_period_30d">30 дней</option>
+      </select>
+      <button type="button" id="refreshChartsBtn" class="btn btn-sm btn-outline" onclick="loadAllCharts()">
+        <i data-lucide="refresh-cw"></i> <span data-i18n="refresh">Обновить</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="charts-grid">
+    <!-- Page Views (Line) -->
+    <div class="chart-card chart-card-wide">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_pageviews">Просмотры страниц</h3>
+      </div>
+      <div class="chart-body" id="wrapPageViews">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartPageViews"></canvas>
+      </div>
+    </div>
+
+    <!-- Hourly Traffic (Bar) -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_hourly">Трафик по часам</h3>
+      </div>
+      <div class="chart-body" id="wrapHourly">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartHourly"></canvas>
+      </div>
+    </div>
+
+    <!-- Popular Pages (Horizontal Bar) -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_popular">Популярные страницы</h3>
+      </div>
+      <div class="chart-body" id="wrapPopular">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartPopular"></canvas>
+      </div>
+    </div>
+
+    <!-- Server Uptime (Bar) -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_uptime">Аптайм серверов</h3>
+      </div>
+      <div class="chart-body" id="wrapUptime">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartUptime"></canvas>
+      </div>
+    </div>
+
+    <!-- Chat Activity (Bar) -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_chat">Активность чата</h3>
+      </div>
+      <div class="chart-body" id="wrapChat">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartChat"></canvas>
+      </div>
+    </div>
+
+    <!-- Server Status Timeline (Stacked Area) -->
+    <div class="chart-card chart-card-wide">
+      <div class="chart-header">
+        <h3 data-i18n="admin_chart_timeline">Статус серверов</h3>
+      </div>
+      <div class="chart-body" id="wrapTimeline">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartTimeline"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.chart-loading {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 0.85rem;
+  background: var(--surface); z-index: 2;
+}
+.chart-no-data {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--text-muted); font-size: 0.85rem; gap: 0.5rem;
+  background: var(--surface); z-index: 2;
+}
+.chart-no-data i { width: 32px; height: 32px; opacity: 0.4; }
+.chart-error {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  color: var(--danger, #ef4444); font-size: 0.8rem; gap: 0.35rem;
+  background: var(--surface); z-index: 2;
+}
+</style>
+
+<script src="https://unpkg.com/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script>
+(function() {
+  // ── Retry Chart.js loading if CDN fails ──
+  function waitForChart(attempt) {
+    attempt = attempt || 0;
+    if (typeof Chart !== 'undefined') {
+      initCharts();
+      return;
+    }
+    if (attempt >= 3) {
+      document.querySelectorAll('.chart-loading').forEach(function(el) {
+        el.innerHTML = '<span style="color:var(--danger,#ef4444)">Failed to load Chart.js</span>';
+      });
+      console.error('Chart.js failed to load after retries');
+      return;
+    }
+    // retry loading
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+    s.onload = function() { waitForChart(attempt + 1); };
+    s.onerror = function() { setTimeout(function() { waitForChart(attempt + 1); }, 500); };
+    document.head.appendChild(s);
+  }
+
+  function initCharts() {
+    // ── Theme-aware colors ──
+    var cs = getComputedStyle(document.documentElement);
+    var chartColors = {
+      accent: cs.getPropertyValue('--accent').trim() || '#a855f7',
+      success: '#22c55e',
+      danger: '#ef4444',
+      warning: '#f59e0b',
+      info: '#3b82f6',
+      muted: cs.getPropertyValue('--text-muted').trim() || '#6b7280',
+      border: cs.getPropertyValue('--border').trim() || '#333',
+      text: cs.getPropertyValue('--text').trim() || '#e0e0e0',
+      palette: ['#a855f7','#3b82f6','#22c55e','#f59e0b','#ef4444','#ec4899','#14b8a6','#f97316','#8b5cf6','#06b6d4']
+    };
+
+    Chart.defaults.color = chartColors.muted;
+    Chart.defaults.borderColor = chartColors.border + '30';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.pointStyle = 'circle';
+    Chart.defaults.responsive = true;
+    Chart.defaults.maintainAspectRatio = false;
+
+    var chartInstances = {};
+    var noDataLabel = (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_no_data') : 'No data';
+
+    function getDays() {
+      return parseInt(document.getElementById('analyticsDays').value) || 14;
+    }
+
+    function formatDate(dateStr) {
+      var d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString(window.i18n && window.i18n.currentLang === 'ru' ? 'ru-RU' : 'en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function fetchData(endpoint) {
+      var days = getDays();
+      return fetch('/admin/analytics/' + endpoint + '?days=' + days)
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        });
+    }
+
+    function destroyChart(id) {
+      if (chartInstances[id]) { chartInstances[id].destroy(); delete chartInstances[id]; }
+    }
+
+    function hideLoading(wrapperId) {
+      var wrap = document.getElementById(wrapperId);
+      if (wrap) {
+        var ld = wrap.querySelector('.chart-loading');
+        if (ld) ld.remove();
+        var nd = wrap.querySelector('.chart-no-data');
+        if (nd) nd.remove();
+      }
+    }
+
+    function showNoData(wrapperId) {
+      var wrap = document.getElementById(wrapperId);
+      if (!wrap) return;
+      var ld = wrap.querySelector('.chart-loading');
+      if (ld) ld.remove();
+      // remove existing no-data if any
+      var existing = wrap.querySelector('.chart-no-data');
+      if (existing) existing.remove();
+      var div = document.createElement('div');
+      div.className = 'chart-no-data';
+      div.innerHTML = '<i data-lucide="bar-chart-2"></i><span>' + noDataLabel + '</span>';
+      wrap.appendChild(div);
+      if (window.lucide) lucide.createIcons({ nodes: [div] });
+    }
+
+    function showError(wrapperId, msg) {
+      var wrap = document.getElementById(wrapperId);
+      if (!wrap) return;
+      var ld = wrap.querySelector('.chart-loading');
+      if (ld) ld.remove();
+      var div = document.createElement('div');
+      div.className = 'chart-error';
+      div.innerHTML = '<span>Error: ' + msg + '</span>';
+      wrap.appendChild(div);
+    }
+
+    // ── Page Views ──
+    function loadPageViewsChart() {
+      return fetchData('pageviews').then(function(data) {
+        destroyChart('pageViews');
+        hideLoading('wrapPageViews');
+        var ctx = document.getElementById('chartPageViews');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapPageViews'); return; }
+        chartInstances.pageViews = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.map(function(d) { return formatDate(d.day); }),
+            datasets: [{
+              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Unique visitors',
+              data: data.map(function(d) { return d.views; }),
+              borderColor: chartColors.accent,
+              backgroundColor: chartColors.accent + '20',
+              borderWidth: 2.5, fill: true, tension: 0.4,
+              pointRadius: 4, pointHoverRadius: 7,
+              pointBackgroundColor: chartColors.accent
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapPageViews', e.message); });
+    }
+
+    // ── Hourly Traffic ──
+    function loadHourlyChart() {
+      return fetchData('hourly-traffic').then(function(data) {
+        destroyChart('hourly');
+        hideLoading('wrapHourly');
+        var ctx = document.getElementById('chartHourly');
+        if (!ctx) return;
+        var hasData = data && data.some(function(d) { return d.views > 0; });
+        if (!hasData) { showNoData('wrapHourly'); return; }
+        chartInstances.hourly = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.map(function(d) { return String(d.hour).padStart(2, '0') + ':00'; }),
+            datasets: [{
+              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Visitors',
+              data: data.map(function(d) { return d.views; }),
+              backgroundColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length] + '70'; }),
+              borderColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length]; }),
+              borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapHourly', e.message); });
+    }
+
+    // ── Popular Pages ──
+    function loadPopularChart() {
+      return fetchData('popular-pages').then(function(data) {
+        destroyChart('popular');
+        hideLoading('wrapPopular');
+        var ctx = document.getElementById('chartPopular');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapPopular'); return; }
+        chartInstances.popular = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.map(function(d) { return d.path.length > 25 ? d.path.substring(0, 25) + '\u2026' : d.path; }),
+            datasets: [{
+              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Visitors',
+              data: data.map(function(d) { return d.views; }),
+              backgroundColor: chartColors.info + '70',
+              borderColor: chartColors.info,
+              borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            indexAxis: 'y',
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              y: { grid: { display: false }, ticks: { color: chartColors.text, font: { size: 11 } } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapPopular', e.message); });
+    }
+
+    // ── Server Uptime (daily breakdown per server) ──
+    function loadUptimeChart() {
+      return fetchData('server-uptime').then(function(data) {
+        destroyChart('uptime');
+        hideLoading('wrapUptime');
+        var ctx = document.getElementById('chartUptime');
+        if (!ctx) return;
+        if (!data || !data.servers || data.servers.length === 0) { showNoData('wrapUptime'); return; }
+
+        var datasets = data.servers.map(function(srv, i) {
+          var color = chartColors.palette[i % chartColors.palette.length];
+          return {
+            label: srv.name,
+            data: srv.data,
+            borderColor: color,
+            backgroundColor: color + '20',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            spanGaps: true
+          };
+        });
+
+        chartInstances.uptime = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.days.map(function(d) { return formatDate(d); }),
+            datasets: datasets
+          },
+          options: {
+            plugins: {
+              legend: { position: 'top', labels: { color: chartColors.text, font: { size: 11 }, boxWidth: 12 } },
+              tooltip: { callbacks: { label: function(ctx) { return ctx.dataset.label + ': ' + ctx.parsed.y + '%'; } } }
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100, ticks: { callback: function(v) { return v + '%'; }, color: chartColors.text }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false }, ticks: { color: chartColors.text } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapUptime', e.message); });
+    }
+
+    // ── Chat Activity ──
+    function loadChatChart() {
+      return fetchData('chat-activity').then(function(data) {
+        destroyChart('chat');
+        hideLoading('wrapChat');
+        var ctx = document.getElementById('chartChat');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapChat'); return; }
+        chartInstances.chat = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.map(function(d) { return formatDate(d.day); }),
+            datasets: [{
+              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_messages') : 'Messages',
+              data: data.map(function(d) { return d.messages; }),
+              backgroundColor: chartColors.success + '60',
+              borderColor: chartColors.success,
+              borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapChat', e.message); });
+    }
+
+    // ── Server Timeline ──
+    function loadTimelineChart() {
+      return fetchData('server-timeline').then(function(data) {
+        destroyChart('timeline');
+        hideLoading('wrapTimeline');
+        var ctx = document.getElementById('chartTimeline');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapTimeline'); return; }
+        chartInstances.timeline = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.map(function(d) { return formatDate(d.day); }),
+            datasets: [
+              {
+                label: 'Online',
+                data: data.map(function(d) { return d.online; }),
+                borderColor: chartColors.success,
+                backgroundColor: chartColors.success + '25',
+                borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
+              },
+              {
+                label: 'Offline',
+                data: data.map(function(d) { return d.offline; }),
+                borderColor: chartColors.danger,
+                backgroundColor: chartColors.danger + '25',
+                borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
+              }
+            ]
+          },
+          options: {
+            plugins: { legend: { position: 'top', labels: { color: chartColors.text } } },
+            scales: {
+              y: { beginAtZero: true, stacked: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapTimeline', e.message); });
+    }
+
+    // ── Load All ──
+    window.loadAllCharts = function() {
+      var btn = document.getElementById('refreshChartsBtn');
+      if (btn) btn.disabled = true;
+
+      // re-show loading indicators
+      document.querySelectorAll('.chart-no-data, .chart-error').forEach(function(el) { el.remove(); });
+      document.querySelectorAll('.chart-body').forEach(function(wrap) {
+        if (!wrap.querySelector('.chart-loading')) {
+          var ld = document.createElement('div');
+          ld.className = 'chart-loading';
+          ld.textContent = 'Loading...';
+          wrap.appendChild(ld);
+        }
+      });
+
+      Promise.all([
+        loadPageViewsChart(),
+        loadHourlyChart(),
+        loadPopularChart(),
+        loadUptimeChart(),
+        loadChatChart(),
+        loadTimelineChart()
+      ]).then(function() {
+        if (btn) btn.disabled = false;
+      }).catch(function(e) {
+        console.error('Charts error:', e);
+        if (btn) btn.disabled = false;
+      });
+    };
+
+    // Period selector
+    var periodSelect = document.getElementById('analyticsDays');
+    if (periodSelect) periodSelect.addEventListener('change', window.loadAllCharts);
+
+    // Initial load
+    setTimeout(window.loadAllCharts, 100);
+  }
+
+  // Start init
+  waitForChart(0);
+})();
+</script>
+
+<%- include('../partials/footer') %>

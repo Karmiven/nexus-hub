@@ -182,9 +182,9 @@ function fmtUptime(sec) {
   var d = Math.floor(sec / 86400);
   var h = Math.floor((sec % 86400) / 3600);
   var m = Math.floor((sec % 3600) / 60);
-  if (d > 0) return d + 'д ' + h + 'ч';
-  if (h > 0) return h + 'ч ' + m + 'м';
-  return m + 'м';
+  if (d > 0) return d + _t('mon_uptime_days') + ' ' + h + _t('mon_uptime_hours');
+  if (h > 0) return h + _t('mon_uptime_hours') + ' ' + m + _t('mon_uptime_minutes');
+  return m + _t('mon_uptime_minutes');
 }
 
 function coreWord(n) {

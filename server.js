@@ -34,7 +34,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
@@ -149,6 +149,32 @@ app.use((req, res, next) => {
     // Database might not be fully initialized yet
   }
   
+  next();
+});
+
+// ── Analytics middleware (track page views) ──
+app.use((req, res, next) => {
+  // Only track GET requests to actual pages (not static assets, API, or XHR)
+  if (
+    req.method === 'GET' &&
+    !req.path.startsWith('/css') &&
+    !req.path.startsWith('/js') &&
+    !req.path.startsWith('/img') &&
+    !req.path.startsWith('/uploads') &&
+    !req.path.startsWith('/api') &&
+    !req.path.startsWith('/admin') &&
+    !req.path.startsWith('/health') &&
+    !req.path.includes('.') &&
+    !req.xhr &&
+    req.headers['x-requested-with'] !== 'XMLHttpRequest'
+  ) {
+    try {
+      db.run(
+        'INSERT INTO page_views (path, method, user_id, ip, user_agent) VALUES (?, ?, ?, ?, ?)',
+        [req.path, req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255)]
+      );
+    } catch (e) { /* analytics should never break the app */ }
+  }
   next();
 });
 
