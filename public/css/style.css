@@ -361,6 +361,63 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   color: var(--text-primary);
 }
 
+/* ── Effect speed slider ── */
+.effect-speed-container {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.effect-speed-label {
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: default;
+  user-select: none;
+}
+
+.effect-speed-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 60px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+
+.effect-speed-slider:hover {
+  border-color: var(--primary);
+}
+
+.effect-speed-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 0 4px var(--glow-color);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.effect-speed-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 8px var(--glow-color);
+}
+
+.effect-speed-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 0 4px var(--glow-color);
+}
+
 /* Mobile toggle */
 .nav-toggle {
   display: none;
@@ -2121,6 +2178,10 @@ td.actions-cell {
     border: 1px solid var(--border);
     font-size: 0.75rem;
     padding: 0.3rem 0.5rem;
+  }
+
+  .nav-item-theme-lang .effect-speed-slider {
+    width: 45px;
   }
 
   .hero-stats { flex-direction: column; align-items: center; gap: 0.65rem; }

@@ -18,4 +18,8 @@
   .nav-item-theme-lang .theme-selector {
     min-width: 68px;
   }
+
+  .nav-item-theme-lang .effect-speed-slider {
+    width: 55px;
+  }
 }
