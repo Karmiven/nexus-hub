@@ -21,46 +21,54 @@ class ProxmoxClient {
   }
 
   /** Raw HTTP(S) request to Proxmox API */
-  _request(method, apiPath) {
+  _request(method, apiPath, postData) {
     return new Promise((resolve, reject) => {
       if (!this.isConfigured()) {
         return reject(new Error('Proxmox API not configured'));
       }
 
       const url = `/api2/json${apiPath}`;
+      const body = postData ? new URLSearchParams(postData).toString() : '';
+      const headers = {
+        'Authorization': `PVEAPIToken=${this.tokenId}=${this.tokenSecret}`,
+        'Accept': 'application/json'
+      };
+      if (body) {
+        headers['Content-Type'] = 'application/x-www-form-urlencoded';
+        headers['Content-Length'] = Buffer.byteLength(body);
+      }
+
       const options = {
         hostname: this.host,
         port: this.port,
         path: url,
         method,
-        headers: {
-          'Authorization': `PVEAPIToken=${this.tokenId}=${this.tokenSecret}`,
-          'Accept': 'application/json'
-        },
+        headers,
         rejectUnauthorized: this.verifySsl,
         timeout: this.timeout
       };
 
       const proto = this.port === 80 ? http : https;
       const req = proto.request(options, (res) => {
-        let body = '';
-        res.on('data', chunk => body += chunk);
+        let respBody = '';
+        res.on('data', chunk => respBody += chunk);
         res.on('end', () => {
           try {
-            const json = JSON.parse(body);
+            const json = JSON.parse(respBody);
             if (res.statusCode >= 200 && res.statusCode < 300) {
               resolve(json.data);
             } else {
               reject(new Error(`Proxmox API ${res.statusCode}: ${JSON.stringify(json.errors || json)}`));
             }
           } catch (e) {
-            reject(new Error(`Proxmox API parse error: ${body.substring(0, 200)}`));
+            reject(new Error(`Proxmox API parse error: ${respBody.substring(0, 200)}`));
           }
         });
       });
 
       req.on('error', (err) => reject(new Error(`Proxmox connection error: ${err.message}`)));
       req.on('timeout', () => { req.destroy(); reject(new Error('Proxmox API request timeout')); });
+      if (body) req.write(body);
       req.end();
     });
   }
@@ -268,6 +276,25 @@ class ProxmoxClient {
       type: 'qemu',
       node
     };
+  }
+
+  /**
+   * Control a guest (start/stop/reboot/shutdown)
+   * @param {string} node - Proxmox node name
+   * @param {number} vmid - VM/CT ID
+   * @param {string} type - 'lxc' or 'qemu'
+   * @param {string} action - 'start', 'stop', 'reboot', or 'shutdown'
+   * @returns {string} UPID task identifier
+   */
+  async controlGuest(node, vmid, type, action) {
+    const validActions = ['start', 'stop', 'reboot', 'shutdown'];
+    if (!validActions.includes(action)) {
+      throw new Error(`Invalid action: ${action}`);
+    }
+    if (type !== 'lxc' && type !== 'qemu') {
+      throw new Error(`Invalid guest type: ${type}`);
+    }
+    return this._request('POST', `/nodes/${node}/${type}/${vmid}/status/${action}`);
   }
 
   /**

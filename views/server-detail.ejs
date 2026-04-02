@@ -9,6 +9,11 @@
 
 <section class="section container">
   <div class="detail-card">
+    <% if (server.image) { %>
+      <div class="detail-card-image">
+        <img src="<%= server.image %>" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">
+      </div>
+    <% } %>
     <div class="detail-header">
       <div class="detail-status">
         <span class="status-dot status-dot-<%= server.status %>"></span>

@@ -128,7 +128,7 @@
           <% if (user) { %>
             <form action="/auth/logout" method="POST" style="display:inline;margin:0;padding:0;">
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button type="submit" class="nav-link btn-nav-outline" data-i18n="nav_logout">Logout</button>
+              <button type="submit" class="nav-link btn-nav-logout" data-i18n="nav_logout">Logout</button>
             </form>
           <% } else { %>
             <a href="/auth/login" class="nav-link btn-nav-outline" data-i18n="nav_login">Login</a>

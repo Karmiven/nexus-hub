@@ -127,6 +127,8 @@ async function refreshAllServers() {
         'x-csrf-token': token ? token.content : ''
       }
     });
+    var newToken = res.headers.get('X-CSRF-Token');
+    if (newToken && token) token.setAttribute('content', newToken);
     var data = await res.json();
     if (data.success) {
       location.reload();

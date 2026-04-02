@@ -16,6 +16,15 @@
     <div class="server-grid">
       <% servers.forEach(function(srv) { %>
         <div class="server-card">
+          <% if (srv.image) { %>
+            <div class="server-card-banner">
+              <img src="<%= srv.image %>" alt="" loading="lazy" onerror="this.parentElement.classList.add('no-image');this.replaceWith(Object.assign(document.createElement('i'),{className:'banner-icon','data-lucide':'gamepad-2'}));if(typeof lucide!=='undefined')lucide.createIcons();">
+            </div>
+          <% } else { %>
+            <div class="server-card-banner no-image">
+              <i data-lucide="gamepad-2" class="banner-icon"></i>
+            </div>
+          <% } %>
           <div class="server-status-indicator status-<%= srv.status %>"></div>
           <div class="server-card-header">
             <h3 class="server-name"><%= srv.name %></h3>

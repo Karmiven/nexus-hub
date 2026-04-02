@@ -73,6 +73,10 @@ router.get('/resources', monitoringAccess, async (req, res) => {
     }
 
     const guests = await pve.getSelectedGuestsStatus(selected);
+    // Merge custom display names from saved config
+    const nameMap = {};
+    selected.forEach(s => { if (s.displayName) nameMap[s.vmid] = s.displayName; });
+    guests.forEach(g => { if (nameMap[g.vmid]) g.displayName = nameMap[g.vmid]; });
     res.json({ success: true, guests, timestamp: new Date().toISOString() });
   } catch (err) {
     console.error('Proxmox monitoring error:', err.message);
@@ -131,6 +135,53 @@ router.post('/discover-guests', isAdmin, async (req, res) => {
   }
 });
 
+// ── JSON API: rename guest (set displayName) ──
+router.post('/rename/:vmid', isAdmin, (req, res) => {
+  const vmid = String(req.params.vmid);
+  const displayName = String(req.body.displayName || '').trim().substring(0, 64);
+  const selected = getSelectedGuests();
+  const guest = selected.find(g => String(g.vmid) === vmid);
+  if (!guest) return res.json({ success: false, error: 'Guest not found' });
+  guest.displayName = displayName || undefined;
+  if (!displayName) delete guest.displayName;
+  db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['proxmox_guests', JSON.stringify(selected)]);
+  res.json({ success: true });
+});
+
+// ── JSON API: control guest (start/stop/reboot/shutdown) ──
+router.post('/control/:vmid/:action', isAdmin, async (req, res) => {
+  try {
+    const { vmid, action } = req.params;
+    const validActions = ['start', 'stop', 'reboot', 'shutdown'];
+    if (!validActions.includes(action)) {
+      return res.json({ success: false, error: 'Invalid action' });
+    }
+
+    const pve = getProxmoxClient();
+    if (!pve.isConfigured()) {
+      return res.json({ success: false, error: 'Proxmox not configured' });
+    }
+
+    // Find guest in selected list to get type and node
+    const selected = getSelectedGuests();
+    const guest = selected.find(g => String(g.vmid) === String(vmid));
+    if (!guest) {
+      return res.json({ success: false, error: 'Guest not found in selected list' });
+    }
+
+    const node = guest.node || pve.node;
+    if (!node) {
+      return res.json({ success: false, error: 'Node not specified for this guest' });
+    }
+
+    const taskId = await pve.controlGuest(node, vmid, guest.type, action);
+    res.json({ success: true, task: taskId, action, vmid: parseInt(vmid) });
+  } catch (err) {
+    console.error(`Proxmox control error (${req.params.action} ${req.params.vmid}):`, err.message);
+    res.json({ success: false, error: err.message });
+  }
+});
+
 // ── Dashboard page ──
 router.get('/dashboard', monitoringAccess, (req, res) => {
   const pve = getProxmoxClient();
@@ -138,7 +189,8 @@ router.get('/dashboard', monitoringAccess, (req, res) => {
   res.render('monitoring/dashboard', {
     title: 'Мониторинг',
     proxmoxConfigured: pve.isConfigured(),
-    hasSelectedGuests: selected.length > 0
+    hasSelectedGuests: selected.length > 0,
+    isAdmin: req.session?.user?.role === 'admin'
   });
 });
 

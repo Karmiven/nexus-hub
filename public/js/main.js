@@ -492,9 +492,16 @@ function initLanguageSelector() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
         'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || ''
       },
       body: JSON.stringify({ language: e.target.value })
+    }).then(function(res) {
+      var newToken = res.headers.get('X-CSRF-Token');
+      if (newToken) {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) meta.setAttribute('content', newToken);
+      }
     }).catch(() => {});
   });
 }

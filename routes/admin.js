@@ -11,11 +11,11 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure uploads directory exists
+// Ensure uploads directories exist
 const uploadsDir = path.join(__dirname, '..', 'uploads', 'news');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
+const serverUploadsDir = path.join(__dirname, '..', 'uploads', 'servers');
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(serverUploadsDir)) fs.mkdirSync(serverUploadsDir, { recursive: true });
 
 // Configure multer for image uploads
 const storage = multer.diskStorage({
@@ -119,6 +119,46 @@ function resolveNewsImage(croppedImageData, uploadedFile, existingImage = '') {
     }
   }
   if (uploadedFile) return '/uploads/news/' + uploadedFile.filename;
+  return existingImage;
+}
+
+// ── Server image upload ──
+const serverStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, serverUploadsDir),
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + crypto.randomBytes(8).toString('hex');
+    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+const uploadServer = multer({ storage: serverStorage, limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (req, file, cb) => {
+  if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) cb(null, true);
+  else cb(new Error('Only JPEG, PNG, GIF, and WebP images are allowed.'), false);
+}});
+
+function resolveServerImage(croppedImageData, uploadedFile, existingImage = '') {
+  if (croppedImageData === 'REMOVE') return '';
+  if (croppedImageData && croppedImageData.startsWith('data:image/')) {
+    try {
+      const matches = croppedImageData.match(/^data:image\/(jpeg|jpg|png|gif|webp);base64,(.+)$/);
+      if (matches) {
+        const ext = matches[1] === 'jpeg' ? 'jpg' : matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        if (buffer.length > 5 * 1024 * 1024) return existingImage;
+        const isValidImage =
+          (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47) ||
+          (buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF) ||
+          (buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46) ||
+          (buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46);
+        if (!isValidImage) return existingImage;
+        const filename = 'server-' + Date.now() + '-' + crypto.randomBytes(8).toString('hex') + '.' + ext;
+        fs.writeFileSync(path.join(serverUploadsDir, filename), buffer);
+        return '/uploads/servers/' + filename;
+      }
+    } catch (e) {
+      console.error('Failed to save cropped server image:', e.message);
+    }
+  }
+  if (uploadedFile) return '/uploads/servers/' + uploadedFile.filename;
   return existingImage;
 }
 
@@ -246,21 +286,22 @@ router.post('/servers/refresh', catchAsync(async (req, res) => {
   res.redirect('/admin/servers');
 }));
 
-router.post('/servers', (req, res) => {
-  const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
-  
+router.post('/servers', uploadServer.single('image'), (req, res) => {
+  const { name, game, ip, port, description, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
+
   const validationError = validateServerInput(req.body);
   if (validationError) {
     req.flash('error', validationError);
     return res.redirect('/admin/servers');
   }
   const portNum = parseInt(port);
-  
+  const image = resolveServerImage(croppedImageData, req.file);
+
   db.run(
     `INSERT INTO servers (name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [name, game, ip, portNum,
-    description || '', image || '',
+    description || '', image,
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0]
   );
@@ -278,21 +319,23 @@ router.get('/servers/:id/edit', (req, res) => {
   res.render('admin/server-form', { title: 'Edit Server', server });
 });
 
-router.post('/servers/:id', (req, res) => {
-  const { name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
-  
+router.post('/servers/:id', uploadServer.single('image'), (req, res) => {
+  const { name, game, ip, port, description, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
+
   const validationError = validateServerInput(req.body);
   if (validationError) {
     req.flash('error', validationError);
     return res.redirect('/admin/servers');
   }
   const portNum = parseInt(port);
-  
+  const existing = db.get('SELECT image FROM servers WHERE id = ?', [req.params.id]);
+  const image = resolveServerImage(croppedImageData, req.file, existing ? existing.image : '');
+
   db.run(
     `UPDATE servers SET name = ?, game = ?, ip = ?, port = ?, description = ?, image = ?,
      redirect_enabled = ?, redirect_url = ?, show_player_count = ?, show_ip_address = ?, sort_order = ? WHERE id = ?`,
     [name, game, ip, portNum,
-    description || '', image || '',
+    description || '', image,
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0,
     req.params.id]

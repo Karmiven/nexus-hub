@@ -48,8 +48,12 @@
 .resource-bar-fill.low { background:var(--success); }
 .resource-bar-fill.medium { background:var(--warning, #f59e0b); }
 .resource-bar-fill.high { background:var(--danger); }
-.resource-card .resource-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; }
-.resource-card .resource-title { font-size:1rem; font-weight:600; margin:0; display:flex; align-items:center; gap:0.4rem; }
+.resource-card { display:flex; flex-direction:column; min-height:180px; }
+.resource-card .resource-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; gap:0.5rem; }
+.resource-card .resource-title { font-size:1rem; font-weight:600; margin:0; display:flex; align-items:center; gap:0.4rem; overflow:hidden; min-width:0; }
+.resource-card .resource-title .guest-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.resource-card .resource-body { flex:1; }
+.resource-card .resource-status { flex-shrink:0; }
 .resource-card .resource-status { font-size:0.78rem; padding:0.2rem 0.6rem; border-radius:var(--radius-sm,4px); font-weight:600; display:flex; align-items:center; gap:0.3rem; }
 .status-dot-inline { width:6px; height:6px; border-radius:50%; display:inline-block; }
 .status-dot-inline.online { background:var(--success); }
@@ -57,12 +61,33 @@
 .btn-xs { padding:0.2rem 0.55rem; font-size:0.75rem; display:inline-flex; align-items:center; gap:0.3rem; }
 .guest-info-row { display:flex; gap:1rem; flex-wrap:wrap; font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem; }
 .guest-info-row span { display:inline-flex; align-items:center; gap:0.25rem; }
+.guest-controls { display:flex; gap:0.35rem; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid var(--border); }
+.guest-controls .btn-control {
+  flex:1; padding:0.3rem 0.5rem; font-size:0.75rem; font-weight:600; border:1px solid var(--border);
+  border-radius:var(--radius-xs,4px); background:var(--surface-2); color:var(--text-secondary);
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;
+  transition:background 0.15s, border-color 0.15s, color 0.15s;
+}
+.guest-controls .btn-control:hover:not(:disabled) { background:var(--surface-hover); color:var(--text-primary); }
+.guest-controls .btn-control:disabled { opacity:0.4; cursor:not-allowed; }
+.guest-controls .btn-control.btn-start { border-color:color-mix(in srgb, var(--success) 40%, transparent); color:var(--success); }
+.guest-controls .btn-control.btn-start:hover:not(:disabled) { background:color-mix(in srgb, var(--success) 12%, transparent); }
+.guest-controls .btn-control.btn-stop { border-color:color-mix(in srgb, var(--danger) 40%, transparent); color:var(--danger); }
+.guest-controls .btn-control.btn-stop:hover:not(:disabled) { background:color-mix(in srgb, var(--danger) 12%, transparent); }
+.guest-controls .btn-control.btn-restart { border-color:color-mix(in srgb, var(--warning) 40%, transparent); color:var(--warning); }
+.guest-controls .btn-control.btn-restart:hover:not(:disabled) { background:color-mix(in srgb, var(--warning) 12%, transparent); }
+.guest-controls .btn-control.loading { pointer-events:none; opacity:0.6; }
+.guest-controls { margin-top:auto; }
+.rename-btn { background:none; border:none; cursor:pointer; color:var(--text-muted); padding:0.1rem; display:inline-flex; align-items:center; opacity:0.5; transition:opacity 0.15s; }
+.rename-btn:hover { opacity:1; color:var(--primary); }
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 <script>
 <% if (proxmoxConfigured && hasSelectedGuests) { %>
 var refreshInterval;
 var _cachedGuests = null;
+var _isAdmin = <%= isAdmin ? 'true' : 'false' %>;
 
 function _t(key) {
   return (typeof window.i18n !== 'undefined') ? window.i18n.t(key) : key;
@@ -116,8 +141,8 @@ function renderGuests(guests) {
   guests.forEach(function(g) {
     var isRunning = g.status === 'running';
     var isError = g.status === 'error';
-    var typeLabel = g.type === 'lxc' ? 'LXC' : 'VM';
     var typeIcon = g.type === 'lxc' ? 'container' : 'monitor';
+    var label = g.displayName || g.name;
 
     var card = document.createElement('div');
     card.className = 'resource-card' + (isRunning ? ' status-online' : ' status-offline');
@@ -125,37 +150,61 @@ function renderGuests(guests) {
     var statusText = isRunning ? _t('mon_running') : (isError ? _t('mon_error') : _t('mon_stopped'));
 
     var html = '<div class="resource-header">' +
-      '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> ' + escHtml(g.name) +
-        ' <span style="font-size:0.72rem;color:var(--text-muted);font-weight:400;">' + typeLabel + ' ' + g.vmid + '</span></h3>' +
+      '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> <span class="guest-name">' + escHtml(label) + '</span>';
+    if (_isAdmin) {
+      html += ' <button class="rename-btn" onclick="renameGuest(' + g.vmid + ',this)" title="Rename"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button>';
+    }
+    html += '</h3>' +
       '<span class="resource-status ' + (isRunning ? 'status-online' : 'status-offline') + '">' +
         '<span class="status-dot-inline ' + (isRunning ? 'online' : 'offline') + '"></span> ' +
         statusText +
       '</span></div>';
 
+    html += '<div class="resource-body">';
     if (isError) {
-      html += '<div style="padding:1rem;text-align:center;color:var(--danger);font-size:0.85rem;">' +
-        '<i data-lucide="alert-triangle" style="width:1.2em;height:1.2em;vertical-align:-0.15em;"></i> ' + escHtml(g.error || _t('mon_no_access')) +
-      '</div>';
+      html += '<div style="padding:1rem;text-align:center;font-size:0.85rem;">' +
+        '<p style="color:var(--text-muted);margin-bottom:0.3rem;"><i data-lucide="server-off" style="width:1.4em;height:1.4em;vertical-align:-0.2em;"></i> ' + escHtml(_t('mon_node_offline')) + '</p>' +
+        '<p style="color:var(--text-muted);font-size:0.78rem;">' + escHtml(_t('mon_node_offline_desc')) + '</p>';
+      if (_isAdmin && g.error) {
+        html += '<p style="color:var(--danger);font-size:0.72rem;margin-top:0.5rem;opacity:0.7;">' + escHtml(g.error) + '</p>';
+      }
+      html += '</div>';
     } else if (isRunning) {
-      // CPU bar
       html += '<div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.7rem;">' +
         makeBar('CPU (' + g.cpus + ' ' + coreWord(g.cpus) + ')', g.cpu) +
         makeBar('RAM — ' + fmtBytes(g.mem) + ' / ' + fmtBytes(g.maxmem), g.memUsage) +
       '</div>';
-      // Info row
       html += '<div class="guest-info-row">' +
         '<span><i data-lucide="clock" style="width:14px;height:14px;"></i> ' + fmtUptime(g.uptime) + '</span>' +
         '<span><i data-lucide="arrow-down" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netin) + '</span>' +
         '<span><i data-lucide="arrow-up" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netout) + '</span>' +
       '</div>';
     } else {
-      html += '<div style="padding:1.5rem;text-align:center;">' +
+      html += '<div style="padding:1rem;text-align:center;">' +
         '<p style="color:var(--text-muted);"><i data-lucide="power-off" style="width:1.2em;height:1.2em;vertical-align:-0.15em;"></i> ' + escHtml(_t('mon_container_stopped')) + '</p>';
       if (g.maxmem) {
         html += '<p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.35rem;">' +
           g.cpus + ' CPU, ' + fmtBytes(g.maxmem) + ' RAM</p>';
       }
       html += '</div>';
+    }
+    html += '</div>';
+
+    if (_isAdmin) {
+      html += '<div class="guest-controls">' +
+        '<button class="btn-control btn-start" data-vmid="' + g.vmid + '" data-action="start" onclick="controlGuest(this)" ' +
+          (isRunning ? 'disabled' : '') + '>' +
+          '<i data-lucide="play" style="width:12px;height:12px;"></i> ' + _t('mon_start') +
+        '</button>' +
+        '<button class="btn-control btn-restart" data-vmid="' + g.vmid + '" data-action="reboot" onclick="controlGuest(this)" ' +
+          (!isRunning ? 'disabled' : '') + '>' +
+          '<i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> ' + _t('mon_restart') +
+        '</button>' +
+        '<button class="btn-control btn-stop" data-vmid="' + g.vmid + '" data-action="shutdown" onclick="controlGuest(this)" ' +
+          (!isRunning ? 'disabled' : '') + '>' +
+          '<i data-lucide="square" style="width:12px;height:12px;"></i> ' + _t('mon_shutdown') +
+        '</button>' +
+      '</div>';
     }
 
     card.innerHTML = html;
@@ -195,6 +244,71 @@ function coreWord(n) {
   if (n === 1) return _t('mon_core_one');
   if (n >= 2 && n <= 4) return _t('mon_core_few');
   return _t('mon_core_many');
+}
+
+async function renameGuest(vmid, btn) {
+  var nameEl = btn.closest('.resource-title').querySelector('.guest-name');
+  var current = nameEl ? nameEl.textContent : '';
+  var newName = prompt(_t('mon_rename_prompt') || 'Введите новое название:', current);
+  if (newName === null) return;
+  try {
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta?.getAttribute('content') || '';
+    var res = await fetch('/monitoring/rename/' + vmid, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ displayName: newName.trim() })
+    });
+    var newCsrf = res.headers.get('X-CSRF-Token');
+    if (newCsrf && csrfMeta) csrfMeta.setAttribute('content', newCsrf);
+    var data = await res.json();
+    if (data.success) fetchData();
+    else alert(data.error || 'Error');
+  } catch (err) { alert(err.message); }
+}
+
+async function controlGuest(btn) {
+  var vmid = btn.getAttribute('data-vmid');
+  var action = btn.getAttribute('data-action');
+  var actionLabel = btn.textContent.trim();
+  var card = btn.closest('.resource-card');
+  var guestName = card ? (card.querySelector('.guest-name')?.textContent || vmid) : vmid;
+
+  if (!confirm(_t('mon_confirm_action').replace('{action}', actionLabel).replace('{vmid}', guestName))) return;
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+  var origHtml = btn.innerHTML;
+  btn.innerHTML = '<i data-lucide="loader-2" style="width:12px;height:12px;animation:spin 1s linear infinite;"></i> ...';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+  try {
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta?.getAttribute('content') || '';
+    var res = await fetch('/monitoring/control/' + vmid + '/' + action, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'x-csrf-token': csrfToken },
+      credentials: 'same-origin'
+    });
+    // Update CSRF token (rotates after each POST)
+    var newToken = res.headers.get('X-CSRF-Token');
+    if (newToken && csrfMeta) csrfMeta.setAttribute('content', newToken);
+    var data = await res.json();
+    if (data.success) {
+      // Refresh data after a short delay to let Proxmox process the action
+      setTimeout(fetchData, 2000);
+    } else {
+      alert(_t('mon_control_error') + ': ' + (data.error || 'Unknown error'));
+    }
+  } catch (err) {
+    alert(_t('mon_control_error') + ': ' + err.message);
+  } finally {
+    btn.innerHTML = origHtml;
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
 }
 
 fetchData();

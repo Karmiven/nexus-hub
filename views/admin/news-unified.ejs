@@ -128,8 +128,8 @@
       <div class="form-group" style="grid-column: 1 / -1;">
         <label class="form-label" data-i18n="admin_news_image">Изображение (16:9 — высокое качество)</label>
         <div class="image-section">
+          <input type="file" id="image" name="image" accept="image/*" style="display: none;">
           <div class="image-upload" id="imageUpload">
-            <input type="file" id="image" name="image" accept="image/*" style="display: none;">
             <div class="upload-placeholder">
               <p><i data-lucide="image"></i> <span data-i18n="admin_news_image_click">Нажмите для загрузки изображения</span></p>
               <small data-i18n="admin_news_image_hint">Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680x360px</small>
@@ -141,7 +141,8 @@
           <div id="finalImagePreview" style="display: none;">
             <img id="finalImage" class="image-preview" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" onclick="openCropModal()"><i data-lucide="pencil"></i> <span data-i18n="admin_news_replace">Заменить</span></button>
+              <button type="button" class="btn btn-xs btn-outline" onclick="recropImage()"><i data-lucide="crop"></i> <span data-i18n="admin_news_recrop">Обрезать</span></button>
+              <button type="button" class="btn btn-xs btn-outline" onclick="replaceImage()"><i data-lucide="image-plus"></i> <span data-i18n="admin_news_replace">Заменить</span></button>
             </div>
           </div>
         </div>
@@ -634,6 +635,36 @@
     }
   });
 
+  // Replace image — trigger file picker (works for both new and existing images)
+  function replaceImage() {
+    imageInput.value = '';
+    imageInput.click();
+  }
+
+  // Re-crop current image (use original if available, otherwise load from preview)
+  function recropImage() {
+    const finalImg = document.getElementById('finalImage');
+    if (originalImageData) {
+      openCropModal();
+    } else if (finalImg && finalImg.src) {
+      // Load existing image as data URL for cropping
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        originalImageData = canvas.toDataURL('image/jpeg', 1.0);
+        openCropModal();
+      };
+      img.onerror = function() {
+        alert(window.i18n ? window.i18n.t('admin_news_recrop_error') : 'Не удалось загрузить изображение для обрезки. Попробуйте заменить.');
+      };
+      img.src = finalImg.src;
+    }
+  }
+
   // Crop modal functions
   function openCropModal() {
     if (!originalImageData) return;
@@ -898,11 +929,16 @@
                      || formData.get('_csrf');
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'x-csrf-token': csrfToken },
+        headers: { 'x-csrf-token': csrfToken, 'X-Requested-With': 'XMLHttpRequest' },
         body: formData,
         credentials: 'same-origin'
       });
-      
+      var newCsrf = response.headers.get('X-CSRF-Token');
+      if (newCsrf) {
+        var meta = document.querySelector('meta[name="csrf-token"]');
+        if (meta) meta.setAttribute('content', newCsrf);
+      }
+
       if (response.ok) {
         window.location.reload();
       } else {

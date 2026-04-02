@@ -321,6 +321,21 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   background: color-mix(in srgb, var(--primary) 8%, transparent);
   color: var(--primary) !important;
 }
+.btn-nav-logout {
+  border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
+  color: var(--danger) !important;
+  font-size: 0.82rem;
+  padding: 0.35rem 0.9rem;
+  min-width: 72px;
+  text-align: center;
+  white-space: nowrap;
+  background: color-mix(in srgb, var(--danger) 8%, transparent);
+}
+.btn-nav-logout:hover {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger) !important;
+}
 
 .btn-nav-filled {
   background: var(--primary);
@@ -956,6 +971,15 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.15rem;
 }
+
+.server-card-banner { margin: -1.15rem -1.15rem 0.75rem -1.15rem; height: 100px; overflow: hidden; position: relative; }
+.server-card-banner img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s ease; }
+.server-card:hover .server-card-banner img { transform: scale(1.05); }
+.server-card-banner.no-image { background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 25%, transparent), color-mix(in srgb, var(--accent) 15%, transparent)); display: flex; align-items: center; justify-content: center; }
+.server-card-banner.no-image .banner-icon { color: color-mix(in srgb, var(--primary) 50%, transparent); width: 40px; height: 40px; opacity: 0.6; }
+.server-card:hover .server-card-banner.no-image .banner-icon { opacity: 0.9; }
+.detail-card-image { margin: -1.5rem -1.5rem 1.5rem -1.5rem; height: 180px; overflow: hidden; }
+.detail-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .server-card {
   background: var(--surface);

@@ -50,6 +50,9 @@ function csrfProtection(req, res, next) {
   req.session._csrf = crypto.randomBytes(24).toString('hex');
   res.locals.csrfToken = req.session._csrf;
 
+  // Expose new token in response header so JS can update without page reload
+  res.setHeader('X-CSRF-Token', req.session._csrf);
+
   next();
 }
 

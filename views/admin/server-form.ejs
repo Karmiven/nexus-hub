@@ -1,4 +1,6 @@
 <%- include('../partials/header') %>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <section class="admin-header">
   <div class="container">
@@ -17,8 +19,7 @@
 
 <section class="section container">
   <div class="form-card">
-    <form action="<%= server ? '/admin/servers/' + server.id : '/admin/servers' %>" method="POST" class="admin-form">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <form action="<%= server ? '/admin/servers/' + server.id + '?_csrf=' + csrfToken : '/admin/servers?_csrf=' + csrfToken %>" method="POST" enctype="multipart/form-data" class="admin-form">
       <div class="form-row">
         <div class="form-group">
           <label for="name" data-i18n="admin_server_name">Название сервера *</label>
@@ -54,8 +55,25 @@
         <textarea id="description" name="description" class="form-input form-textarea" rows="4"><%= server ? server.description : '' %></textarea>
       </div>
       <div class="form-group">
-        <label for="image" data-i18n="admin_server_image">URL изображения (необязательно)</label>
-        <input type="url" id="image" name="image" class="form-input" value="<%= server ? server.image : '' %>" placeholder="https://example.com/server-banner.jpg">
+        <label data-i18n="admin_server_image">Баннер сервера (необязательно)</label>
+        <div class="image-section">
+          <input type="file" id="imageFile" name="image" accept="image/*" style="display:none;">
+          <div class="image-upload" id="imageUpload" style="<%= server && server.image ? 'display:none' : '' %>">
+            <div class="upload-placeholder" style="padding:1.5rem;text-align:center;cursor:pointer;border:2px dashed var(--border);border-radius:var(--radius-sm);">
+              <p><i data-lucide="image"></i> <span data-i18n="admin_server_image_click">Нажмите для загрузки баннера</span></p>
+              <small style="color:var(--text-muted);">JPG, PNG, GIF, WebP (макс. 5MB) • 16:5</small>
+            </div>
+          </div>
+          <input type="hidden" id="croppedImageData" name="croppedImageData">
+          <div id="finalImagePreview" style="<%= server && server.image ? '' : 'display:none' %>">
+            <img id="finalImage" src="<%= server && server.image ? server.image : '' %>" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);">
+            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+              <button type="button" class="btn btn-xs btn-outline" id="recropBtn"><i data-lucide="crop"></i> Обрезать</button>
+              <button type="button" class="btn btn-xs btn-outline" id="replaceBtn"><i data-lucide="image-plus"></i> Заменить</button>
+              <button type="button" class="btn btn-xs btn-outline" style="color:var(--danger);border-color:var(--danger);" id="removeBtn"><i data-lucide="trash-2"></i> Удалить</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <fieldset class="form-fieldset">
@@ -100,14 +118,129 @@
   </div>
 </section>
 
+<!-- Crop Modal -->
+<div id="cropModal" class="modal" style="display:none;z-index:2000;">
+  <div class="modal-content" style="max-width:600px;">
+    <div class="modal-header">
+      <h2><i data-lucide="crop"></i> Обрезка баннера (16:5)</h2>
+      <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
+    </div>
+    <div style="max-height:400px;overflow:hidden;">
+      <img id="cropperImage" style="max-width:100%;">
+    </div>
+    <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end;">
+      <button type="button" class="btn btn-secondary" onclick="closeCropModal()">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> Применить</button>
+    </div>
+  </div>
+</div>
+
 <script>
-  const toggle = document.getElementById('redirectToggle');
-  const urlGroup = document.getElementById('redirectUrlGroup');
+  // Redirect toggle
+  var toggle = document.getElementById('redirectToggle');
+  var urlGroup = document.getElementById('redirectUrlGroup');
   function updateRedirectVisibility() {
     urlGroup.style.display = toggle.checked ? 'block' : 'none';
   }
   toggle.addEventListener('change', updateRedirectVisibility);
   updateRedirectVisibility();
+
+  // Image crop
+  var imageUpload = document.getElementById('imageUpload');
+  var imageFile = document.getElementById('imageFile');
+  var finalPreview = document.getElementById('finalImagePreview');
+  var finalImage = document.getElementById('finalImage');
+  var cropModal = document.getElementById('cropModal');
+  var cropper = null;
+  var originalImageData = null;
+
+  imageUpload.addEventListener('click', function(e) {
+    if (e.target === imageFile) return;
+    imageFile.click();
+  });
+
+  document.getElementById('replaceBtn').addEventListener('click', function() {
+    imageFile.value = '';
+    imageFile.click();
+  });
+
+  document.getElementById('recropBtn').addEventListener('click', function() {
+    if (originalImageData) {
+      openCropModal();
+    } else if (finalImage.src) {
+      var img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        var canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        originalImageData = canvas.toDataURL('image/jpeg', 1.0);
+        openCropModal();
+      };
+      img.onerror = function() { alert('Не удалось загрузить изображение. Попробуйте заменить.'); };
+      img.src = finalImage.src;
+    }
+  });
+
+  document.getElementById('removeBtn').addEventListener('click', function() {
+    finalPreview.style.display = 'none';
+    imageUpload.style.display = 'block';
+    document.getElementById('croppedImageData').value = 'REMOVE';
+    finalImage.src = '';
+    originalImageData = null;
+  });
+
+  imageFile.addEventListener('change', function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Макс 5MB.'); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      originalImageData = ev.target.result;
+      openCropModal();
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function openCropModal() {
+    if (!originalImageData) return;
+    var img = document.getElementById('cropperImage');
+    img.src = originalImageData;
+    if (cropper) cropper.destroy();
+    cropper = new Cropper(img, {
+      aspectRatio: 16 / 5,
+      autoCropArea: 1,
+      responsive: true,
+      guides: true,
+      center: true,
+      highlight: true,
+      cropBoxMovable: true,
+      cropBoxResizable: true,
+    });
+    cropModal.style.display = 'flex';
+  }
+
+  function closeCropModal() { cropModal.style.display = 'none'; }
+
+  function applyCrop() {
+    if (!cropper) return;
+    var canvas = cropper.getCroppedCanvas({
+      maxWidth: 800,
+      maxHeight: 250,
+      fillColor: '#000',
+      imageSmoothingEnabled: true,
+      imageSmoothingQuality: 'high',
+    });
+    var croppedData = canvas.toDataURL('image/jpeg', 0.9);
+    document.getElementById('croppedImageData').value = croppedData;
+    finalImage.src = croppedData;
+    finalPreview.style.display = 'block';
+    imageUpload.style.display = 'none';
+    closeCropModal();
+    // Clear file input so form doesn't send raw file
+    imageFile.value = '';
+  }
 </script>
 
 <%- include('../partials/footer') %>
