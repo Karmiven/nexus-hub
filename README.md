@@ -265,7 +265,7 @@ server {
 - [x] Dashboard charts and analytics (Chart.js)
 - [ ] Docker support with docker-compose
 - [ ] Automated database backups
-- [ ] Proxmox VM/CT control (start/stop/restart)
+- [x] Proxmox VM/CT control (start/stop/restart)
 - [ ] HTTPS / Let's Encrypt automation
 - [ ] Email verification for registration
 
