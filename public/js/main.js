@@ -6,6 +6,11 @@
  * Content area fades in separately for SPA-like feel.
  */
 function revealPage() {
+  // Remove the inline bg override set before CSS loaded — let theme CSS take full control
+  if (typeof window.__clearBgOverride === 'function') {
+    window.__clearBgOverride();
+    window.__clearBgOverride = null;
+  }
   document.body.classList.add('page-rendered');
   requestAnimationFrame(function () {
     var main = document.querySelector('.main-content');
@@ -120,7 +125,8 @@ async function spaNavigateTo(href, pushState) {
     // Wait for fade-out to finish (300ms transition)
     await new Promise(r => setTimeout(r, 280));
 
-    // ── Swap content ──
+    // ── Swap content (disable transitions during swap to prevent white/border flash) ──
+    document.body.classList.add('spa-swapping');
     main.innerHTML = newMain.innerHTML;
     if (footer && newFooter) footer.innerHTML = newFooter.innerHTML;
 
@@ -179,10 +185,15 @@ async function spaNavigateTo(href, pushState) {
     // Scroll to top
     window.scrollTo({ top: 0, behavior: 'instant' });
 
-    // ── Fade in new content ──
+    // ── Fade in new content (remove spa-swapping only after first paint with correct styles) ──
     requestAnimationFrame(function () {
-      main.classList.add('content-ready');
-      if (footer) footer.classList.add('content-ready');
+      // Force reflow so new elements compute their theme colors before transitions re-enable
+      void main.offsetHeight;
+      document.body.classList.remove('spa-swapping');
+      requestAnimationFrame(function () {
+        main.classList.add('content-ready');
+        if (footer) footer.classList.add('content-ready');
+      });
     });
 
   } catch (err) {
@@ -443,6 +454,8 @@ function initThemeToggle() {
  * Apply theme to the document (called only when user switches theme)
  */
 function setTheme(theme) {
+  // Enable transitions for smooth theme change
+  document.documentElement.classList.add('theme-transitioning');
   document.documentElement.setAttribute('data-theme', theme);
   // Update theme stylesheet
   var link = document.getElementById('theme-stylesheet');
@@ -451,6 +464,10 @@ function setTheme(theme) {
   if (window.themeEffects) {
     window.themeEffects.switch(theme);
   }
+  // Remove transitioning class after animations complete
+  setTimeout(function() {
+    document.documentElement.classList.remove('theme-transitioning');
+  }, 500);
 }
 
 /**

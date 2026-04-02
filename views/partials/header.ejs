@@ -13,6 +13,23 @@
       document.documentElement.setAttribute('data-theme', t);
       window.__savedTheme = t;
       window.__savedLang = lang;
+      // Set bg color directly on <html> so browser never shows white during CSS load.
+      // Cleared after theme CSS loads so theme variables take over normally.
+      var bgMap = {
+        'dark':                '#0c0e14',
+        'light':               '#f6f5f1',
+        'cyberpunk-purple':    '#08010f',
+        'matrix-green':        '#000000',
+        'retro-90s-vaporwave': '#150a28',
+        'vampire':             '#140e0c'
+      };
+      var bg = bgMap[t] || '#0c0e14';
+      document.documentElement.style.backgroundColor = bg;
+      document.documentElement.style.colorScheme = (t === 'light') ? 'light' : 'dark';
+      // Remove inline override once theme CSS is loaded (so CSS variables take full control)
+      window.__clearBgOverride = function() {
+        document.documentElement.style.backgroundColor = '';
+      };
     })();
   </script>
   <link rel="stylesheet" href="/css/style.css">
@@ -42,6 +59,11 @@
     }
     body.page-rendered {
       visibility: visible;
+    }
+
+    /* Suppress all transitions during SPA content swap to prevent white flash */
+    body.spa-swapping * {
+      transition: none !important;
     }
 
     /* Content area fades in for SPA-like feel; navbar stays solid */

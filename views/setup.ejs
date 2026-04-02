@@ -1,136 +1,343 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
-  <link rel="stylesheet" href="/css/desktop.css">
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ── Setup is fully self-contained: no external CSS/JS deps ── */
+
+    /* Dark theme tokens (overridden by theme CSS if it loads) */
+    :root {
+      --bg-primary: #0c0e14;
+      --bg-secondary: #12151e;
+      --surface: #181c28;
+      --surface-2: #1f2433;
+      --text-primary: #e8e4df;
+      --text-secondary: #8b8a8e;
+      --text-muted: #555660;
+      --primary: #5b8af5;
+      --primary-hover: #4a78e0;
+      --border: #2a2f40;
+      --danger: #e55b6f;
+      --warning: #e2a359;
+      --success: #51c490;
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.65;
       min-height: 100vh;
-      background-color: var(--bg-dark);
-      margin: 0;
-      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
     }
-    .setup-container {
-      background: var(--bg-card);
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      width: 100%;
-      max-width: 500px;
-      border: 1px solid rgba(139, 92, 246, 0.2);
+    a { color: var(--primary); }
+    svg.icon { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2;
+               stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    .setup-wrap { width: 100%; max-width: 460px; }
+
+    /* ── Brand ── */
+    .setup-brand { text-align: center; margin-bottom: 2rem; }
+    .setup-brand-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 56px; height: 56px;
+      background: color-mix(in srgb, var(--primary) 15%, transparent);
+      border: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+      border-radius: 16px; margin-bottom: 1rem; color: var(--primary);
     }
-    .setup-header {
-      text-align: center;
-      margin-bottom: 2rem;
+    .setup-brand-icon svg { width: 28px; height: 28px; }
+    .setup-brand h1 { font-family: 'Exo 2', sans-serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .setup-brand p { color: var(--text-secondary); font-size: 0.9rem; }
+
+    /* ── Steps ── */
+    .setup-steps { display: flex; align-items: flex-start; margin-bottom: 2rem; position: relative; }
+    .setup-step { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; position: relative; }
+    .setup-step:not(:last-child)::after {
+      content: ''; position: absolute; top: 14px; left: calc(50% + 16px); right: calc(-50% + 16px);
+      height: 1px; background: var(--border);
     }
-    .setup-header h1 {
-      color: var(--primary);
-      margin-bottom: 0.5rem;
-      font-size: 2rem;
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-muted); position: relative; z-index: 1;
     }
-    .setup-header p {
-      color: var(--text-muted);
+    .setup-step.active .step-dot {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+      box-shadow: 0 0 12px color-mix(in srgb, var(--primary) 50%, transparent);
     }
-    .form-group {
-      margin-bottom: 1.5rem;
+    .setup-step.done .step-dot {
+      background: color-mix(in srgb, var(--primary) 20%, transparent);
+      border-color: color-mix(in srgb, var(--primary) 60%, transparent); color: var(--primary);
     }
+    .step-label { font-size: 0.72rem; color: var(--text-muted); }
+    .setup-step.active .step-label { color: var(--text-secondary); }
+
+    /* ── Card ── */
+    .setup-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+    }
+
+    /* ── Section title ── */
+    .setup-section-title {
+      font-size: 0.95rem; font-weight: 700; color: var(--text-primary);
+      margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .setup-section-title svg { color: var(--primary); }
+    .setup-divider { border: none; border-top: 1px solid var(--border); margin: 1.75rem 0; }
+
+    /* ── Form ── */
+    .form-group { margin-bottom: 1.1rem; }
     .form-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      color: var(--text-light);
-      font-weight: 500;
+      display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);
+      margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.04em;
     }
+    .form-input-wrap { position: relative; }
+    .form-input-icon {
+      position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); pointer-events: none; display: flex;
+    }
+    .form-input-icon svg { width: 15px; height: 15px; }
     .form-input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(139, 92, 246, 0.3);
-      border-radius: 8px;
-      color: var(--text-light);
-      font-size: 1rem;
-      transition: all 0.3s ease;
+      width: 100%; padding: 0.65rem 0.9rem 0.65rem 2.4rem;
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+      color: var(--text-primary); font-size: 0.92rem; font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .form-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    .form-input::placeholder { color: var(--text-muted); }
+    .form-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 18%, transparent); }
+
+    /* ── Password toggle ── */
+    .form-input-action {
+      position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+      background: none; border: none; color: var(--text-muted); cursor: pointer;
+      padding: 0.2rem; display: flex; align-items: center; transition: color 0.2s;
     }
-    .btn-primary {
-      width: 100%;
-      padding: 0.75rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-top: 1rem;
+    .form-input-action:hover { color: var(--text-secondary); }
+    .form-input-action svg { width: 15px; height: 15px; }
+    .has-action .form-input { padding-right: 2.4rem; }
+
+    /* ── Password strength ── */
+    .password-strength { margin-top: 0.5rem; display: none; }
+    .password-strength.visible { display: block; }
+    .strength-bar { height: 3px; border-radius: 2px; background: var(--border); overflow: hidden; margin-bottom: 0.3rem; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; width: 0%; }
+    .strength-label { font-size: 0.72rem; color: var(--text-muted); }
+
+    /* ── Submit ── */
+    .setup-submit {
+      width: 100%; padding: 0.75rem; background: var(--primary); color: #fff;
+      border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; margin-top: 0.5rem; display: flex; align-items: center;
+      justify-content: center; gap: 0.5rem;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
     }
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    .setup-submit:hover { background: var(--primary-hover); box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 40%, transparent); transform: translateY(-1px); }
+    .setup-submit:active { transform: translateY(0); }
+
+    /* ── Alert ── */
+    .setup-alert {
+      display: flex; align-items: flex-start; gap: 0.6rem; padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 1.25rem;
     }
-    .alert {
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1.5rem;
-      text-align: center;
+    .setup-alert svg { flex-shrink: 0; margin-top: 1px; }
+    .setup-alert-error {
+      background: color-mix(in srgb, var(--danger) 10%, transparent);
+      border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); color: var(--danger);
     }
-    .alert-error {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border: 1px solid rgba(239, 68, 68, 0.3);
+
+    /* ── Note ── */
+    .setup-note {
+      display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.8rem;
+      color: var(--text-muted); margin-top: 1.25rem; padding: 0.65rem 0.85rem;
+      background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border);
     }
+    .setup-note svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; }
   </style>
 </head>
 <body>
-  <div class="setup-container">
-    <div class="setup-header">
+  <div class="setup-wrap">
+
+    <!-- Brand -->
+    <div class="setup-brand">
+      <div class="setup-brand-icon">
+        <svg class="icon" style="width:28px;height:28px" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
       <h1>NexusHub Setup</h1>
-      <p>Welcome! Let's get your gaming hub configured.</p>
+      <p>First-run configuration — takes under a minute</p>
     </div>
 
-    <% if (error && error.length > 0) { %>
-      <div class="alert alert-error"><%= error %></div>
-    <% } %>
+    <!-- Steps -->
+    <div class="setup-steps">
+      <div class="setup-step done">
+        <div class="step-dot">
+          <svg class="icon" style="width:12px;height:12px" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span class="step-label">Install</span>
+      </div>
+      <div class="setup-step active">
+        <div class="step-dot">2</div>
+        <span class="step-label">Configure</span>
+      </div>
+      <div class="setup-step">
+        <div class="step-dot">3</div>
+        <span class="step-label">Done</span>
+      </div>
+    </div>
 
-    <form action="/setup" method="POST">
-      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-      <div class="form-group">
-        <label for="site_name">Site Name</label>
-        <input type="text" id="site_name" name="site_name" class="form-input" value="NexusHub" required>
+    <!-- Card -->
+    <div class="setup-card">
+
+      <% if (error && error.length > 0) { %>
+        <div class="setup-alert setup-alert-error">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span><%= Array.isArray(error) ? error[0] : error %></span>
+        </div>
+      <% } %>
+
+      <form action="/setup" method="POST" id="setupForm">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <!-- Site -->
+        <p class="setup-section-title">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Site
+        </p>
+        <div class="form-group">
+          <label for="site_name">Site Name</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon"><svg class="icon" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></span>
+            <input type="text" id="site_name" name="site_name" class="form-input"
+                   value="NexusHub" required autocomplete="off">
+          </div>
+        </div>
+
+        <hr class="setup-divider">
+
+        <!-- Admin account -->
+        <p class="setup-section-title">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Admin Account
+        </p>
+
+        <div class="form-group">
+          <label for="admin_username">Username</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <input type="text" id="admin_username" name="admin_username" class="form-input"
+                   placeholder="admin" required autocomplete="username">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin_email">Email</label>
+          <div class="form-input-wrap">
+            <span class="form-input-icon"><svg class="icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <input type="email" id="admin_email" name="admin_email" class="form-input"
+                   placeholder="admin@example.com" required autocomplete="email">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin_password">Password</label>
+          <div class="form-input-wrap has-action">
+            <span class="form-input-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input type="password" id="admin_password" name="admin_password" class="form-input"
+                   required minlength="8" autocomplete="new-password" placeholder="min. 8 characters">
+            <button type="button" class="form-input-action" id="togglePwd" aria-label="Show password">
+              <svg class="icon eye-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon eye-closed" style="display:none" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+          <div class="password-strength" id="pwdStrength">
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <span class="strength-label" id="strengthLabel"></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="admin_password_confirm">Confirm Password</label>
+          <div class="form-input-wrap has-action">
+            <span class="form-input-icon"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+            <input type="password" id="admin_password_confirm" name="admin_password_confirm" class="form-input"
+                   required minlength="8" autocomplete="new-password" placeholder="repeat password">
+            <button type="button" class="form-input-action" id="togglePwdConfirm" aria-label="Show password">
+              <svg class="icon eye-open" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              <svg class="icon eye-closed" style="display:none" viewBox="0 0 24 24"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="setup-submit">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 3 0 3 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-3 0-3"/></svg>
+          Launch NexusHub
+        </button>
+      </form>
+
+      <div class="setup-note">
+        <svg class="icon" style="width:13px;height:13px" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <span>This page is only accessible before the first admin account is created. It will disappear automatically after setup.</span>
       </div>
 
-      <div class="form-group">
-        <label for="admin_username">Admin Username</label>
-        <input type="text" id="admin_username" name="admin_username" class="form-input" placeholder="admin" required>
-      </div>
-
-      <div class="form-group">
-        <label for="admin_email">Admin Email</label>
-        <input type="email" id="admin_email" name="admin_email" class="form-input" placeholder="admin@example.com" required>
-      </div>
-
-      <div class="form-group">
-        <label for="admin_password">Admin Password</label>
-        <input type="password" id="admin_password" name="admin_password" class="form-input" required minlength="6">
-      </div>
-
-      <div class="form-group">
-        <label for="admin_password_confirm">Confirm Password</label>
-        <input type="password" id="admin_password_confirm" name="admin_password_confirm" class="form-input" required minlength="6">
-      </div>
-
-      <button type="submit" class="btn-primary">Complete Setup</button>
-    </form>
+    </div>
   </div>
+
+  <script>
+    // ── Password show/hide ──
+    function initToggle(pwdId, btnId) {
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        var input = document.getElementById(pwdId);
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.querySelector('.eye-open').style.display = show ? 'none' : '';
+        btn.querySelector('.eye-closed').style.display = show ? '' : 'none';
+      });
+    }
+    initToggle('admin_password', 'togglePwd');
+    initToggle('admin_password_confirm', 'togglePwdConfirm');
+
+    // ── Password strength ──
+    var pwdInput = document.getElementById('admin_password');
+    var strengthWrap = document.getElementById('pwdStrength');
+    var strengthFill = document.getElementById('strengthFill');
+    var strengthLabel = document.getElementById('strengthLabel');
+
+    pwdInput.addEventListener('input', function() {
+      var val = this.value;
+      if (!val) { strengthWrap.classList.remove('visible'); return; }
+      strengthWrap.classList.add('visible');
+      var score = 0;
+      if (val.length >= 8)  score++;
+      if (val.length >= 12) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+      var levels = [
+        { pct: '20%', color: 'var(--danger)',  text: 'Very weak' },
+        { pct: '40%', color: 'var(--danger)',  text: 'Weak' },
+        { pct: '60%', color: 'var(--warning)', text: 'Fair' },
+        { pct: '80%', color: 'var(--primary)', text: 'Strong' },
+        { pct: '100%', color: 'var(--success)', text: 'Very strong' },
+      ];
+      var l = levels[Math.min(score, 4)];
+      strengthFill.style.width = l.pct;
+      strengthFill.style.background = l.color;
+      strengthLabel.textContent = l.text;
+      strengthLabel.style.color = l.color;
+    });
+
+  </script>
 </body>
 </html>

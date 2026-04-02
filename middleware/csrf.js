@@ -43,7 +43,7 @@ function csrfProtection(req, res, next) {
       return res.status(403).json({ success: false, error: 'Invalid CSRF token' });
     }
     req.flash('error', 'Form expired. Please try again.');
-    return res.redirect('back');
+    return res.redirect(req.get('Referrer') || '/');
   }
 
   // Rotate token after successful validation to limit reuse window

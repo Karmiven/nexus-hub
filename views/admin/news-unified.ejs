@@ -894,9 +894,13 @@
     const url = currentEditId ? `/admin/news/${currentEditId}` : '/admin/news/create';
     
     try {
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                     || formData.get('_csrf');
       const response = await fetch(url, {
         method: 'POST',
-        body: formData
+        headers: { 'x-csrf-token': csrfToken },
+        body: formData,
+        credentials: 'same-origin'
       });
       
       if (response.ok) {

@@ -55,7 +55,7 @@ app.use(helmet({
       connectSrc: ["'self'", "ws:", "wss:"],
       objectSrc: ["'none'"],
       frameAncestors: ["'none'"],
-      ...(process.env.NODE_ENV === 'production' ? { upgradeInsecureRequests: [] } : {})
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     }
   },
   crossOriginEmbedderPolicy: false,
