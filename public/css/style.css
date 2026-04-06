@@ -1855,13 +1855,13 @@ td.actions-cell {
 .data-table.table-servers th:nth-child(5), .data-table.table-servers td:nth-child(5) { width: 10%; }
 .data-table.table-servers th:nth-child(6), .data-table.table-servers td:nth-child(6) { width: 30%; }
 
-.data-table.table-users th:nth-child(1), .data-table.table-users td:nth-child(1) { width: 50px; }
-.data-table.table-users th:nth-child(2), .data-table.table-users td:nth-child(2) { width: 12%; }
-.data-table.table-users th:nth-child(3), .data-table.table-users td:nth-child(3) { width: 18%; max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.data-table.table-users th:nth-child(4), .data-table.table-users td:nth-child(4) { width: 7%; }
-.data-table.table-users th:nth-child(5), .data-table.table-users td:nth-child(5) { width: 18%; white-space: nowrap; }
+.data-table.table-users th:nth-child(1), .data-table.table-users td:nth-child(1) { width: 40px; }
+.data-table.table-users th:nth-child(2), .data-table.table-users td:nth-child(2) { width: 11%; }
+.data-table.table-users th:nth-child(3), .data-table.table-users td:nth-child(3) { width: 17%; max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.data-table.table-users th:nth-child(4), .data-table.table-users td:nth-child(4) { width: 9%; text-align: center; overflow: visible !important; text-overflow: clip !important; }
+.data-table.table-users th:nth-child(5), .data-table.table-users td:nth-child(5) { width: 17%; white-space: nowrap; }
 .data-table.table-users th:nth-child(6), .data-table.table-users td:nth-child(6) { width: 14%; white-space: nowrap; }
-.data-table.table-users th:nth-child(7), .data-table.table-users td:nth-child(7) { width: 13%; }
+.data-table.table-users th:nth-child(7), .data-table.table-users td:nth-child(7) { width: 12%; }
 .data-table.table-users th:nth-child(8), .data-table.table-users td:nth-child(8) { width: 14%; }
 
 .data-table.table-news th:nth-child(1), .data-table.table-news td:nth-child(1) { width: 28%; }

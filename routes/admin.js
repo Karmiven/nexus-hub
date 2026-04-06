@@ -566,6 +566,90 @@ router.get('/analytics/hourly-traffic', (req, res) => {
   res.json(result);
 });
 
+// Filter out local/private IPs from analytics
+const LOCAL_IP_FILTER = `
+  AND ip NOT LIKE '127.%'
+  AND ip NOT LIKE '10.%'
+  AND ip NOT LIKE '172.16.%' AND ip NOT LIKE '172.17.%' AND ip NOT LIKE '172.18.%'
+  AND ip NOT LIKE '172.19.%' AND ip NOT LIKE '172.2_.%' AND ip NOT LIKE '172.3_.%'
+  AND ip NOT LIKE '192.168.%'
+  AND ip NOT LIKE '::1%'
+  AND ip NOT LIKE '::ffff:127.%'
+  AND ip NOT LIKE '::ffff:10.%'
+  AND ip NOT LIKE '::ffff:192.168.%'
+  AND ip NOT LIKE 'fe80:%'
+`;
+
+// Visitor countries (pie/doughnut chart)
+router.get('/analytics/countries', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const rows = db.all(`
+    SELECT COALESCE(NULLIF(country, ''), 'Unknown') as country, COUNT(DISTINCT ip) as visitors
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+    GROUP BY country
+    ORDER BY visitors DESC
+    LIMIT 20
+  `, [days]);
+  res.json(rows);
+});
+
+// Visitor log (detailed table with pagination + sorting)
+router.get('/analytics/visitors', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const limit = 50;
+  const offset = (page - 1) * limit;
+
+  // Sorting
+  const SORT_COLUMNS = {
+    ip: 'ip', country: 'country', visits: 'total_views',
+    pages: 'unique_pages', first: 'first_visit', last: 'last_visit'
+  };
+  const sortCol = SORT_COLUMNS[req.query.sort] || 'total_views';
+  const sortDir = req.query.dir === 'asc' ? 'ASC' : 'DESC';
+
+  const total = db.get(`
+    SELECT COUNT(DISTINCT ip) as count
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+  `, [days]);
+
+  const rows = db.all(`
+    SELECT
+      ip,
+      COALESCE(NULLIF(country, ''), 'Unknown') as country,
+      COUNT(*) as total_views,
+      COUNT(DISTINCT path) as unique_pages,
+      MIN(created_at) as first_visit,
+      MAX(created_at) as last_visit,
+      GROUP_CONCAT(DISTINCT path) as pages
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+    GROUP BY ip
+    ORDER BY ${sortCol} ${sortDir}
+    LIMIT ? OFFSET ?
+  `, [days, limit, offset]);
+
+  // Convert pages to array for frontend
+  for (const row of rows) {
+    row.pages = row.pages ? row.pages.split(',') : [];
+  }
+
+  res.json({
+    visitors: rows,
+    total: total ? total.count : 0,
+    page,
+    totalPages: Math.ceil((total ? total.count : 0) / limit)
+  });
+});
+
 // Cleanup old analytics data (keep last 90 days)
 router.post('/analytics/cleanup', (req, res) => {
   const pvDeleted = db.run("DELETE FROM page_views WHERE created_at < datetime('now', '-90 days')");

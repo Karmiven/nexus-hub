@@ -1,0 +1,17 @@
+services:
+  nexushub:
+    build: .
+    container_name: nexushub
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # SESSION_SECRET auto-generated and persisted to data/.session-secret
+      # Override below if needed:
+      # - SESSION_SECRET=your-secret-here
+      # - ENCRYPTION_KEY=64-hex-chars
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads

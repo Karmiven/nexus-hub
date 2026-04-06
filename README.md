@@ -263,7 +263,7 @@ server {
 - [ ] Server-side i18n (flash messages, API responses)
 - [ ] More languages beyond EN/RU
 - [x] Dashboard charts and analytics (Chart.js)
-- [ ] Docker support with docker-compose
+- [x] Docker support with docker-compose
 - [ ] Automated database backups
 - [x] Proxmox VM/CT control (start/stop/restart)
 - [ ] HTTPS / Let's Encrypt automation

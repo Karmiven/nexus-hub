@@ -98,6 +98,65 @@
         <canvas id="chartTimeline"></canvas>
       </div>
     </div>
+
+    <!-- Countries (Doughnut) -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i data-lucide="globe"></i> <span data-i18n="admin_chart_countries">Страны посетителей</span></h3>
+      </div>
+      <div class="chart-body" id="wrapCountries">
+        <div class="chart-loading">Loading...</div>
+        <canvas id="chartCountries"></canvas>
+      </div>
+    </div>
+
+    <!-- Country Stats Table -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3><i data-lucide="flag"></i> <span data-i18n="admin_chart_by_country">По странам</span></h3>
+      </div>
+      <div class="chart-body" id="wrapCountryTable" style="overflow-y:auto; padding: 0;">
+        <div class="chart-loading">Loading...</div>
+        <table class="visitors-country-table" id="countryTable" style="display:none;">
+          <thead><tr>
+            <th data-i18n="admin_chart_country">Страна</th>
+            <th data-i18n="admin_chart_visitors">Посетители</th>
+            <th>%</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Visitor Log -->
+  <div class="admin-table-wrapper" style="margin-top: 1.5rem;">
+    <div class="admin-section-header">
+      <h2><i data-lucide="users"></i> <span data-i18n="admin_visitor_log">Журнал посетителей</span></h2>
+      <div class="analytics-controls">
+        <button type="button" id="prevPageBtn" class="btn btn-sm btn-outline" disabled>&lt;</button>
+        <span id="visitorPageInfo" style="color:var(--text-secondary);font-size:0.85rem;padding:0 0.5rem;">1 / 1</span>
+        <button type="button" id="nextPageBtn" class="btn btn-sm btn-outline" disabled>&gt;</button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="data-table visitor-log-table" id="visitorTable">
+        <thead>
+          <tr>
+            <th class="sortable-th" data-sort="ip" style="width:12%"><span class="sort-wrap"><span data-i18n="admin_visitor_ip">IP</span><span class="sort-arrow"></span></span></th>
+            <th class="sortable-th" data-sort="country" style="width:8%;text-align:center"><span class="sort-wrap"><span data-i18n="admin_visitor_country">Страна</span><span class="sort-arrow"></span></span></th>
+            <th class="sortable-th" data-sort="visits" style="width:7%;text-align:center"><span class="sort-wrap"><span data-i18n="admin_visitor_visits">Визиты</span><span class="sort-arrow"></span></span></th>
+            <th class="sortable-th" data-sort="pages" style="width:8%;text-align:center"><span class="sort-wrap"><span data-i18n="admin_visitor_pages">Страницы</span><span class="sort-arrow"></span></span></th>
+            <th class="sortable-th" data-sort="first" style="width:13%"><span class="sort-wrap"><span data-i18n="admin_visitor_first">Первый визит</span><span class="sort-arrow"></span></span></th>
+            <th class="sortable-th" data-sort="last" style="width:13%"><span class="sort-wrap"><span data-i18n="admin_visitor_last">Последний визит</span><span class="sort-arrow"></span></span></th>
+            <th style="width:39%" data-i18n="admin_visitor_visited">Посещённые страницы</th>
+          </tr>
+        </thead>
+        <tbody id="visitorTableBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--text-muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </section>
 
@@ -121,6 +180,22 @@
   color: var(--danger, #ef4444); font-size: 0.8rem; gap: 0.35rem;
   background: var(--surface); z-index: 2;
 }
+.visitors-country-table { border: none; font-size: 0.82rem; width: 100%; border-collapse: collapse; }
+.visitors-country-table th { padding: 0.5rem 0.75rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); text-align: left; }
+.visitors-country-table td { padding: 0.4rem 0.75rem; color: var(--text-secondary); white-space: nowrap; }
+.visitors-country-table .country-bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--accent); vertical-align: middle; margin-left: 0.4rem; }
+.country-flag { font-size: 1.1em; margin-right: 0.3rem; }
+.visitor-log-table th { overflow: visible !important; text-overflow: clip !important; white-space: normal !important; font-size: 0.75rem; line-height: 1.3; }
+.visitor-log-table td { font-size: 0.82rem; overflow: visible !important; text-overflow: clip !important; white-space: nowrap; }
+.sortable-th { cursor: pointer; user-select: none; }
+.sortable-th:hover { color: var(--primary); }
+.sortable-th .sort-wrap { display: inline-flex; align-items: center; gap: 3px; }
+.sort-arrow { font-size: 0.65em; opacity: 0.3; flex-shrink: 0; }
+.sortable-th.sort-active .sort-arrow { opacity: 1; color: var(--primary); }
+.visitor-pages-cell { white-space: normal !important; overflow: visible !important; line-height: 1.5; }
+.visitor-pages-cell .vp-tag { display: inline-block; background: var(--surface-2); border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px; margin: 1px 2px; font-size: 0.73rem; color: var(--text-secondary); }
+.visitor-pages-toggle { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.73rem; padding: 1px 6px; display: inline-block; }
+.visitor-pages-toggle:hover { text-decoration: underline; }
 </style>
 
 <script src="https://unpkg.com/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
@@ -444,6 +519,152 @@
       }).catch(function(e) { showError('wrapTimeline', e.message); });
     }
 
+    // ── Country code → flag emoji ──
+    function countryFlag(code) {
+      if (!code || code === 'Unknown') return '🏳️';
+      var chars = code.toUpperCase().split('').map(function(c) { return String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)); });
+      return chars.join('');
+    }
+
+    // ── Countries Doughnut ──
+    function loadCountriesChart() {
+      return fetchData('countries').then(function(data) {
+        destroyChart('countries');
+        hideLoading('wrapCountries');
+        var ctx = document.getElementById('chartCountries');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapCountries'); return; }
+        chartInstances.countries = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: data.map(function(d) { return countryFlag(d.country) + ' ' + d.country; }),
+            datasets: [{
+              data: data.map(function(d) { return d.visitors; }),
+              backgroundColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length] + 'CC'; }),
+              borderColor: 'transparent',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            cutout: '55%',
+            plugins: {
+              legend: { position: 'right', labels: { color: chartColors.text, font: { size: 11 }, padding: 8, boxWidth: 14 } }
+            }
+          }
+        });
+
+        // Also fill country table
+        var table = document.getElementById('countryTable');
+        var tbody = table ? table.querySelector('tbody') : null;
+        if (tbody) {
+          var total = data.reduce(function(s, d) { return s + d.visitors; }, 0);
+          tbody.innerHTML = data.map(function(d) {
+            var pct = total > 0 ? (d.visitors / total * 100).toFixed(1) : 0;
+            var barW = total > 0 ? Math.round(d.visitors / total * 80) : 0;
+            return '<tr><td><span class="country-flag">' + countryFlag(d.country) + '</span>' + d.country + '</td>' +
+                   '<td>' + d.visitors + '</td>' +
+                   '<td>' + pct + '%<span class="country-bar" style="width:' + barW + 'px"></span></td></tr>';
+          }).join('');
+          table.style.display = '';
+          var ld = document.getElementById('wrapCountryTable');
+          if (ld) { var l = ld.querySelector('.chart-loading'); if (l) l.remove(); }
+        }
+      }).catch(function(e) { showError('wrapCountries', e.message); });
+    }
+
+    // ── Visitor Log ──
+    var _visitorPage = 1;
+    var _visitorSort = 'visits';
+    var _visitorDir = 'desc';
+
+    function renderPages(pages) {
+      if (!pages || pages.length === 0) return '-';
+      var show = 5;
+      var visible = pages.slice(0, show);
+      var hidden = pages.slice(show);
+      var html = visible.map(function(p) { return '<span class="vp-tag">' + p + '</span>'; }).join('');
+      if (hidden.length > 0) {
+        var uid = 'vp_' + Math.random().toString(36).substr(2, 6);
+        var hiddenHtml = hidden.map(function(p) { return '<span class="vp-tag">' + p + '</span>'; }).join('');
+        var tMore = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_more') : 'ещё';
+        var tCollapse = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_collapse') : 'свернуть';
+        html += '<span id="' + uid + '" style="display:none">' + hiddenHtml + '</span>';
+        html += '<button class="visitor-pages-toggle" onclick="var el=document.getElementById(\'' + uid + '\');if(el.style.display===\'none\'){el.style.display=\'\';this.textContent=\'▲ ' + tCollapse + '\';}else{el.style.display=\'none\';this.textContent=\'+ ' + hidden.length + ' ' + tMore + '\';}">+ ' + hidden.length + ' ' + tMore + '</button>';
+      }
+      return html;
+    }
+
+    function loadVisitorLog(page) {
+      page = page || 1;
+      _visitorPage = page;
+      var days = getDays();
+      fetch('/admin/analytics/visitors?days=' + days + '&page=' + page + '&sort=' + _visitorSort + '&dir=' + _visitorDir)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var tbody = document.getElementById('visitorTableBody');
+          if (!tbody) return;
+          if (!data.visitors || data.visitors.length === 0) {
+            var noDataText = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_nodata') : 'Нет данных';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">' + noDataText + '</td></tr>';
+            return;
+          }
+          tbody.innerHTML = data.visitors.map(function(v) {
+            var firstVisit = window.formatTimestamp ? window.formatTimestamp(v.first_visit, 'datetime') : v.first_visit;
+            var lastVisit = window.formatTimestamp ? window.formatTimestamp(v.last_visit, 'datetime') : v.last_visit;
+            return '<tr>' +
+              '<td class="mono">' + v.ip + '</td>' +
+              '<td style="text-align:center"><span class="country-flag">' + countryFlag(v.country) + '</span>' + v.country + '</td>' +
+              '<td style="text-align:center">' + v.total_views + '</td>' +
+              '<td style="text-align:center">' + v.unique_pages + '</td>' +
+              '<td>' + firstVisit + '</td>' +
+              '<td>' + lastVisit + '</td>' +
+              '<td class="visitor-pages-cell">' + renderPages(v.pages) + '</td>' +
+              '</tr>';
+          }).join('');
+
+          // Pagination
+          var info = document.getElementById('visitorPageInfo');
+          var prev = document.getElementById('prevPageBtn');
+          var next = document.getElementById('nextPageBtn');
+          if (info) info.textContent = data.page + ' / ' + data.totalPages;
+          if (prev) prev.disabled = data.page <= 1;
+          if (next) next.disabled = data.page >= data.totalPages;
+
+          // Update sort arrows
+          document.querySelectorAll('.sortable-th').forEach(function(th) {
+            var arrow = th.querySelector('.sort-arrow');
+            if (th.dataset.sort === _visitorSort) {
+              th.classList.add('sort-active');
+              arrow.textContent = _visitorDir === 'asc' ? '▲' : '▼';
+            } else {
+              th.classList.remove('sort-active');
+              arrow.textContent = '▽';
+            }
+          });
+        })
+        .catch(function() {});
+    }
+
+    // Sorting — click on column headers
+    document.querySelectorAll('.sortable-th').forEach(function(th) {
+      th.addEventListener('click', function() {
+        var col = th.dataset.sort;
+        if (_visitorSort === col) {
+          _visitorDir = _visitorDir === 'desc' ? 'asc' : 'desc';
+        } else {
+          _visitorSort = col;
+          _visitorDir = 'desc';
+        }
+        loadVisitorLog(1);
+      });
+    });
+
+    // Pagination buttons
+    var prevBtn = document.getElementById('prevPageBtn');
+    var nextBtn = document.getElementById('nextPageBtn');
+    if (prevBtn) prevBtn.addEventListener('click', function() { if (_visitorPage > 1) loadVisitorLog(_visitorPage - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function() { loadVisitorLog(_visitorPage + 1); });
+
     // ── Load All ──
     window.loadAllCharts = function() {
       var btn = document.getElementById('refreshChartsBtn');
@@ -466,8 +687,10 @@
         loadPopularChart(),
         loadUptimeChart(),
         loadChatChart(),
-        loadTimelineChart()
+        loadTimelineChart(),
+        loadCountriesChart()
       ]).then(function() {
+        loadVisitorLog(1);
         if (btn) btn.disabled = false;
       }).catch(function(e) {
         console.error('Charts error:', e);

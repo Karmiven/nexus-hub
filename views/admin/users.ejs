@@ -42,9 +42,7 @@
               <td><%= u.id %></td>
               <td><strong><%= u.username %></strong></td>
               <td><%= u.email || '-' %></td>
-              <td>
-                <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
-              </td>
+              <td><span class="role-badge role-<%= u.role %>"><%= u.role %></span></td>
               <td><% if (u.last_login) { %><span class="local-time" data-timestamp="<%= u.last_login %>" data-format="datetime"></span><% } else { %><span data-i18n="admin_never">Никогда</span><% } %></td>
               <td class="mono"><%= u.last_ip || '-' %></td>
               <td><span class="local-time" data-timestamp="<%= u.created_at %>" data-format="date"></span></td>

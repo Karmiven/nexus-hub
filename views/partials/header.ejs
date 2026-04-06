@@ -32,22 +32,22 @@
       };
     })();
   </script>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css">
-  <link rel="stylesheet" href="/css/desktop.css">
+  <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
+  <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css?v=<%= v %>">
+  <link rel="stylesheet" href="/css/desktop.css?v=<%= v %>">
   <script>
     // Update theme stylesheet href ASAP (after <link> exists)
     (function(){
       var t = window.__savedTheme || 'dark';
       var link = document.getElementById('theme-stylesheet');
-      if (link) link.href = '/css/themes/' + t + '.css';
+      if (link) link.href = '/css/themes/' + t + '.css?v=<%= v %>';
     })();
   </script>
   <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&family=VT323&display=swap" rel="stylesheet">
-  <script src="/js/translations.js"></script>
-  <script src="/js/theme-effects.js"></script>
+  <script src="/js/translations.js?v=<%= v %>"></script>
+  <script src="/js/theme-effects.js?v=<%= v %>"></script>
   <script>
     window.SITE_TIMEZONE = '<%= typeof siteTimezone !== "undefined" ? siteTimezone : "Europe/Moscow" %>';
   </script>

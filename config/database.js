@@ -133,8 +133,12 @@ async function initDatabase() {
   `);
 
   // Indexes for fast queries
+  // Migrations
+  try { db.exec(`ALTER TABLE page_views ADD COLUMN country TEXT DEFAULT ''`); } catch {}
+
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_created ON page_views(created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_path ON page_views(path);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_page_views_ip ON page_views(ip);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_created ON server_status_log(created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_server_status_log_server ON server_status_log(server_id);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);`);
@@ -244,4 +248,6 @@ function stopAutoSave() {
   }
 }
 
-module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave, getCachedSettings, invalidateSettingsCache };
+function getInstance() { return db; }
+
+module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave, getCachedSettings, invalidateSettingsCache, getInstance };
