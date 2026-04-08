@@ -3,15 +3,7 @@
 <section class="admin-header">
   <div class="container">
     <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_panel">Панель управления</span></h1>
-    <nav class="admin-nav">
-      <a href="/admin" class="admin-tab active" data-i18n="admin_tab_home">Главная</a>
-      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
-      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
-      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
-      <a href="/admin/analytics" class="admin-tab" data-i18n="admin_tab_analytics">Аналитика</a>
-      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
-    </nav>
+    <%- include('../partials/admin-nav', { activeTab: 'home' }) %>
   </div>
 </section>
 
@@ -101,7 +93,7 @@
               <td class="mono"><%= srv.ip %>:<%= srv.port %></td>
               <td>
                 <span class="status-badge badge-<%= srv.status %>">
-                  <%= srv.status === 'online' ? 'Online' : 'Offline' %>
+                  <span data-i18n="<%= srv.status === 'online' ? 'admin_dashboard_online' : 'admin_dashboard_offline' %>"><%= srv.status === 'online' ? 'Online' : 'Offline' %></span>
                 </span>
               </td>
               <td><span class="local-time" data-timestamp="<%= srv.last_checked %>" data-format="datetime"></span></td>
@@ -135,12 +127,12 @@ async function refreshAllServers() {
     } else {
       alert(data.message || 'Error');
       btn.disabled = false;
-      btn.querySelector('span').textContent = (window.i18n ? window.i18n.t('admin_refresh_all') : 'Обновить все');
+      btn.querySelector('span').textContent = t('admin_refresh_all');
     }
   } catch(e) {
-    alert('Failed to refresh');
+    alert(t('admin_dashboard_refresh_fail'));
     btn.disabled = false;
-    btn.querySelector('span').textContent = (window.i18n ? window.i18n.t('admin_refresh_all') : 'Обновить все');
+    btn.querySelector('span').textContent = t('admin_refresh_all');
   }
 }
 </script>

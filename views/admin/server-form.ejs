@@ -5,15 +5,7 @@
 <section class="admin-header">
   <div class="container">
     <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="<%= server ? 'admin_edit_server' : 'admin_new_server' %>"><%= server ? 'Редактировать' : 'Новый' %> сервер</span></h1>
-    <nav class="admin-nav">
-      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
-      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
-      <a href="/admin/servers" class="admin-tab active" data-i18n="admin_tab_servers">Сервера</a>
-      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
-      <a href="/admin/analytics" class="admin-tab" data-i18n="admin_tab_analytics">Аналитика</a>
-      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
-    </nav>
+    <%- include('../partials/admin-nav', { activeTab: 'servers' }) %>
   </div>
 </section>
 
@@ -61,16 +53,16 @@
           <div class="image-upload" id="imageUpload" style="<%= server && server.image ? 'display:none' : '' %>">
             <div class="upload-placeholder" style="padding:1.5rem;text-align:center;cursor:pointer;border:2px dashed var(--border);border-radius:var(--radius-sm);">
               <p><i data-lucide="image"></i> <span data-i18n="admin_server_image_click">Нажмите для загрузки баннера</span></p>
-              <small style="color:var(--text-muted);">JPG, PNG, GIF, WebP (макс. 5MB) • 16:5</small>
+              <small style="color:var(--text-muted);" data-i18n="admin_image_hint_server">JPG, PNG, GIF, WebP (макс. 5MB) • 16:5</small>
             </div>
           </div>
           <input type="hidden" id="croppedImageData" name="croppedImageData">
           <div id="finalImagePreview" style="<%= server && server.image ? '' : 'display:none' %>">
             <img id="finalImage" src="<%= server && server.image ? server.image : '' %>" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);">
             <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" id="recropBtn"><i data-lucide="crop"></i> Обрезать</button>
-              <button type="button" class="btn btn-xs btn-outline" id="replaceBtn"><i data-lucide="image-plus"></i> Заменить</button>
-              <button type="button" class="btn btn-xs btn-outline" style="color:var(--danger);border-color:var(--danger);" id="removeBtn"><i data-lucide="trash-2"></i> Удалить</button>
+              <button type="button" class="btn btn-xs btn-outline" id="recropBtn"><i data-lucide="crop"></i> <span data-i18n="admin_btn_crop">Обрезать</span></button>
+              <button type="button" class="btn btn-xs btn-outline" id="replaceBtn"><i data-lucide="image-plus"></i> <span data-i18n="admin_btn_replace">Заменить</span></button>
+              <button type="button" class="btn btn-xs btn-outline" style="color:var(--danger);border-color:var(--danger);" id="removeBtn"><i data-lucide="trash-2"></i> <span data-i18n="admin_btn_remove">Удалить</span></button>
             </div>
           </div>
         </div>
@@ -122,15 +114,15 @@
 <div id="cropModal" class="modal" style="display:none;z-index:2000;">
   <div class="modal-content" style="max-width:600px;">
     <div class="modal-header">
-      <h2><i data-lucide="crop"></i> Обрезка баннера (16:5)</h2>
+      <h2><i data-lucide="crop"></i> <span data-i18n="admin_crop_banner_title">Обрезка баннера (16:5)</span></h2>
       <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
     </div>
     <div style="max-height:400px;overflow:hidden;">
       <img id="cropperImage" style="max-width:100%;">
     </div>
     <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end;">
-      <button type="button" class="btn btn-secondary" onclick="closeCropModal()">Отмена</button>
-      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> Применить</button>
+      <button type="button" class="btn btn-secondary" onclick="closeCropModal()" data-i18n="cancel">Отмена</button>
+      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> <span data-i18n="admin_btn_apply">Применить</span></button>
     </div>
   </div>
 </div>
@@ -178,7 +170,7 @@
         originalImageData = canvas.toDataURL('image/jpeg', 1.0);
         openCropModal();
       };
-      img.onerror = function() { alert('Не удалось загрузить изображение. Попробуйте заменить.'); };
+      img.onerror = function() { alert(t('admin_image_load_error')); };
       img.src = finalImage.src;
     }
   });
@@ -194,7 +186,7 @@
   imageFile.addEventListener('change', function(e) {
     var file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert('Файл слишком большой. Макс 5MB.'); return; }
+    if (file.size > 5 * 1024 * 1024) { alert(t('admin_file_too_large')); return; }
     var reader = new FileReader();
     reader.onload = function(ev) {
       originalImageData = ev.target.result;

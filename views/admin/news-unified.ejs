@@ -8,15 +8,7 @@
 <section class="admin-header">
   <div class="container">
     <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_news_mgmt">Управление новостями</span></h1>
-    <nav class="admin-nav">
-      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
-      <a href="/admin/news" class="admin-tab active" data-i18n="admin_tab_news">Новости</a>
-      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
-      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
-      <a href="/admin/analytics" class="admin-tab" data-i18n="admin_tab_analytics">Аналитика</a>
-      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
-    </nav>
+    <%- include('../partials/admin-nav', { activeTab: 'news' }) %>
   </div>
 </section>
 
@@ -51,7 +43,7 @@
                 <td><span class="local-time" data-timestamp="<%= item.created_at %>" data-format="date"></span></td>
                 <td class="actions-cell">
                   <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
-                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(window.i18n ? window.i18n.t('admin_confirm_delete_article') : 'Удалить эту статью?')">
+                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(t('admin_confirm_delete_article'))">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                   </form>
@@ -659,7 +651,7 @@
         openCropModal();
       };
       img.onerror = function() {
-        alert(window.i18n ? window.i18n.t('admin_news_recrop_error') : 'Не удалось загрузить изображение для обрезки. Попробуйте заменить.');
+        alert(t('admin_news_recrop_error'));
       };
       img.src = finalImg.src;
     }
@@ -732,12 +724,12 @@
 
   function getPreviewData() {
     return {
-      title_en: document.getElementById('title_en').value || (window.i18n ? window.i18n.t('admin_news_no_title') : 'Untitled'),
-      title_ru: document.getElementById('title_ru').value || (window.i18n ? window.i18n.t('admin_news_no_title') : 'Без названия'),
-      content_short_en: document.getElementById('content_short_en').value || (window.i18n ? window.i18n.t('admin_news_no_short') : 'No short content'),
-      content_short_ru: document.getElementById('content_short_ru').value || (window.i18n ? window.i18n.t('admin_news_no_short') : 'Нет краткого содержания'),
-      content_full_en: document.getElementById('content_full_en').value || (window.i18n ? window.i18n.t('admin_news_no_full') : 'No full content'),
-      content_full_ru: document.getElementById('content_full_ru').value || (window.i18n ? window.i18n.t('admin_news_no_full') : 'Нет полного содержания'),
+      title_en: document.getElementById('title_en').value || t('admin_news_no_title'),
+      title_ru: document.getElementById('title_ru').value || t('admin_news_no_title'),
+      content_short_en: document.getElementById('content_short_en').value || t('admin_news_no_short'),
+      content_short_ru: document.getElementById('content_short_ru').value || t('admin_news_no_short'),
+      content_full_en: document.getElementById('content_full_en').value || t('admin_news_no_full'),
+      content_full_ru: document.getElementById('content_full_ru').value || t('admin_news_no_full'),
       image: document.getElementById('finalImage')?.src || '',
       pinned: document.getElementById('pinned').checked,
       author: '<%= typeof user !== "undefined" && user ? user.username : "Admin" %>',
@@ -776,7 +768,7 @@
     const imageHtml = d.image && !d.image.endsWith('#')
       ? `<div class="news-image" style="background-image: url('${d.image}')"></div>`
       : `<div class="news-image news-image-default"></div>`;
-    const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${window.i18n ? window.i18n.t('admin_news_pinned_label') : 'Закреплено'}</span>` : '';
+    const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${t('admin_news_pinned_label')}</span>` : '';
 
     const langSwitcher = `
       <div class="preview-lang-switch">
@@ -835,8 +827,8 @@
     document.getElementById('croppedImageData').value = '';
     document.getElementById('finalImagePreview').style.display = 'none';
     document.getElementById('imageUpload').style.display = 'flex';
-    modalTitle.innerHTML = '<i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">' + (window.i18n ? window.i18n.t('admin_news_modal_create') : 'Создать новость') + '</span>';
-    submitBtn.innerHTML = '<i data-lucide="sparkles"></i> <span data-i18n="create">' + (window.i18n ? window.i18n.t('create') : 'Создать') + '</span>';
+    modalTitle.innerHTML = '<i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">' + (t('admin_news_modal_create')) + '</span>';
+    submitBtn.innerHTML = '<i data-lucide="sparkles"></i> <span data-i18n="create">' + (t('create')) + '</span>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
     modal.style.display = 'flex';
   }
@@ -904,8 +896,8 @@
         currentEditId = articleId;
         
         // Update header
-        modalTitle.innerHTML = '<i data-lucide="pencil"></i> <span data-i18n="admin_news_modal_edit">' + (window.i18n ? window.i18n.t('admin_news_modal_edit') : 'Редактировать') + '</span>';
-        submitBtn.innerHTML = '<i data-lucide="save"></i> <span data-i18n="save">' + (window.i18n ? window.i18n.t('save') : 'Сохранить') + '</span>';
+        modalTitle.innerHTML = '<i data-lucide="pencil"></i> <span data-i18n="admin_news_modal_edit">' + (t('admin_news_modal_edit')) + '</span>';
+        submitBtn.innerHTML = '<i data-lucide="save"></i> <span data-i18n="save">' + (t('save')) + '</span>';
         if (typeof lucide !== 'undefined') lucide.createIcons();
         
         // Open modal
@@ -913,7 +905,7 @@
       })
       .catch(err => {
         console.error('Error loading article:', err);
-        alert((window.i18n ? window.i18n.t('admin_news_error_load') : 'Ошибка загрузки статьи:') + ' ' + err.message);
+        alert(t('admin_news_error_load') + ' ' + err.message);
       });
   }
 
@@ -944,11 +936,11 @@
       } else {
         const text = await response.text();
         console.error('Response error:', text);
-        alert((window.i18n ? window.i18n.t('admin_news_error_save') : 'Ошибка сохранения:') + ' ' + response.status);
+        alert(t('admin_news_error_save') + ' ' + response.status);
       }
     } catch (err) {
       console.error('Error:', err);
-      alert((window.i18n ? window.i18n.t('admin_news_error_save') : 'Ошибка сохранения:') + ' ' + err.message);
+      alert(t('admin_news_error_save') + ' ' + err.message);
     }
   });
 </script>

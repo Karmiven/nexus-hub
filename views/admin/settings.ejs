@@ -3,15 +3,7 @@
 <section class="admin-header">
   <div class="container">
     <h1 class="page-title"><i data-lucide="settings"></i> <span data-i18n="admin_settings_title">Настройки</span></h1>
-    <nav class="admin-nav">
-      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
-      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
-      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
-      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab active" data-i18n="admin_tab_settings">Настройки</a>
-      <a href="/admin/analytics" class="admin-tab" data-i18n="admin_tab_analytics">Аналитика</a>
-      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
-    </nav>
+    <%- include('../partials/admin-nav', { activeTab: 'settings' }) %>
   </div>
 </section>
 
@@ -78,6 +70,24 @@
                 <p id="previewSubtitle" class="hero-subtitle"><%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %></p>
               </div>
             </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-fieldset" style="margin-top: 1.5rem;">
+          <legend><i data-lucide="panel-bottom"></i> <span data-i18n="admin_settings_footer">Нижняя шапка (Footer)</span></legend>
+          <div class="form-group">
+            <label for="footer_title" data-i18n="admin_settings_footer_title">Название в футере</label>
+            <input type="text" id="footer_title" name="footer_title" class="form-input" value="<%= settings.footer_title || '' %>" maxlength="40" placeholder="<%= settings.navbar_title || 'NexusHub' %>">
+            <small class="form-hint" data-i18n="admin_settings_footer_title_hint">Если пусто, используется заголовок навигации.</small>
+          </div>
+          <div class="form-group">
+            <label for="footer_tagline" data-i18n="admin_settings_footer_tagline">Слоган</label>
+            <input type="text" id="footer_tagline" name="footer_tagline" class="form-input" value="<%= settings.footer_tagline || '' %>" maxlength="120" placeholder="Your ultimate gaming server hub.">
+          </div>
+          <div class="form-group">
+            <label for="footer_copyright" data-i18n="admin_settings_footer_copyright">Копирайт</label>
+            <input type="text" id="footer_copyright" name="footer_copyright" class="form-input" value="<%= settings.footer_copyright || '' %>" maxlength="80" placeholder="<%= settings.navbar_title || 'NexusHub' %>">
+            <small class="form-hint" data-i18n="admin_settings_footer_copyright_hint">Текст после © 2026. Если пусто, используется заголовок навигации.</small>
           </div>
         </fieldset>
       </div>
@@ -517,7 +527,7 @@
     reader.onload = (event) => {
       // Save the raw base64 string to preserve original transparency and quality
       currentIconBase64 = event.target.result;
-      const _chosenText = window.i18n?.t('admin_settings_game_chosen') || 'Выбрано';
+      const _chosenText = t('admin_settings_game_chosen');
       newGameIconBtn.innerHTML = '<i data-lucide="check"></i> ' + _chosenText;
       if (typeof lucide !== 'undefined') lucide.createIcons();
       newGameIconBtn.classList.add('btn-success');
@@ -541,7 +551,7 @@
       div.innerHTML = `
         <img src="${game.icon}" alt="${game.name}" style="width: 32px; height: 32px; object-fit: contain;">
         <span style="flex-grow: 1; font-weight: 600;">${game.name}</span>
-        <button type="button" class="btn btn-xs btn-danger" onclick="removeGame(${index})">${window.i18n?.t('admin_settings_game_remove') || 'Удалить'}</button>
+        <button type="button" class="btn btn-xs btn-danger" onclick="removeGame(${index})">${t('admin_settings_game_remove')}</button>
       `;
       gamesListContainer.appendChild(div);
     });
@@ -550,8 +560,8 @@
 
   window.addGame = function() {
     const name = newGameName.value.trim();
-    if (!name) return alert(window.i18n?.t('admin_settings_game_name_required') || 'Enter game name');
-    if (!currentIconBase64) return alert(window.i18n?.t('admin_settings_game_icon_required') || 'Select an icon');
+    if (!name) return alert(t('admin_settings_game_name_required'));
+    if (!currentIconBase64) return alert(t('admin_settings_game_icon_required'));
 
     games.push({ name, icon: currentIconBase64 });
     renderGames();
@@ -560,7 +570,7 @@
     newGameName.value = '';
     newGameIcon.value = '';
     currentIconBase64 = '';
-    const _chooseText = window.i18n?.t('admin_settings_game_choose') || 'Выбрать';
+    const _chooseText = t('admin_settings_game_choose');
     newGameIconBtn.innerHTML = '<i data-lucide="folder-open"></i> ' + _chooseText;
     if (typeof lucide !== 'undefined') lucide.createIcons();
     newGameIconBtn.classList.remove('btn-success');

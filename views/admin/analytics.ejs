@@ -3,15 +3,7 @@
 <section class="admin-header">
   <div class="container">
     <h1 class="page-title"><i data-lucide="bar-chart-3"></i> <span data-i18n="admin_analytics_title">Аналитика</span></h1>
-    <nav class="admin-nav">
-      <a href="/admin" class="admin-tab" data-i18n="admin_tab_home">Главная</a>
-      <a href="/admin/news" class="admin-tab" data-i18n="admin_tab_news">Новости</a>
-      <a href="/admin/servers" class="admin-tab" data-i18n="admin_tab_servers">Сервера</a>
-      <a href="/admin/users" class="admin-tab" data-i18n="admin_tab_users">Пользователи</a>
-      <a href="/admin/settings" class="admin-tab" data-i18n="admin_tab_settings">Настройки</a>
-      <a href="/admin/analytics" class="admin-tab active" data-i18n="admin_tab_analytics">Аналитика</a>
-      <a href="/admin/proxmox" class="admin-tab">Proxmox</a>
-    </nav>
+    <%- include('../partials/admin-nav', { activeTab: 'analytics' }) %>
   </div>
 </section>
 
@@ -247,7 +239,7 @@
     Chart.defaults.maintainAspectRatio = false;
 
     var chartInstances = {};
-    var noDataLabel = (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_no_data') : 'No data';
+    var noDataLabel = t('admin_chart_no_data');
 
     function getDays() {
       return parseInt(document.getElementById('analyticsDays').value) || 14;
@@ -319,7 +311,7 @@
           data: {
             labels: data.map(function(d) { return formatDate(d.day); }),
             datasets: [{
-              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Unique visitors',
+              label: t('admin_chart_views'),
               data: data.map(function(d) { return d.views; }),
               borderColor: chartColors.accent,
               backgroundColor: chartColors.accent + '20',
@@ -353,7 +345,7 @@
           data: {
             labels: data.map(function(d) { return String(d.hour).padStart(2, '0') + ':00'; }),
             datasets: [{
-              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Visitors',
+              label: t('admin_chart_views'),
               data: data.map(function(d) { return d.views; }),
               backgroundColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length] + '70'; }),
               borderColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length]; }),
@@ -384,7 +376,7 @@
           data: {
             labels: data.map(function(d) { return d.path.length > 25 ? d.path.substring(0, 25) + '\u2026' : d.path; }),
             datasets: [{
-              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_views') : 'Visitors',
+              label: t('admin_chart_views'),
               data: data.map(function(d) { return d.views; }),
               backgroundColor: chartColors.info + '70',
               borderColor: chartColors.info,
@@ -461,7 +453,7 @@
           data: {
             labels: data.map(function(d) { return formatDate(d.day); }),
             datasets: [{
-              label: (window.i18n && window.i18n.t) ? window.i18n.t('admin_chart_messages') : 'Messages',
+              label: t('admin_chart_messages'),
               data: data.map(function(d) { return d.messages; }),
               backgroundColor: chartColors.success + '60',
               borderColor: chartColors.success,
@@ -493,14 +485,14 @@
             labels: data.map(function(d) { return formatDate(d.day); }),
             datasets: [
               {
-                label: 'Online',
+                label: t('admin_dashboard_online'),
                 data: data.map(function(d) { return d.online; }),
                 borderColor: chartColors.success,
                 backgroundColor: chartColors.success + '25',
                 borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
               },
               {
-                label: 'Offline',
+                label: t('admin_dashboard_offline'),
                 data: data.map(function(d) { return d.offline; }),
                 borderColor: chartColors.danger,
                 backgroundColor: chartColors.danger + '25',
@@ -586,8 +578,8 @@
       if (hidden.length > 0) {
         var uid = 'vp_' + Math.random().toString(36).substr(2, 6);
         var hiddenHtml = hidden.map(function(p) { return '<span class="vp-tag">' + p + '</span>'; }).join('');
-        var tMore = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_more') : 'ещё';
-        var tCollapse = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_collapse') : 'свернуть';
+        var tMore = t('admin_visitor_more');
+        var tCollapse = t('admin_visitor_collapse');
         html += '<span id="' + uid + '" style="display:none">' + hiddenHtml + '</span>';
         html += '<button class="visitor-pages-toggle" onclick="var el=document.getElementById(\'' + uid + '\');if(el.style.display===\'none\'){el.style.display=\'\';this.textContent=\'▲ ' + tCollapse + '\';}else{el.style.display=\'none\';this.textContent=\'+ ' + hidden.length + ' ' + tMore + '\';}">+ ' + hidden.length + ' ' + tMore + '</button>';
       }
@@ -604,7 +596,7 @@
           var tbody = document.getElementById('visitorTableBody');
           if (!tbody) return;
           if (!data.visitors || data.visitors.length === 0) {
-            var noDataText = (window.i18n && window.i18n.t) ? window.i18n.t('admin_visitor_nodata') : 'Нет данных';
+            var noDataText = t('admin_visitor_nodata');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">' + noDataText + '</td></tr>';
             return;
           }
