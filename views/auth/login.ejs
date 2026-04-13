@@ -6,7 +6,7 @@
       <h1 class="auth-title" data-i18n="welcome_back">Welcome Back</h1>
       <p class="auth-subtitle" data-i18n="login_subtitle">Log in to your NexusHub account</p>
     </div>
-    <form action="/auth/login" method="POST" class="auth-form">
+    <form action="/auth/login" method="POST" class="auth-form" id="loginForm">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="form-group">
         <label for="username" data-i18n="username">Username</label>
@@ -16,9 +16,31 @@
         <label for="password" data-i18n="password">Password</label>
         <input type="password" id="password" name="password" class="form-input" required>
       </div>
-      <button type="submit" class="btn btn-primary btn-block" data-i18n="log_in">Log In</button>
+      <div id="turnstile-container"></div>
+      <button type="submit" class="btn btn-primary btn-block" id="loginBtn" disabled data-i18n="log_in">Log In</button>
     </form>
   </div>
 </section>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=_initTurnstile"></script>
+<script>
+  function _initTurnstile() {
+    var container = document.getElementById('turnstile-container');
+    var btn = document.getElementById('loginBtn');
+    if (!container || !btn) return;
+    container.innerHTML = '';
+    btn.disabled = true;
+    turnstile.render(container, {
+      sitekey: '<%= turnstileSiteKey %>',
+      theme: 'auto',
+      size: 'flexible',
+      callback: function() { btn.disabled = false; },
+      'expired-callback': function() { btn.disabled = true; },
+      'error-callback': function() { btn.disabled = true; }
+    });
+  }
+
+  if (typeof turnstile !== 'undefined') { setTimeout(_initTurnstile, 0); }
+</script>
 
 <%- include('../partials/footer') %>

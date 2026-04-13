@@ -125,6 +125,24 @@ const translations = {
     account: 'Account',
     footer_copyright: 'NexusHub. Powered by Proxmox.',
     
+    // Flash messages
+    flash_bot_failed: 'Bot verification failed. Please try again.',
+    flash_fill_all: 'Please fill in all fields.',
+    flash_invalid_username: 'Invalid username length.',
+    flash_invalid_creds: 'Invalid credentials.',
+    flash_session_error: 'Session error. Please try again.',
+    flash_reg_disabled: 'Registration is currently disabled.',
+    flash_username_required: 'Username and password are required.',
+    flash_username_short: 'Username must be at least 2 characters.',
+    flash_email_invalid: 'Invalid email format.',
+    flash_passwords_mismatch: 'Passwords do not match.',
+    flash_password_short: 'Password must be at least 8 characters.',
+    flash_username_taken: 'Username is already taken.',
+    flash_email_taken: 'Email is already registered.',
+    flash_account_created: 'Account created! You can now log in.',
+    flash_reg_error: 'An error occurred during registration.',
+    flash_prefs_saved: 'Preferences saved.',
+
     // Common
     loading: 'Loading...',
     error: 'Error',
@@ -555,6 +573,24 @@ const translations = {
     account: 'Аккаунт',
     footer_copyright: 'NexusHub. Работает на Proxmox.',
     
+    // Flash messages
+    flash_bot_failed: 'Проверка не пройдена. Попробуйте ещё раз.',
+    flash_fill_all: 'Пожалуйста, заполните все поля.',
+    flash_invalid_username: 'Неверная длина имени пользователя.',
+    flash_invalid_creds: 'Неверные данные для входа.',
+    flash_session_error: 'Ошибка сессии. Попробуйте ещё раз.',
+    flash_reg_disabled: 'Регистрация отключена.',
+    flash_username_required: 'Имя пользователя и пароль обязательны.',
+    flash_username_short: 'Имя пользователя — минимум 2 символа.',
+    flash_email_invalid: 'Неверный формат email.',
+    flash_passwords_mismatch: 'Пароли не совпадают.',
+    flash_password_short: 'Пароль — минимум 8 символов.',
+    flash_username_taken: 'Имя пользователя уже занято.',
+    flash_email_taken: 'Email уже зарегистрирован.',
+    flash_account_created: 'Аккаунт создан! Теперь можете войти.',
+    flash_reg_error: 'Произошла ошибка при регистрации.',
+    flash_prefs_saved: 'Настройки сохранены.',
+
     // Common
     loading: 'Загрузка...',
     error: 'Ошибка',

@@ -1,0 +1,156 @@
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE & RESPONSIVE — all breakpoint overrides
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Tablet ── */
+@media (max-width: 992px) {
+  .stats-grid-4x2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Charts & Analytics ── */
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  .chart-card-wide {
+    grid-column: 1;
+  }
+  .stats-grid-7 {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+  .analytics-controls {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── Mobile (≤768px) ── */
+@media (max-width: 768px) {
+  /* Navigation */
+  .nav-toggle { display: flex; }
+
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 56px;
+    left: 0; right: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem;
+    gap: 0;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  }
+
+  .nav-links.active {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem;
+  }
+
+  .nav-link {
+    padding: 0.65rem 0.85rem;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    min-width: unset;
+  }
+
+  .nav-link:hover { background: var(--surface-2); }
+
+  .nav-item-placeholder { display: none; }
+
+  .nav-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .nav-item-home { grid-column: 1; grid-row: 1; }
+  .nav-item-servers { grid-column: 2; grid-row: 1; }
+  .nav-item-community { grid-column: 1; grid-row: 2; }
+  .nav-item-monitoring { grid-column: 2; grid-row: 2; }
+  .nav-item-profile { grid-column: 1; grid-row: 3; }
+  .nav-item-admin { grid-column: 2; grid-row: 3; }
+  .nav-item-auth { grid-column: 1 / -1; grid-row: 4; }
+  .nav-item-theme-lang { grid-column: 1 / -1; grid-row: 5; }
+
+  .nav-item-theme-lang {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+  }
+
+  .nav-item-theme-lang .language-selector,
+  .nav-item-theme-lang .theme-selector {
+    min-width: 58px;
+    background: transparent;
+    border: 1px solid var(--border);
+    font-size: 0.75rem;
+    padding: 0.3rem 0.5rem;
+  }
+
+  .nav-item-theme-lang .effect-speed-slider {
+    width: 45px;
+    flex-shrink: 1;
+    min-width: 30px;
+  }
+
+  /* Layout */
+  .hero-stats { flex-direction: column; align-items: center; gap: 0.65rem; }
+  .news-grid { grid-template-columns: 1fr; }
+  .server-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .footer-grid { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+  .stats-grid-7 { grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+  .profile-grid { grid-template-columns: 1fr; }
+  .resources-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+
+  /* Admin */
+  .admin-tab { padding: 0.5rem 0.65rem; font-size: 0.78rem; min-width: 70px; }
+  .admin-header .container { padding: 0 1rem; }
+  .section.container { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Stat cards — allow text to wrap, remove truncation */
+  .stat-info .stat-label, .stat-content .stat-label {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    font-size: 0.72rem;
+  }
+
+  .stat-card { padding: 1rem 0.85rem; gap: 0.65rem; }
+  .stat-info .stat-number, .stat-content .stat-number { font-size: 1.5rem; }
+  .stat-icon { font-size: 1.25rem; }
+
+  /* General */
+  .game-badge { min-width: 120px; padding: 0.85rem 1rem; }
+  .auth-card { padding: 1.5rem; }
+  .hero { padding: 3.5rem 0 2.5rem; }
+  .hero-actions .btn { min-width: 140px; }
+  .data-table { table-layout: auto; }
+  .detail-actions .btn { min-width: 120px; }
+  .page-title, .section-title { white-space: normal; }
+  .admin-section-header h2 { white-space: normal; }
+  .footer-bottom p { white-space: normal; }
+}
+
+/* ── Small mobile (≤480px) ── */
+@media (max-width: 480px) {
+  .stats-grid { grid-template-columns: 1fr; }
+  .stats-grid-7 { grid-template-columns: 1fr 1fr; }
+  .stats-grid-4x2 { grid-template-columns: 1fr; }
+  .hero-title { font-size: 1.85rem; }
+  .hero { padding: 2.5rem 0 2rem; }
+  .hero-actions .btn { min-width: 120px; }
+  .actions-cell { min-width: 100px; }
+  .actions-cell .btn { min-width: 45px; }
+
+  .admin-header .container { padding: 0 0.75rem; }
+  .section.container { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .container { padding: 0 0.75rem; }
+}

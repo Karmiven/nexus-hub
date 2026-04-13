@@ -4,15 +4,13 @@ const db = require('../config/database');
 
 // Community chat page
 router.get('/', (req, res) => {
-  const enabled = db.get("SELECT value FROM settings WHERE key = 'community_enabled'");
-  if (enabled?.value === '0') {
+  const s = db.getCachedSettings('community_enabled', 'max_chat_messages');
+  if (s.community_enabled === '0') {
     req.flash('error', 'Community section is currently disabled.');
     return res.redirect('/');
   }
 
-  const maxMessages = parseInt(
-    db.get("SELECT value FROM settings WHERE key = 'max_chat_messages'")?.value || '200'
-  );
+  const maxMessages = parseInt(s.max_chat_messages || '200');
 
   const messages = db.all(
     'SELECT * FROM chat_messages WHERE channel = ? ORDER BY created_at DESC LIMIT ?',

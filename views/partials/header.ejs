@@ -34,6 +34,7 @@
   </script>
   <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
   <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css?v=<%= v %>">
+  <link rel="stylesheet" href="/css/mobile.css?v=<%= v %>">
   <link rel="stylesheet" href="/css/desktop.css?v=<%= v %>">
   <script>
     // Update theme stylesheet href ASAP (after <link> exists)
@@ -164,10 +165,10 @@
   </script>
 
   <% if (success && success.length > 0) { %>
-    <div class="flash flash-success"><%= success[0] %></div>
+    <div class="flash flash-success" data-i18n="<%= success[0] %>"><%= success[0] %></div>
   <% } %>
   <% if (error && error.length > 0) { %>
-    <div class="flash flash-error"><%= error[0] %></div>
+    <div class="flash flash-error" data-i18n="<%= error[0] %>"><%= error[0] %></div>
   <% } %>
 
   <main class="main-content">

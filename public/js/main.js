@@ -40,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initFlashMessages();
   initServerPolling();
   formatLocalTimes();
-  runInlinePageScripts();
 });
 
 // ═══════════════════════════════════════════════════════════════
@@ -62,7 +61,7 @@ function isSpaEligible(href) {
     var path = url.pathname;
     // Skip: API, auth actions, file downloads, socket.io, admin pages
     if (/^\/(api|socket\.io)\//i.test(path)) return false;
-    if (/\/auth\/logout/i.test(path)) return false;
+    if (/\/auth\/(logout|login)/i.test(path)) return false;
     if (/^\/admin\b/i.test(path)) return false;
     return true;
   } catch (e) {
@@ -234,13 +233,6 @@ function executeInlineScripts(scriptElements) {
     document.body.appendChild(s);
     s.remove();
   });
-}
-
-/**
- * Run inline scripts that were in the original page's main-content on first load
- */
-function runInlinePageScripts() {
-  // Already executed by browser on first load — nothing to do
 }
 
 /**

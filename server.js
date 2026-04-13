@@ -37,13 +37,14 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com"],
       scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
-      connectSrc: ["'self'", "ws:", "wss:"],
+      connectSrc: ["'self'", "ws:", "wss:", "https://challenges.cloudflare.com"],
       objectSrc: ["'none'"],
+      frameSrc: ["https://challenges.cloudflare.com"],
       frameAncestors: ["'none'"],
       upgradeInsecureRequests: null
     }
@@ -56,84 +57,8 @@ app.use(helmet({
 app.use(compression());
 
 // ── Bot / Scanner protection ──
-// Block malicious path traversal, vulnerability scanners, and suspicious requests
-// This runs EARLY — before static files, sessions, or analytics
-(function setupBotProtection() {
-  // Suspicious path patterns (path traversal, known exploit paths, config files)
-  const BLOCKED_PATHS = [
-    /\.\./, /\/\.\w/, // path traversal, dotfiles
-    /\/etc\//, /\/proc\//, /\/var\//, /\/tmp\//,
-    /\/@fs\//, /\/@vite\//, /\/__vite/,
-    /\/\.env/, /\/\.git/, /\/\.svn/, /\/\.hg/,
-    /\/wp-admin/, /\/wp-login/, /\/wp-content/, /\/wp-includes/, /\/xmlrpc\.php/,
-    /\/phpmyadmin/i, /\/pma\//i, /\/adminer/i,
-    /\/cgi-bin\//, /\/\.cgi$/,
-    /\/config\.(php|json|yml|yaml|xml|ini|bak)$/i,
-    /\/debug\//, /\/telescope\//, /\/actuator\//,
-    /\/(shell|cmd|command|exec|eval)\b/i,
-    /\.sql$/i, /\.bak$/i, /\.old$/i, /\.orig$/i, /\.swp$/i,
-    /\/\.well-known\/(?!acme)/, // allow ACME, block rest
-  ];
-
-  // Suspicious user-agents (scanners, exploit tools)
-  const BLOCKED_UA = /sqlmap|nikto|nmap|masscan|zgrab|nuclei|gobuster|dirbuster|wpscan|acunetix|nessus|openvas|burpsuite|hydra|metasploit/i;
-
-  // IP ban tracking (in-memory, resets on restart)
-  const _ipStrikes = new Map();
-  const STRIKE_LIMIT = 10;
-  const STRIKE_WINDOW = 15 * 60 * 1000; // 15 min
-  const BAN_DURATION = 60 * 60 * 1000;  // 1 hour
-
-  app.use((req, res, next) => {
-    const ip = req.ip;
-    const now = Date.now();
-
-    // Check if IP is banned
-    const record = _ipStrikes.get(ip);
-    if (record && record.banned && now < record.bannedUntil) {
-      return res.status(403).end();
-    }
-
-    const urlPath = decodeURIComponent(req.path).toLowerCase();
-    const ua = req.get('user-agent') || '';
-    let blocked = false;
-
-    // Check path
-    if (BLOCKED_PATHS.some(rx => rx.test(urlPath))) blocked = true;
-
-    // Check user-agent
-    if (!blocked && BLOCKED_UA.test(ua)) blocked = true;
-
-    // Check null bytes
-    if (!blocked && req.url.includes('%00')) blocked = true;
-
-    if (blocked) {
-      // Track strikes
-      if (!record || now - record.first > STRIKE_WINDOW) {
-        _ipStrikes.set(ip, { first: now, count: 1, banned: false, bannedUntil: 0 });
-      } else {
-        record.count++;
-        if (record.count >= STRIKE_LIMIT) {
-          record.banned = true;
-          record.bannedUntil = now + BAN_DURATION;
-          console.warn(`🚫 Banned IP ${ip} for 1h (${record.count} malicious requests)`);
-        }
-      }
-      return res.status(404).end();
-    }
-
-    next();
-  });
-
-  // Cleanup old strike records every 30 min
-  setInterval(() => {
-    const now = Date.now();
-    for (const [ip, rec] of _ipStrikes) {
-      if (rec.banned && now > rec.bannedUntil) _ipStrikes.delete(ip);
-      else if (!rec.banned && now - rec.first > STRIKE_WINDOW) _ipStrikes.delete(ip);
-    }
-  }, 30 * 60 * 1000).unref();
-})();
+// Runs EARLY — before static files, sessions, or analytics
+app.use(require('./middleware/botProtection'));
 
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
@@ -186,14 +111,20 @@ app.use((req, res, next) => {
 
   // Use cached settings to avoid DB hit on every request
   try {
-    const s = db.getCachedSettings('navbar_title', 'monitoring_public', 'site_timezone');
+    const s = db.getCachedSettings('navbar_title', 'monitoring_public', 'site_timezone', 'footer_title', 'footer_tagline', 'footer_copyright');
     res.locals.navbarTitle = s.navbar_title || 'NexusHub';
     res.locals.monitoringPublic = String(s.monitoring_public) === '1';
     res.locals.siteTimezone = s.site_timezone || 'Europe/Moscow';
+    res.locals.footerTitle = s.footer_title || '';
+    res.locals.footerTagline = s.footer_tagline || '';
+    res.locals.footerCopyright = s.footer_copyright || '';
   } catch (e) {
     res.locals.navbarTitle = 'NexusHub';
     res.locals.monitoringPublic = false;
     res.locals.siteTimezone = 'Europe/Moscow';
+    res.locals.footerTitle = '';
+    res.locals.footerTagline = '';
+    res.locals.footerCopyright = '';
   }
   next();
 });
@@ -250,53 +181,7 @@ app.use((req, res, next) => {
 });
 
 // ── Analytics middleware (buffered page view tracking) ──
-const geoip = require('geoip-lite');
-const _analyticsBuffer = [];
-const ANALYTICS_FLUSH_INTERVAL = 5000; // flush every 5 seconds
-
-setInterval(() => {
-  if (_analyticsBuffer.length === 0) return;
-  const batch = _analyticsBuffer.splice(0, _analyticsBuffer.length);
-  try {
-    const batchInsert = db.transaction((rows) => {
-      for (const row of rows) {
-        db.run(
-          'INSERT INTO page_views (path, method, user_id, ip, user_agent, country) VALUES (?, ?, ?, ?, ?, ?)',
-          row
-        );
-      }
-    });
-    batchInsert(batch);
-  } catch (e) { /* analytics should never break the app */ }
-}, ANALYTICS_FLUSH_INTERVAL);
-
-app.use((req, res, next) => {
-  // Only track GET requests to actual pages (not static assets, API, or XHR)
-  if (
-    req.method === 'GET' &&
-    !req.path.startsWith('/css') &&
-    !req.path.startsWith('/js') &&
-    !req.path.startsWith('/img') &&
-    !req.path.startsWith('/uploads') &&
-    !req.path.startsWith('/api') &&
-    !req.path.startsWith('/admin') &&
-    !req.path.startsWith('/health') &&
-    !req.path.includes('.') &&
-    !req.xhr &&
-    req.headers['x-requested-with'] !== 'XMLHttpRequest'
-  ) {
-    // Resolve country from IP
-    const rawIp = req.ip || '';
-    const cleanIp = rawIp.replace(/^::ffff:/, '');
-    const geo = geoip.lookup(cleanIp);
-    const country = (geo && geo.country) || '';
-
-    _analyticsBuffer.push(
-      [req.path, req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255), country]
-    );
-  }
-  next();
-});
+app.use(require('./middleware/analytics'));
 
 // ── Routes ──
 const setupRoutes = require('./routes/setup');
@@ -305,17 +190,19 @@ const serverRoutes = require('./routes/servers');
 const communityRoutes = require('./routes/community');
 const authRoutes = require('./routes/auth');
 const adminRoutes = require('./routes/admin');
+const adminAnalyticsRoutes = require('./routes/admin-analytics');
 const apiRoutes = require('./routes/api');
-const monitoring = require('./routes/monitoring');
+const monitoringRoutes = require('./routes/monitoring');
 
 app.use('/setup', setupRoutes);
 app.use('/', homeRoutes);
 app.use('/servers', serverRoutes);
+app.use('/admin/analytics', adminAnalyticsRoutes);
 app.use('/admin', adminRoutes);
 app.use('/auth', authRoutes);
 app.use('/community', communityRoutes);
 app.use('/api', apiRoutes);
-app.use('/monitoring', monitoring.router);
+app.use('/monitoring', monitoringRoutes);
 
 // ── Health Check ──
 app.get('/health', (req, res) => {
@@ -372,7 +259,6 @@ async function start() {
     }
   });
 
-  monitoring.initMonitoring?.();
   startStatusChecker();
 
   server.listen(PORT, () => {

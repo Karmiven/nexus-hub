@@ -1,6 +1,7 @@
 services:
   nexushub:
     build: .
+    env_file: .env
     container_name: nexushub
     restart: unless-stopped
     ports:

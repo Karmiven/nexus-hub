@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
 const { ProxmoxClient } = require('../utils/proxmox');
-const { isAdmin, isAuthenticated } = require('../middleware/auth');
+const { isAdmin } = require('../middleware/auth');
 const { decrypt } = require('../utils/crypto');
 
 /**
@@ -47,8 +47,8 @@ function getSelectedGuests() {
 
 // ── Guard: public if monitoring_public=1, otherwise auth+admin ──
 function monitoringAccess(req, res, next) {
-  const row = db.get("SELECT value FROM settings WHERE key = 'monitoring_public'");
-  const isPublic = String(row?.value) === '1';
+  const s = db.getCachedSettings('monitoring_public');
+  const isPublic = String(s.monitoring_public) === '1';
   if (isPublic) return next();
   // Not public — require authenticated admin
   if (req.session?.user?.role === 'admin') return next();
@@ -194,4 +194,4 @@ router.get('/dashboard', monitoringAccess, (req, res) => {
   });
 });
 
-module.exports = { router, initMonitoring: () => {} };
+module.exports = router;

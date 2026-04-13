@@ -6,6 +6,20 @@ const { isGuest, isAuthenticated } = require('../middleware/auth');
 const catchAsync = require('../utils/catchAsync');
 const rateLimit = require('express-rate-limit');
 
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
+const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY;
+
+
+async function verifyTurnstile(token, ip) {
+  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: TURNSTILE_SECRET, response: token, remoteip: ip }),
+  });
+  const data = await res.json();
+  return data.success === true;
+}
+
 // Rate limiter for login attempts
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -26,15 +40,21 @@ const registerLimiter = rateLimit({
 
 // Login page
 router.get('/login', isGuest, (req, res) => {
-  res.render('auth/login', { title: 'Login' });
+  res.render('auth/login', { title: 'Login', turnstileSiteKey: TURNSTILE_SITE_KEY });
 });
 
 // Login handler
 router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   let { username, password } = req.body;
+  const turnstileToken = req.body['cf-turnstile-response'];
+
+  if (!turnstileToken || !(await verifyTurnstile(turnstileToken, req.ip))) {
+    req.flash('error', 'flash_bot_failed');
+    return res.redirect('/auth/login');
+  }
 
   if (!username || !password) {
-    req.flash('error', 'Please fill in all fields.');
+    req.flash('error', 'flash_fill_all');
     return res.redirect('/auth/login');
   }
 
@@ -42,20 +62,20 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   username = String(username).replace(/[^\p{L}\p{N}_]/gu, '');
   
   if (username.length < 2 || username.length > 30) {
-    req.flash('error', 'Invalid username length.');
+    req.flash('error', 'flash_invalid_username');
     return res.redirect('/auth/login');
   }
 
   const user = db.get('SELECT * FROM users WHERE username = ?', [username]);
 
   if (!user) {
-    req.flash('error', 'Invalid credentials.');
+    req.flash('error', 'flash_invalid_creds');
     return res.redirect('/auth/login');
   }
 
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) {
-    req.flash('error', 'Invalid credentials.');
+    req.flash('error', 'flash_invalid_creds');
     return res.redirect('/auth/login');
   }
 
@@ -80,7 +100,7 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   req.session.regenerate((err) => {
     if (err) {
       console.error('Session regeneration error:', err);
-      req.flash('error', 'Session error. Please try again.');
+      req.flash('error', 'flash_session_error');
       return res.redirect('/auth/login');
     }
     req.session.user = userData;
@@ -95,9 +115,9 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
 // Register page
 router.get('/register', isGuest, (req, res) => {
   // Check if registration is enabled
-  const regSetting = db.get("SELECT value FROM settings WHERE key = 'registration_enabled'");
-  if (regSetting?.value === '0') {
-    req.flash('error', 'Registration is currently disabled.');
+  const s = db.getCachedSettings('registration_enabled');
+  if (s.registration_enabled === '0') {
+    req.flash('error', 'flash_reg_disabled');
     return res.redirect('/auth/login');
   }
   res.render('auth/register', { title: 'Register' });
@@ -106,23 +126,23 @@ router.get('/register', isGuest, (req, res) => {
 // Register handler
 router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) => {
   // Check if registration is enabled
-  const regSetting = db.get("SELECT value FROM settings WHERE key = 'registration_enabled'");
-  if (regSetting?.value === '0') {
-    req.flash('error', 'Registration is currently disabled.');
+  const s = db.getCachedSettings('registration_enabled');
+  if (s.registration_enabled === '0') {
+    req.flash('error', 'flash_reg_disabled');
     return res.redirect('/auth/login');
   }
 
   const { username, email, password, password2 } = req.body;
 
   if (!username || !password || !password2) {
-    req.flash('error', 'Username and password are required.');
+    req.flash('error', 'flash_username_required');
     return res.redirect('/auth/register');
   }
 
   // Sanitize username
   const cleanUsername = String(username).replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 30);
   if (cleanUsername.length < 2) {
-    req.flash('error', 'Username must be at least 2 characters (letters, numbers, underscores).');
+    req.flash('error', 'flash_username_short');
     return res.redirect('/auth/register');
   }
 
@@ -130,25 +150,25 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
   if (email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      req.flash('error', 'Invalid email format.');
+      req.flash('error', 'flash_email_invalid');
       return res.redirect('/auth/register');
     }
   }
 
   if (password !== password2) {
-    req.flash('error', 'Passwords do not match.');
+    req.flash('error', 'flash_passwords_mismatch');
     return res.redirect('/auth/register');
   }
 
   if (password.length < 8) {
-    req.flash('error', 'Password must be at least 8 characters long.');
+    req.flash('error', 'flash_password_short');
     return res.redirect('/auth/register');
   }
 
   // Check if username already exists
   const existingUser = db.get('SELECT id FROM users WHERE username = ?', [cleanUsername]);
   if (existingUser) {
-    req.flash('error', 'Username is already taken.');
+    req.flash('error', 'flash_username_taken');
     return res.redirect('/auth/register');
   }
 
@@ -156,7 +176,7 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
   if (email) {
     const existingEmail = db.get('SELECT id FROM users WHERE email = ?', [email.trim().toLowerCase()]);
     if (existingEmail) {
-      req.flash('error', 'Email is already registered.');
+      req.flash('error', 'flash_email_taken');
       return res.redirect('/auth/register');
     }
   }
@@ -168,11 +188,11 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
       [cleanUsername, email ? email.trim().toLowerCase() : null, hashedPassword, 'user']
     );
 
-    req.flash('success', 'Account created! You can now log in.');
+    req.flash('success', 'flash_account_created');
     res.redirect('/auth/login');
   } catch (error) {
     console.error('Registration error:', error);
-    req.flash('error', 'An error occurred during registration.');
+    req.flash('error', 'flash_reg_error');
     res.redirect('/auth/register');
   }
 }));
@@ -199,7 +219,7 @@ router.post('/profile/notifications', isAuthenticated, (req, res) => {
     [notify_email ? 1 : 0, cleanDiscord, req.session.user.id]
   );
 
-  req.flash('success', 'Preferences saved.');
+  req.flash('success', 'flash_prefs_saved');
   res.redirect('/auth/profile');
 });
 
