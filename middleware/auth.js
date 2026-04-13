@@ -6,7 +6,7 @@ function isAuthenticated(req, res, next) {
   if (req.session && req.session.user) {
     return next();
   }
-  req.flash('error', 'Please log in to access this page.');
+  req.flash('error', 'flash_login_required');
   return res.redirect('/auth/login');
 }
 

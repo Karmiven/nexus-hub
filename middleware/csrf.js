@@ -42,7 +42,7 @@ function csrfProtection(req, res, next) {
         (req.headers.accept && req.headers.accept.includes('application/json'))) {
       return res.status(403).json({ success: false, error: 'Invalid CSRF token' });
     }
-    req.flash('error', 'Form expired. Please try again.');
+    req.flash('error', 'flash_form_expired');
     return res.redirect(req.get('Referrer') || '/');
   }
 

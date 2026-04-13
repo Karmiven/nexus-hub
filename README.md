@@ -260,7 +260,7 @@ server {
 - [x] Health check endpoint (`/health`)
 - [ ] Telegram bot notifications for server status changes
 - [ ] Discord webhook integration
-- [ ] Server-side i18n (flash messages, API responses)
+- [x] Server-side i18n (flash messages, API responses)
 - [ ] More languages beyond EN/RU
 - [x] Dashboard charts and analytics (Chart.js)
 - [x] Docker support with docker-compose

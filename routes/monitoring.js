@@ -55,7 +55,7 @@ function monitoringAccess(req, res, next) {
   if (req.session?.user) {
     return res.status(404).render('errors/404', { title: 'Page Not Found' });
   }
-  req.flash('error', 'Please log in to access this page.');
+  req.flash('error', 'flash_login_required');
   return res.redirect('/auth/login');
 }
 

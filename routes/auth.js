@@ -201,7 +201,7 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
 router.get('/profile', isAuthenticated, (req, res) => {
   const profile = db.get('SELECT id, username, email, role, notify_email, notify_discord, created_at FROM users WHERE id = ?', [req.session.user.id]);
   if (!profile) {
-    req.flash('error', 'User not found.');
+    req.flash('error', 'flash_user_not_found');
     return res.redirect('/');
   }
   res.render('auth/profile', { title: 'Profile', profile });

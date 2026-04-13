@@ -34,31 +34,31 @@ router.post('/', setupLimiter, catchAsync(async (req, res) => {
   const { site_name, admin_username, admin_email, admin_password, admin_password_confirm } = req.body;
 
   if (!site_name || !admin_username || !admin_email || !admin_password || !admin_password_confirm) {
-    req.flash('error', 'Please fill in all fields.');
+    req.flash('error', 'flash_fill_all');
     return res.redirect('/setup');
   }
 
   // Sanitize username
   const cleanUsername = String(admin_username).replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 30);
   if (cleanUsername.length < 2) {
-    req.flash('error', 'Username must be at least 2 characters (letters, numbers, underscores).');
+    req.flash('error', 'flash_username_short');
     return res.redirect('/setup');
   }
 
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(admin_email)) {
-    req.flash('error', 'Invalid email format.');
+    req.flash('error', 'flash_email_invalid');
     return res.redirect('/setup');
   }
 
   if (admin_password !== admin_password_confirm) {
-    req.flash('error', 'Passwords do not match.');
+    req.flash('error', 'flash_passwords_mismatch');
     return res.redirect('/setup');
   }
 
   if (admin_password.length < 8) {
-    req.flash('error', 'Password must be at least 8 characters long.');
+    req.flash('error', 'flash_password_short');
     return res.redirect('/setup');
   }
 
@@ -74,11 +74,11 @@ router.post('/', setupLimiter, catchAsync(async (req, res) => {
       [cleanUsername, admin_email.trim().toLowerCase(), hashedPassword, 'admin']
     );
 
-    req.flash('success', 'Setup complete! You can now log in.');
+    req.flash('success', 'flash_setup_complete');
     res.redirect('/auth/login');
   } catch (error) {
     console.error('Setup error:', error);
-    req.flash('error', 'An error occurred during setup. Please try again.');
+    req.flash('error', 'flash_setup_error');
     res.redirect('/setup');
   }
 }));

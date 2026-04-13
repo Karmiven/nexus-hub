@@ -20,14 +20,14 @@ const HOSTNAME_RE = /^(?!-)([A-Za-z0-9-]{1,63}\.)*[A-Za-z]{2,}$/;
 function validateServerInput(body) {
   const { name, game, ip, port } = body;
   if (!name || !game || !ip || !port) {
-    return 'Name, game, IP, and port are required.';
+    return 'flash_server_fields_required';
   }
   const portNum = parseInt(port);
   if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-    return 'Port must be a valid number between 1 and 65535.';
+    return 'flash_server_invalid_port';
   }
   if (net.isIP(ip) === 0 && !HOSTNAME_RE.test(ip)) {
-    return 'Invalid IP address or hostname format.';
+    return 'flash_server_invalid_ip';
   }
   return null;
 }
@@ -38,11 +38,11 @@ const MAX_NEWS_CONTENT_SIZE = 50000; // 50KB per field
 function validateNewsInput(body) {
   const { title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru } = body;
   if (!title_en || !title_ru || !content_short_en || !content_short_ru || !content_full_en || !content_full_ru) {
-    return 'All title and content fields are required.';
+    return 'flash_news_fields_required';
   }
   const fields = [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru];
   if (fields.some(f => String(f).length > MAX_NEWS_CONTENT_SIZE)) {
-    return 'Content is too long (max 50KB per field).';
+    return 'flash_news_content_too_long';
   }
   return null;
 }
@@ -108,7 +108,7 @@ router.post('/news/create', upload.single('image'), (req, res) => {
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.session.user.username]
   );
 
-  req.flash('success', 'News article created.');
+  req.flash('success', 'flash_news_created');
   res.redirect('/admin/news');
 });
 
@@ -117,7 +117,7 @@ router.post('/news/:id', upload.single('image'), (req, res) => {
 
   const article = db.get('SELECT * FROM news WHERE id = ?', [req.params.id]);
   if (!article) {
-    req.flash('error', 'Article not found.');
+    req.flash('error', 'flash_article_not_found');
     return res.redirect('/admin/news');
   }
 
@@ -134,13 +134,13 @@ router.post('/news/:id', upload.single('image'), (req, res) => {
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.params.id]
   );
 
-  req.flash('success', 'News article updated.');
+  req.flash('success', 'flash_news_updated');
   res.redirect('/admin/news');
 });
 
 router.post('/news/:id/delete', (req, res) => {
   db.run('DELETE FROM news WHERE id = ?', [req.params.id]);
-  req.flash('success', 'News article deleted.');
+  req.flash('success', 'flash_news_deleted');
   res.redirect('/admin/news');
 });
 
@@ -161,13 +161,13 @@ router.post('/servers/refresh', catchAsync(async (req, res) => {
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
       return res.json({ success: true });
     }
-    req.flash('success', 'Server statuses refreshed.');
+    req.flash('success', 'flash_servers_refreshed');
   } catch (err) {
     console.error('Status refresh error:', err);
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
       return res.json({ success: false, message: 'Failed to refresh server statuses.' });
     }
-    req.flash('error', 'Failed to refresh server statuses.');
+    req.flash('error', 'flash_servers_refresh_failed');
   }
   res.redirect('/admin/servers');
 }));
@@ -192,14 +192,14 @@ router.post('/servers', uploadServer.single('image'), (req, res) => {
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0]
   );
 
-  req.flash('success', 'Server added.');
+  req.flash('success', 'flash_server_added');
   res.redirect('/admin/servers');
 });
 
 router.get('/servers/:id/edit', (req, res) => {
   const server = db.get('SELECT * FROM servers WHERE id = ?', [req.params.id]);
   if (!server) {
-    req.flash('error', 'Server not found.');
+    req.flash('error', 'flash_server_not_found');
     return res.redirect('/admin/servers');
   }
   res.render('admin/server-form', { title: 'Edit Server', server });
@@ -227,13 +227,13 @@ router.post('/servers/:id', uploadServer.single('image'), (req, res) => {
     req.params.id]
   );
 
-  req.flash('success', 'Server updated.');
+  req.flash('success', 'flash_server_updated');
   res.redirect('/admin/servers');
 });
 
 router.post('/servers/:id/delete', (req, res) => {
   db.run('DELETE FROM servers WHERE id = ?', [req.params.id]);
-  req.flash('success', 'Server deleted.');
+  req.flash('success', 'flash_server_deleted');
   res.redirect('/admin/servers');
 });
 
@@ -267,7 +267,7 @@ router.post('/settings', (req, res) => {
   // Invalidate cached settings so changes take effect immediately
   db.invalidateSettingsCache();
 
-  req.flash('success', 'Settings saved.');
+  req.flash('success', 'flash_settings_saved');
   res.redirect('/admin/settings');
 });
 
@@ -279,14 +279,14 @@ router.get('/users', (req, res) => {
 
 router.post('/users/:id/delete', (req, res) => {
   if (parseInt(req.params.id) === req.session.user.id) {
-    req.flash('error', 'Cannot delete your own account.');
+    req.flash('error', 'flash_cannot_delete_self');
     return res.redirect('/admin/users');
   }
   db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
   // Reset installed cache so the setup guard re-checks admin count
   const resetCache = req.app.get('resetInstalledCache');
   if (resetCache) resetCache();
-  req.flash('success', 'User deleted.');
+  req.flash('success', 'flash_user_deleted');
   res.redirect('/admin/users');
 });
 

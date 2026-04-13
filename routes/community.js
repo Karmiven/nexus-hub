@@ -6,7 +6,7 @@ const db = require('../config/database');
 router.get('/', (req, res) => {
   const s = db.getCachedSettings('community_enabled', 'max_chat_messages');
   if (s.community_enabled === '0') {
-    req.flash('error', 'Community section is currently disabled.');
+    req.flash('error', 'flash_community_disabled');
     return res.redirect('/');
   }
 
