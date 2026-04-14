@@ -147,8 +147,7 @@
           </select>
 
           <select class="language-selector" id="languageSelector" aria-label="Select language">
-            <option value="en">ENG</option>
-            <option value="ru">RUS</option>
+            <!-- populated dynamically by translations.js -->
           </select>
         </li>
       </ul>
@@ -159,8 +158,7 @@
     (function(){
       var ts = document.getElementById('themeSwitcher');
       if (ts && window.__savedTheme) ts.value = window.__savedTheme;
-      var ls = document.getElementById('languageSelector');
-      if (ls && window.__savedLang) ls.value = window.__savedLang;
+      // Language selector is populated dynamically by translations.js after i18n loads
     })();
   </script>
 

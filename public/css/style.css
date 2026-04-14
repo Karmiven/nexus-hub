@@ -272,6 +272,8 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   color: var(--text-primary);
   text-decoration: none;
   letter-spacing: -0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-logo:hover { color: var(--accent); }

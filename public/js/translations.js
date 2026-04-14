@@ -1,989 +1,135 @@
-// Translation system for NexusHub
-const translations = {
-  en: {
-    // Navigation
-    nav_home: 'Home',
-    nav_servers: 'Servers',
-    nav_community: 'Community',
-    nav_monitoring: 'Monitoring',
-    nav_profile: 'Profile',
-    nav_admin: 'Admin',
-    nav_login: 'Login',
-    nav_logout: 'Logout',
-    
-    // Home page
-    hero_title: 'NexusHub',
-    hero_subtitle: 'Your Ultimate Gaming Server Hub',
-    hero_browse_servers: 'Browse Servers',
-    hero_join_community: 'Join Community',
-    latest_news: 'Latest News',
-    hosted_games: 'Hosted Games',
-    no_news: 'No news yet. Check back soon!',
-    stat_online: 'Online',
-    stat_servers: 'Servers',
-    pinned: 'Pinned',
-    news_by: 'By',
+// ═══════════════════════════════════════════════════════════════
+//  NexusHub i18n — Dynamic Language Loader
+//  Language files live in /js/lang/{code}.js
+//  Each file calls window.__loadLang({ _label: 'English', ... })
+//  Adding a new language = creating a new .js file in /js/lang/
+// ═══════════════════════════════════════════════════════════════
 
-    // Servers
-    game_servers: 'Game Servers',
-    servers_desc: 'Browse all our hosted game servers. Click on any server for more details.',
-    no_servers: 'No servers configured yet. Check back soon!',
-    online: 'Online',
-    offline: 'Offline',
-    game: 'Game',
-    address: 'Address',
-    players: 'Players',
-    launch: 'Launch',
-    details: 'Details',
-    last_checked: 'Checked',
-    
-    // Server detail
-    back_to_servers: 'Back to Servers',
-    server_address: 'Server Address',
-    players_online: 'Players Online',
-    about_server: 'About this Server',
-    copy_address: 'Copy Address',
-    open_launcher: 'Open Launcher',
-    copied: 'Copied!',
-    
-    // Community
-    community_chat: 'Community Chat',
-    community_desc: 'Chat with other players in real-time. Be respectful!',
-    your_nickname: 'Your nickname:',
-    enter_nickname: 'Enter nickname...',
-    join_chat: 'Join Chat',
-    type_message: 'Type a message...',
-    send: 'Send',
-    is_typing: '{user} is typing...',
-    online_users: 'Online',
-    
-    // Auth
-    welcome_back: 'Welcome Back',
-    login_subtitle: 'Log in to your NexusHub account',
-    username: 'Username',
-    password: 'Password',
-    log_in: 'Log In',
-    
-    // Registration
-    join_nexushub: 'Join NexusHub',
-    register_subtitle: 'Create your account and join the community',
-    username_required: 'Username *',
-    email_optional: 'Email (optional, for notifications)',
-    password_required: 'Password *',
-    confirm_password: 'Confirm Password *',
-    create_account: 'Create Account',
-    have_account: 'Already have an account?',
-    no_account: "Don't have an account?",
-    register_now: 'Register',
-    
-    // Profile
-    profile_title: 'Profile',
-    account_info: 'Account Info',
-    email: 'Email',
-    not_set: 'Not set',
-    role: 'Role',
-    joined: 'Joined',
-    notification_prefs: 'Notification Preferences',
-    notify_email_label: 'Receive email notifications for new servers/news',
-    discord_id_label: 'Discord User ID (for bot notifications)',
-    save_preferences: 'Save Preferences',
-    
-    // Admin
-    admin_dashboard: 'Admin Dashboard',
-    manage_news: 'Manage News',
-    manage_servers: 'Manage Servers',
-    manage_users: 'Manage Users',
-    settings: 'Settings',
-    
-    // Monitoring
-    resource_monitoring: 'Resource Monitoring',
-    monitoring_desc: 'Real-time system resource usage for all game servers',
-    total_servers: 'Total Servers',
-    online_servers: 'Online',
-    offline_servers: 'Offline',
-    avg_cpu: 'Avg CPU',
-    server_resources: 'Server Resources',
-    cpu: 'CPU',
-    memory: 'Memory',
-    disk: 'Disk',
-    cores: 'Cores',
-    load: 'Load',
-    uptime: 'Uptime',
-    last_check: 'Last check',
-    server_offline_msg: 'Server is offline or not responding',
-    
-    // Errors
-    page_not_found: 'Page Not Found',
-    error_404_desc: "The page you're looking for doesn't exist or has been moved.",
-    back_to_home: 'Back to Home',
-    server_error: 'Server Error',
-    error_500_desc: 'Something went wrong on our end. Please try again later.',
-    
-    // Footer
-    footer_tagline: 'Your ultimate gaming server hub. Play, connect, and conquer.',
-    quick_links: 'Quick Links',
-    account: 'Account',
-    footer_copyright: 'NexusHub. Powered by Proxmox.',
-    
-    // Flash messages
-    flash_bot_failed: 'Bot verification failed. Please try again.',
-    flash_fill_all: 'Please fill in all fields.',
-    flash_invalid_username: 'Invalid username length.',
-    flash_invalid_creds: 'Invalid credentials.',
-    flash_session_error: 'Session error. Please try again.',
-    flash_reg_disabled: 'Registration is currently disabled.',
-    flash_username_required: 'Username and password are required.',
-    flash_username_short: 'Username must be at least 2 characters.',
-    flash_email_invalid: 'Invalid email format.',
-    flash_passwords_mismatch: 'Passwords do not match.',
-    flash_password_short: 'Password must be at least 8 characters.',
-    flash_username_taken: 'Username is already taken.',
-    flash_email_taken: 'Email is already registered.',
-    flash_account_created: 'Account created! You can now log in.',
-    flash_reg_error: 'An error occurred during registration.',
-    flash_prefs_saved: 'Preferences saved.',
-    flash_login_required: 'Please log in to access this page.',
-    flash_form_expired: 'Form expired. Please try again.',
-    flash_community_disabled: 'Community section is currently disabled.',
-    flash_news_created: 'News article created.',
-    flash_news_updated: 'News article updated.',
-    flash_news_deleted: 'News article deleted.',
-    flash_news_fields_required: 'All title and content fields are required.',
-    flash_news_content_too_long: 'Content is too long (max 50KB per field).',
-    flash_article_not_found: 'Article not found.',
-    flash_server_added: 'Server added.',
-    flash_server_updated: 'Server updated.',
-    flash_server_deleted: 'Server deleted.',
-    flash_server_not_found: 'Server not found.',
-    flash_server_fields_required: 'Name, game, IP, and port are required.',
-    flash_server_invalid_port: 'Port must be a valid number between 1 and 65535.',
-    flash_server_invalid_ip: 'Invalid IP address or hostname format.',
-    flash_servers_refreshed: 'Server statuses refreshed.',
-    flash_servers_refresh_failed: 'Failed to refresh server statuses.',
-    flash_settings_saved: 'Settings saved.',
-    flash_cannot_delete_self: 'Cannot delete your own account.',
-    flash_user_deleted: 'User deleted.',
-    flash_user_not_found: 'User not found.',
-    flash_setup_complete: 'Setup complete! You can now log in.',
-    flash_setup_error: 'An error occurred during setup. Please try again.',
+var _i18nLanguages = {};   // { en: { _label, ...keys }, ru: { ... } }
+var _i18nReady = false;
 
-    // Common
-    loading: 'Loading...',
-    error: 'Error',
-    success: 'Success',
-    cancel: 'Cancel',
-    save: 'Save',
-    delete: 'Delete',
-    edit: 'Edit',
-    add: 'Add',
-    create: 'Create',
-    update: 'Update',
-    back: 'Back',
-    next: 'Next',
-    previous: 'Previous',
-    search: 'Search',
-    filter: 'Filter',
-    refresh: 'Refresh',
-    close: 'Close',
-    
-    // Time formats
-    minutes_ago: '{minutes} minutes ago',
-    hours_ago: '{hours} hours ago',
-    days_ago: '{days} days ago',
-    just_now: 'Just now',
-
-    // Admin - Navigation
-    admin_panel: 'Control Panel',
-    admin_tab_home: 'Home',
-    admin_tab_news: 'News',
-    admin_tab_servers: 'Servers',
-    admin_tab_users: 'Users',
-    admin_tab_settings: 'Settings',
-
-    // Admin - Dashboard
-    admin_stat_news: 'News',
-    admin_stat_total_servers: 'Total Servers',
-    admin_stat_online_servers: 'Servers Online',
-    admin_stat_users: 'Users',
-    admin_stat_total_views: 'Unique Visitors',
-    admin_stat_today_views: 'Today (unique)',
-    admin_stat_chat_msgs: 'Messages',
-    admin_analytics_title: 'Analytics',
-    admin_analytics_overview: 'Overview',
-    admin_tab_analytics: 'Analytics',
-    admin_period_7d: '7 days',
-    admin_period_14d: '14 days',
-    admin_period_30d: '30 days',
-    admin_chart_pageviews: 'Page Views',
-    admin_chart_hourly: 'Hourly Traffic',
-    admin_chart_popular: 'Popular Pages',
-    admin_chart_uptime: 'Server Uptime',
-    admin_chart_chat: 'Chat Activity',
-    admin_chart_timeline: 'Server Status',
-    admin_chart_views: 'Views',
-    admin_chart_messages: 'Messages',
-    admin_chart_no_data: 'No data',
-    admin_chart_countries: 'Visitor Countries',
-    admin_chart_by_country: 'By Country',
-    admin_chart_country: 'Country',
-    admin_chart_visitors: 'Visitors',
-    admin_visitor_log: 'Visitor Log',
-    admin_visitor_ip: 'IP',
-    admin_visitor_country: 'Country',
-    admin_visitor_visits: 'Visits',
-    admin_visitor_pages: 'Pages',
-    admin_visitor_first: 'First Visit',
-    admin_visitor_last: 'Last Visit',
-    admin_visitor_visited: 'Visited Pages',
-    admin_visitor_nodata: 'No data',
-    admin_visitor_more: 'more',
-    admin_visitor_collapse: 'collapse',
-    admin_server_monitor: 'Server Status Monitor',
-    admin_refresh_all: 'Refresh All',
-    admin_th_name: 'Name',
-    admin_th_game: 'Game',
-    admin_th_address: 'Address',
-    admin_th_status: 'Status',
-    admin_th_checked: 'Checked',
-
-    // Admin - Server Management
-    admin_server_mgmt: 'Server Management',
-    admin_no_servers: 'No servers configured.',
-    admin_all_servers: 'All Servers',
-    admin_refresh_status: 'Refresh Status',
-    admin_add_server: 'Add Server',
-    admin_th_redirect: 'Redirect',
-    admin_th_actions: 'Actions',
-    admin_redirect_on: 'On',
-    admin_redirect_off: 'Off',
-    admin_edit_short: 'Edit',
-    admin_confirm_delete_server: 'Delete this server?',
-
-    // Admin - Server Form
-    admin_edit_server: 'Edit Server',
-    admin_new_server: 'New Server',
-    admin_server_name: 'Server Name *',
-    admin_server_game: 'Game *',
-    admin_server_ip: 'IP Address *',
-    admin_server_port: 'Port *',
-    admin_server_desc: 'Description',
-    admin_server_image: 'Server banner (optional)',
-    admin_server_image_click: 'Click to upload banner',
-    admin_redirect_settings: 'Redirect Settings',
-    admin_redirect_enable: 'Enable redirect on server click',
-    admin_redirect_url: 'Redirect URL',
-    admin_additional: 'Additional',
-    admin_show_players: 'Show player count (Minecraft only)',
-    admin_show_ip: 'Show IP address in server list',
-    admin_sort_order: 'Sort order (lower = higher)',
-    admin_save_server: 'Save Server',
-    admin_add_server_btn: 'Add Server',
-    admin_btn_crop: 'Crop',
-    admin_btn_replace: 'Replace',
-    admin_btn_remove: 'Remove',
-    admin_crop_banner_title: 'Crop Banner (16:5)',
-    admin_btn_apply: 'Apply',
-    admin_image_load_error: 'Could not load image. Try replacing.',
-    admin_file_too_large: 'File too large. Max 5MB.',
-    admin_image_hint_server: 'JPG, PNG, GIF, WebP (max 5MB) • 16:5',
-    admin_dashboard_online: 'Online',
-    admin_dashboard_offline: 'Offline',
-    admin_dashboard_refresh_fail: 'Failed to refresh',
-    admin_cleanup_confirm: 'Delete analytics data older than selected period?',
-    admin_analytics_cleanup: 'Cleanup',
-
-    // Admin - User Management
-    admin_user_mgmt: 'User Management',
-    admin_users_title: 'Users',
-    admin_users_count: 'users',
-    admin_th_id: 'ID',
-    admin_th_username: 'Username',
-    admin_th_email: 'Email',
-    admin_th_role: 'Role',
-    admin_th_last_login: 'Last Login',
-    admin_th_last_ip: 'Last IP',
-    admin_th_registered: 'Registered',
-    admin_never: 'Never',
-    admin_confirm_delete_user: 'Delete user',
-
-    // Admin - News Management
-    admin_news_mgmt: 'News Management',
-    admin_all_articles: 'All Articles',
-    admin_create_news: 'Create News',
-    admin_no_news: 'No news yet.',
-    admin_th_title: 'Title',
-    admin_th_author: 'Author',
-    admin_th_pinned: 'Pinned',
-    admin_th_date: 'Date',
-    admin_pinned_yes: 'Yes',
-    admin_pinned_no: '—',
-    admin_confirm_delete_article: 'Delete this article?',
-    admin_news_modal_create: 'Create News',
-    admin_news_modal_edit: 'Edit News',
-    admin_news_heading_en: 'Title',
-    admin_news_heading_ru: 'Title',
-    admin_news_short_en: 'Short Content (Homepage)',
-    admin_news_short_ru: 'Short Content (Homepage)',
-    admin_news_full_en: 'Full Content (Article)',
-    admin_news_full_ru: 'Full Content (Article)',
-    admin_news_image: 'Image (16:9 — high quality)',
-    admin_news_image_click: 'Click to upload image',
-    admin_news_image_hint: 'Supported: JPG, PNG, GIF (max 5MB) • 16:9 • 680×360px',
-    admin_news_replace: 'Replace',
-    admin_news_recrop: 'Crop',
-    admin_news_recrop_error: 'Could not load image for cropping. Try replacing instead.',
-    admin_news_pin: 'Pin to homepage',
-    admin_news_preview: 'Preview',
-    admin_news_preview_title: 'Article Preview',
-    admin_news_preview_mini: 'Mini Card (Homepage)',
-    admin_news_preview_full: 'Full Article',
-    admin_news_preview_mini_desc: 'How it looks on homepage:',
-    admin_news_preview_full_desc: 'Full article when clicking the card:',
-    admin_news_crop_title: 'Crop Image (16:9)',
-    admin_news_crop_apply: 'Apply',
-    admin_news_no_title: 'No title',
-    admin_news_no_short: 'No short content',
-    admin_news_no_full: 'No full content',
-    admin_news_pinned_label: 'Pinned',
-    admin_news_error_load: 'Error loading article:',
-    admin_news_error_save: 'Error saving:',
-
-    // Admin - News Form (simple)
-    admin_edit_article: 'Edit Article',
-    admin_new_article: 'New Article',
-    admin_article_word: 'Article',
-    admin_add: 'Add',
-    admin_article_title: 'Title *',
-    admin_article_short: 'Short Content (Homepage) *',
-    admin_article_full: 'Full Content (Article) *',
-    admin_article_image: 'Image URL (optional)',
-    admin_article_pin: 'Pin article to top',
-
-    // Admin - Settings
-    admin_settings_title: 'Settings',
-    admin_settings_site: 'Site & Appearance',
-    admin_settings_site_name: 'Site Name',
-    admin_settings_site_desc: 'Site Description',
-    admin_settings_nav_title: 'Navigation Title',
-    admin_settings_nav_hint: 'Brand name shown in navbar and browser tab.',
-    admin_settings_hero_title: 'Hero Title',
-    admin_settings_hero_subtitle: 'Hero Subtitle',
-    admin_settings_hero_style: 'Title Style',
-    admin_settings_preview: 'Preview',
-    admin_settings_server: 'Server & Community',
-    admin_settings_timezone: 'Site Timezone',
-    admin_settings_timezone_hint: 'All dates and times on the site will be displayed in the selected timezone.',
-    admin_settings_check_interval: 'Status Check Interval (sec.)',
-    admin_settings_check_hint: 'How often to ping servers. Lower = more frequent, but more resources.',
-    admin_settings_chat_enable: 'Enable Community Chat',
-    admin_settings_chat_max: 'Max Chat Messages',
-    admin_settings_save: 'Save Settings',
-    admin_settings_footer: 'Footer',
-    admin_settings_footer_title: 'Footer Title',
-    admin_settings_footer_title_hint: 'If empty, navigation title is used.',
-    admin_settings_footer_tagline: 'Tagline',
-    admin_settings_footer_copyright: 'Copyright',
-    admin_settings_footer_copyright_hint: 'Text after © 2026. If empty, navigation title is used.',
-    admin_settings_games: 'Games List on Homepage',
-    admin_settings_games_hint: 'Add games that will be displayed on the homepage. Icons are automatically resized to 64x64px.',
-    admin_settings_game_name: 'Game Name',
-    admin_settings_game_icon: 'Icon',
-    admin_settings_game_choose: 'Choose',
-    admin_settings_game_chosen: 'Chosen',
-    admin_settings_game_add: 'Add',
-    admin_settings_game_remove: 'Remove',
-    admin_settings_game_name_required: 'Enter game name',
-    admin_settings_game_icon_required: 'Select an icon',
-    admin_settings_game_name_placeholder: 'e.g. Minecraft',
-    admin_settings_registration_enable: 'Enable User Registration',
-    admin_settings_registration_hint: 'If disabled, new users will not be able to register.',
-    admin_settings_monitoring_enable: 'Open Monitoring for All Users',
-    admin_settings_monitoring_hint: 'If disabled, the monitoring page is only accessible to admins.',
-
-    // Admin - Proxmox
-    admin_tab_proxmox: 'Proxmox',
-    pve_title: 'Proxmox Monitoring',
-    pve_connection: 'Proxmox VE Connection',
-    pve_host: 'Host',
-    pve_port: 'Port',
-    pve_token_hint: 'Format: user@realm!token-name (e.g. root@pam!monitoring)',
-    pve_node_label: 'Node name (optional)',
-    pve_node_placeholder: 'Auto-detect',
-    pve_node_hint: 'Auto-filled when testing connection.',
-    pve_test: 'Test Connection',
-    pve_checking: 'Checking...',
-    pve_connected: 'Connected!',
-    pve_conn_error: 'Connection error',
-    pve_saved: 'Saved!',
-    pve_save_error: 'Save error',
-    pve_guests_title: 'Containers & VMs for Monitoring',
-    pve_guests_desc: 'Click "Discover" to get a list of available containers and VMs from Proxmox. Check the ones you want on the monitoring dashboard.',
-    pve_discover: 'Discover',
-    pve_save_selection: 'Save Selection',
-    pve_discovering: 'Discovering...',
-    pve_no_guests: 'No containers/VMs found',
-    pve_perm_hint: 'The API token likely lacks VM listing permissions. Fix in Proxmox:',
-    pve_perm_required_title: 'Required Proxmox permissions for LXC/VM discovery:',
-    pve_perm_vm_audit: 'view VM/container list and status',
-    pve_perm_sys_audit: 'view node information and cluster resources',
-    pve_perm_ds_audit: 'view storage/disk data (optional)',
-    pve_perm_how_to_fix: 'How to fix:',
-    pve_perm_step1: 'Go to Datacenter → API Tokens → select your token',
-    pve_perm_step2: 'Disable "Privilege Separation" and recreate the token secret',
-    pve_perm_step3: 'Or: Datacenter → Permissions → Add → Path: /, User/Token: your token, Role: PVEAuditor',
-    pve_found: 'Found',
-    pve_click_discover: 'Click "Discover" to load list.',
-    pve_th_name: 'Name',
-    pve_th_type: 'Type',
-    pve_th_status: 'Status',
-    pve_th_node: 'Node',
-
-    // Monitoring Dashboard
-    mon_title: 'Monitoring',
-    mon_desc: 'Real-time load of containers and virtual machines',
-    mon_not_connected: 'Proxmox not connected',
-    mon_not_connected_desc: 'Connect a Proxmox VE server to display monitoring data.',
-    mon_setup: 'Configure Proxmox',
-    mon_no_guests: 'No containers selected',
-    mon_no_guests_desc: 'Select containers/VMs for monitoring in the admin panel.',
-    mon_select_guests: 'Select Containers',
-    mon_loading: 'Loading data...',
-    mon_updated: 'Updated',
-    mon_refresh: 'Refresh',
-    mon_running: 'Running',
-    mon_stopped: 'Stopped',
-    mon_error: 'Error',
-    mon_no_access: 'No access',
-    mon_node_offline: 'Server unavailable',
-    mon_node_offline_desc: 'The host node is offline or not responding. The server will appear when the node comes back online.',
-    mon_container_stopped: 'Container stopped',
-    mon_no_data: 'No data.',
-    mon_net_error: 'Network error',
-    mon_core_one: 'core',
-    mon_core_few: 'cores',
-    mon_core_many: 'cores',
-    mon_uptime_days: 'd',
-    mon_uptime_hours: 'h',
-    mon_uptime_minutes: 'm',
-    mon_start: 'Start',
-    mon_restart: 'Restart',
-    mon_shutdown: 'Shutdown',
-    mon_confirm_action: 'Are you sure you want to {action} guest {vmid}?',
-    mon_control_error: 'Control error',
-  },
-
-  ru: {
-    // Navigation
-    nav_home: 'Главная',
-    nav_servers: 'Сервера',
-    nav_community: 'Сообщество',
-    nav_monitoring: 'Мониторинг',
-    nav_profile: 'Профиль',
-    nav_admin: 'Админ',
-    nav_login: 'Вход',
-    nav_logout: 'Выход',
-    
-    // Home page
-    hero_title: 'NexusHub',
-    hero_subtitle: 'Ваш центр игровых серверов',
-    hero_browse_servers: 'Сервера',
-    hero_join_community: 'Сообщество',
-    latest_news: 'Последние новости',
-    hosted_games: 'Игры',
-    no_news: 'Новостей пока нет. Зайдите позже!',
-    stat_online: 'Онлайн',
-    stat_servers: 'Сервера',
-    pinned: 'Закреплено',
-    news_by: 'Автор',
-
-    // Servers
-    game_servers: 'Игровые сервера',
-    servers_desc: 'Просмотрите все наши игровые сервера. Нажмите на любой сервер для подробной информации.',
-    no_servers: 'Сервера не настроены. Зайдите позже!',
-    online: 'Онлайн',
-    offline: 'Офлайн',
-    game: 'Игра',
-    address: 'Адрес',
-    players: 'Игроки',
-    launch: 'Запустить',
-    details: 'Подробнее',
-    last_checked: 'Проверено',
-    
-    // Server detail
-    back_to_servers: 'Назад к серверам',
-    server_address: 'Адрес сервера',
-    players_online: 'Игроков онлайн',
-    about_server: 'Об этом сервере',
-    copy_address: 'Копировать адрес',
-    open_launcher: 'Открыть лаунчер',
-    copied: 'Скопировано!',
-    
-    // Community
-    community_chat: 'Чат сообщества',
-    community_desc: 'Общайтесь с другими игроками в реальном времени. Будьте вежливы!',
-    your_nickname: 'Ваш никнейм:',
-    enter_nickname: 'Введите никнейм...',
-    join_chat: 'Войти в чат',
-    type_message: 'Напишите сообщение...',
-    send: 'Отправить',
-    is_typing: '{user} печатает...',
-    online_users: 'Онлайн',
-    
-    // Auth
-    welcome_back: 'С возвращением',
-    login_subtitle: 'Войдите в свой аккаунт NexusHub',
-    username: 'Имя пользователя',
-    password: 'Пароль',
-    log_in: 'Войти',
-    
-    // Registration
-    join_nexushub: 'Присоединяйтесь к NexusHub',
-    register_subtitle: 'Создайте аккаунт и присоединяйтесь к сообществу',
-    username_required: 'Имя пользователя *',
-    email_optional: 'Email (необязательно, для уведомлений)',
-    password_required: 'Пароль *',
-    confirm_password: 'Подтвердите пароль *',
-    create_account: 'Создать аккаунт',
-    have_account: 'Уже есть аккаунт?',
-    no_account: 'Нет аккаунта?',
-    register_now: 'Зарегистрироваться',
-    
-    // Profile
-    profile_title: 'Профиль',
-    account_info: 'Информация об аккаунте',
-    email: 'Email',
-    not_set: 'Не указан',
-    role: 'Роль',
-    joined: 'Дата регистрации',
-    notification_prefs: 'Настройки уведомлений',
-    notify_email_label: 'Получать email-уведомления о новых серверах/новостях',
-    discord_id_label: 'Discord User ID (для уведомлений через бота)',
-    save_preferences: 'Сохранить настройки',
-    
-    // Admin
-    admin_dashboard: 'Панель администратора',
-    manage_news: 'Управление новостями',
-    manage_servers: 'Управление серверами',
-    manage_users: 'Управление пользователями',
-    settings: 'Настройки',
-    
-    // Monitoring
-    resource_monitoring: 'Мониторинг ресурсов',
-    monitoring_desc: 'Мониторинг системных ресурсов всех игровых серверов в реальном времени',
-    total_servers: 'Всего серверов',
-    online_servers: 'Онлайн',
-    offline_servers: 'Офлайн',
-    avg_cpu: 'Средняя CPU',
-    server_resources: 'Ресурсы серверов',
-    cpu: 'CPU',
-    memory: 'Память',
-    disk: 'Диск',
-    cores: 'Ядра',
-    load: 'Нагрузка',
-    uptime: 'Время работы',
-    last_check: 'Последняя проверка',
-    server_offline_msg: 'Сервер офлайн или не отвечает',
-    
-    // Errors
-    page_not_found: 'Страница не найдена',
-    error_404_desc: 'Страница, которую вы ищете, не существует или была перемещена.',
-    back_to_home: 'На главную',
-    server_error: 'Ошибка сервера',
-    error_500_desc: 'Что-то пошло не так. Пожалуйста, попробуйте позже.',
-    
-    // Footer
-    footer_tagline: 'Ваш центр игровых серверов. Играй, общайся, побеждай.',
-    quick_links: 'Быстрые ссылки',
-    account: 'Аккаунт',
-    footer_copyright: 'NexusHub. Работает на Proxmox.',
-    
-    // Flash messages
-    flash_bot_failed: 'Проверка не пройдена. Попробуйте ещё раз.',
-    flash_fill_all: 'Пожалуйста, заполните все поля.',
-    flash_invalid_username: 'Неверная длина имени пользователя.',
-    flash_invalid_creds: 'Неверные данные для входа.',
-    flash_session_error: 'Ошибка сессии. Попробуйте ещё раз.',
-    flash_reg_disabled: 'Регистрация отключена.',
-    flash_username_required: 'Имя пользователя и пароль обязательны.',
-    flash_username_short: 'Имя пользователя — минимум 2 символа.',
-    flash_email_invalid: 'Неверный формат email.',
-    flash_passwords_mismatch: 'Пароли не совпадают.',
-    flash_password_short: 'Пароль — минимум 8 символов.',
-    flash_username_taken: 'Имя пользователя уже занято.',
-    flash_email_taken: 'Email уже зарегистрирован.',
-    flash_account_created: 'Аккаунт создан! Теперь можете войти.',
-    flash_reg_error: 'Произошла ошибка при регистрации.',
-    flash_prefs_saved: 'Настройки сохранены.',
-    flash_login_required: 'Пожалуйста, войдите для доступа к этой странице.',
-    flash_form_expired: 'Форма устарела. Попробуйте ещё раз.',
-    flash_community_disabled: 'Раздел сообщества отключён.',
-    flash_news_created: 'Новость создана.',
-    flash_news_updated: 'Новость обновлена.',
-    flash_news_deleted: 'Новость удалена.',
-    flash_news_fields_required: 'Все поля заголовков и содержания обязательны.',
-    flash_news_content_too_long: 'Содержание слишком длинное (макс. 50КБ на поле).',
-    flash_article_not_found: 'Статья не найдена.',
-    flash_server_added: 'Сервер добавлен.',
-    flash_server_updated: 'Сервер обновлён.',
-    flash_server_deleted: 'Сервер удалён.',
-    flash_server_not_found: 'Сервер не найден.',
-    flash_server_fields_required: 'Название, игра, IP и порт обязательны.',
-    flash_server_invalid_port: 'Порт должен быть числом от 1 до 65535.',
-    flash_server_invalid_ip: 'Неверный формат IP-адреса или хостнейма.',
-    flash_servers_refreshed: 'Статусы серверов обновлены.',
-    flash_servers_refresh_failed: 'Не удалось обновить статусы серверов.',
-    flash_settings_saved: 'Настройки сохранены.',
-    flash_cannot_delete_self: 'Нельзя удалить свой аккаунт.',
-    flash_user_deleted: 'Пользователь удалён.',
-    flash_user_not_found: 'Пользователь не найден.',
-    flash_setup_complete: 'Настройка завершена! Теперь можете войти.',
-    flash_setup_error: 'Произошла ошибка при настройке. Попробуйте ещё раз.',
-
-    // Common
-    loading: 'Загрузка...',
-    error: 'Ошибка',
-    success: 'Успешно',
-    cancel: 'Отмена',
-    save: 'Сохранить',
-    delete: 'Удалить',
-    edit: 'Редактировать',
-    add: 'Добавить',
-    create: 'Создать',
-    update: 'Обновить',
-    back: 'Назад',
-    next: 'Далее',
-    previous: 'Назад',
-    search: 'Поиск',
-    filter: 'Фильтр',
-    refresh: 'Обновить',
-    close: 'Закрыть',
-    
-    // Time formats
-    minutes_ago: '{minutes} минут назад',
-    hours_ago: '{hours} часов назад',
-    days_ago: '{days} дней назад',
-    just_now: 'Только что',
-
-    // Admin - Navigation
-    admin_panel: 'Панель управления',
-    admin_tab_home: 'Главная',
-    admin_tab_news: 'Новости',
-    admin_tab_servers: 'Сервера',
-    admin_tab_users: 'Пользователи',
-    admin_tab_settings: 'Настройки',
-
-    // Admin - Dashboard
-    admin_stat_news: 'Новости',
-    admin_stat_total_servers: 'Всего серверов',
-    admin_stat_online_servers: 'Сервера онлайн',
-    admin_stat_users: 'Пользователи',
-    admin_stat_total_views: 'Уник. посетители',
-    admin_stat_today_views: 'Сегодня (уник.)',
-    admin_stat_chat_msgs: 'Сообщения',
-    admin_analytics_title: 'Аналитика',
-    admin_analytics_overview: 'Обзор',
-    admin_tab_analytics: 'Аналитика',
-    admin_period_7d: '7 дней',
-    admin_period_14d: '14 дней',
-    admin_period_30d: '30 дней',
-    admin_chart_pageviews: 'Просмотры страниц',
-    admin_chart_hourly: 'Трафик по часам',
-    admin_chart_popular: 'Популярные страницы',
-    admin_chart_uptime: 'Аптайм серверов',
-    admin_chart_chat: 'Активность чата',
-    admin_chart_timeline: 'Статус серверов',
-    admin_chart_views: 'Просмотры',
-    admin_chart_messages: 'Сообщения',
-    admin_chart_no_data: 'Нет данных',
-    admin_chart_countries: 'Страны посетителей',
-    admin_chart_by_country: 'По странам',
-    admin_chart_country: 'Страна',
-    admin_chart_visitors: 'Посетители',
-    admin_visitor_log: 'Журнал посетителей',
-    admin_visitor_ip: 'IP',
-    admin_visitor_country: 'Страна',
-    admin_visitor_visits: 'Визиты',
-    admin_visitor_pages: 'Страницы',
-    admin_visitor_first: 'Первый визит',
-    admin_visitor_last: 'Последний визит',
-    admin_visitor_visited: 'Посещённые страницы',
-    admin_visitor_nodata: 'Нет данных',
-    admin_visitor_more: 'ещё',
-    admin_visitor_collapse: 'свернуть',
-    admin_server_monitor: 'Монитор статуса серверов',
-    admin_refresh_all: 'Обновить все',
-    admin_th_name: 'Название',
-    admin_th_game: 'Игра',
-    admin_th_address: 'Адрес',
-    admin_th_status: 'Статус',
-    admin_th_checked: 'Проверено',
-
-    // Admin - Server Management
-    admin_server_mgmt: 'Управление серверами',
-    admin_no_servers: 'Сервера не настроены.',
-    admin_all_servers: 'Все сервера',
-    admin_refresh_status: 'Обновить статус',
-    admin_add_server: 'Добавить сервер',
-    admin_th_redirect: 'Редирект',
-    admin_th_actions: 'Действия',
-    admin_redirect_on: 'Вкл',
-    admin_redirect_off: 'Выкл',
-    admin_edit_short: 'Ред.',
-    admin_confirm_delete_server: 'Удалить этот сервер?',
-
-    // Admin - Server Form
-    admin_edit_server: 'Редактировать сервер',
-    admin_new_server: 'Новый сервер',
-    admin_server_name: 'Название сервера *',
-    admin_server_game: 'Игра *',
-    admin_server_ip: 'IP адрес *',
-    admin_server_port: 'Порт *',
-    admin_server_desc: 'Описание',
-    admin_server_image: 'Баннер сервера (необязательно)',
-    admin_server_image_click: 'Нажмите для загрузки баннера',
-    admin_redirect_settings: 'Настройки редиректа',
-    admin_redirect_enable: 'Включить редирект при клике на сервер',
-    admin_redirect_url: 'URL редиректа',
-    admin_additional: 'Дополнительно',
-    admin_show_players: 'Показывать кол-во игроков (только Minecraft)',
-    admin_show_ip: 'Показывать IP адрес в списке серверов',
-    admin_sort_order: 'Порядок сортировки (меньше = выше)',
-    admin_save_server: 'Сохранить сервер',
-    admin_add_server_btn: 'Добавить сервер',
-    admin_btn_crop: 'Обрезать',
-    admin_btn_replace: 'Заменить',
-    admin_btn_remove: 'Удалить',
-    admin_crop_banner_title: 'Обрезка баннера (16:5)',
-    admin_btn_apply: 'Применить',
-    admin_image_load_error: 'Не удалось загрузить изображение. Попробуйте заменить.',
-    admin_file_too_large: 'Файл слишком большой. Макс 5MB.',
-    admin_image_hint_server: 'JPG, PNG, GIF, WebP (макс. 5MB) • 16:5',
-    admin_dashboard_online: 'Онлайн',
-    admin_dashboard_offline: 'Офлайн',
-    admin_dashboard_refresh_fail: 'Не удалось обновить',
-    admin_cleanup_confirm: 'Удалить данные аналитики старше выбранного периода?',
-    admin_analytics_cleanup: 'Очистка',
-
-    // Admin - User Management
-    admin_user_mgmt: 'Управление пользователями',
-    admin_users_title: 'Пользователи',
-    admin_users_count: 'пользователей',
-    admin_th_id: 'ID',
-    admin_th_username: 'Имя',
-    admin_th_email: 'Email',
-    admin_th_role: 'Роль',
-    admin_th_last_login: 'Посл. вход',
-    admin_th_last_ip: 'Посл. IP',
-    admin_th_registered: 'Регистрация',
-    admin_never: 'Никогда',
-    admin_confirm_delete_user: 'Удалить пользователя',
-
-    // Admin - News Management
-    admin_news_mgmt: 'Управление новостями',
-    admin_all_articles: 'Все статьи',
-    admin_create_news: 'Создать новость',
-    admin_no_news: 'Новостей пока нет.',
-    admin_th_title: 'Заголовок',
-    admin_th_author: 'Автор',
-    admin_th_pinned: 'Закреп.',
-    admin_th_date: 'Дата',
-    admin_pinned_yes: 'Да',
-    admin_pinned_no: '—',
-    admin_confirm_delete_article: 'Удалить эту статью?',
-    admin_news_modal_create: 'Создать новость',
-    admin_news_modal_edit: 'Редактировать новость',
-    admin_news_heading_en: 'Заголовок',
-    admin_news_heading_ru: 'Заголовок',
-    admin_news_short_en: 'Краткое содержание (Главная)',
-    admin_news_short_ru: 'Краткое содержание (Главная)',
-    admin_news_full_en: 'Полное содержание (Статья)',
-    admin_news_full_ru: 'Полное содержание (Статья)',
-    admin_news_image: 'Изображение (16:9 — высокое качество)',
-    admin_news_image_click: 'Нажмите для загрузки изображения',
-    admin_news_image_hint: 'Поддерживается: JPG, PNG, GIF (макс. 5MB) • 16:9 • 680×360px',
-    admin_news_replace: 'Заменить',
-    admin_news_recrop: 'Обрезать',
-    admin_news_recrop_error: 'Не удалось загрузить изображение для обрезки. Попробуйте заменить.',
-    admin_news_pin: 'Закрепить на главной',
-    admin_news_preview: 'Предпросмотр',
-    admin_news_preview_title: 'Предпросмотр статьи',
-    admin_news_preview_mini: 'Мини-карточка (Главная)',
-    admin_news_preview_full: 'Полная статья',
-    admin_news_preview_mini_desc: 'Как выглядит на главной:',
-    admin_news_preview_full_desc: 'Полная статья при клике на карточку:',
-    admin_news_crop_title: 'Обрезка изображения (16:9)',
-    admin_news_crop_apply: 'Применить',
-    admin_news_no_title: 'Без названия',
-    admin_news_no_short: 'Нет краткого содержания',
-    admin_news_no_full: 'Нет полного содержания',
-    admin_news_pinned_label: 'Закреплено',
-    admin_news_error_load: 'Ошибка загрузки статьи:',
-    admin_news_error_save: 'Ошибка сохранения:',
-
-    // Admin - News Form (simple)
-    admin_edit_article: 'Редактировать статью',
-    admin_new_article: 'Новая статья',
-    admin_article_word: 'статья',
-    admin_add: 'Добавить',
-    admin_article_title: 'Заголовок *',
-    admin_article_short: 'Краткое содержание (Главная) *',
-    admin_article_full: 'Полное содержание (Статья) *',
-    admin_article_image: 'URL изображения (необязательно)',
-    admin_article_pin: 'Закрепить статью вверху',
-
-    // Admin - Settings
-    admin_settings_title: 'Настройки',
-    admin_settings_site: 'Сайт и внешний вид',
-    admin_settings_site_name: 'Название сайта',
-    admin_settings_site_desc: 'Описание сайта',
-    admin_settings_nav_title: 'Заголовок навигации',
-    admin_settings_nav_hint: 'Название бренда в навигационной панели и вкладке браузера.',
-    admin_settings_hero_title: 'Заголовок героя',
-    admin_settings_hero_subtitle: 'Подзаголовок героя',
-    admin_settings_hero_style: 'Стиль заголовка',
-    admin_settings_preview: 'Предпросмотр',
-    admin_settings_server: 'Сервер и сообщество',
-    admin_settings_timezone: 'Часовой пояс сайта',
-    admin_settings_timezone_hint: 'Все даты и время на сайте будут отображаться в выбранном часовом поясе.',
-    admin_settings_check_interval: 'Интервал проверки статуса (сек.)',
-    admin_settings_check_hint: 'Как часто пинговать сервера. Меньше = чаще, но больше ресурсов.',
-    admin_settings_chat_enable: 'Включить чат сообщества',
-    admin_settings_chat_max: 'Макс. сообщений в чате',
-    admin_settings_save: 'Сохранить настройки',
-    admin_settings_footer: 'Нижняя шапка (Footer)',
-    admin_settings_footer_title: 'Название в футере',
-    admin_settings_footer_title_hint: 'Если пусто, используется заголовок навигации.',
-    admin_settings_footer_tagline: 'Слоган',
-    admin_settings_footer_copyright: 'Копирайт',
-    admin_settings_footer_copyright_hint: 'Текст после © 2026. Если пусто, используется заголовок навигации.',
-    admin_settings_games: 'Список игр на главной',
-    admin_settings_games_hint: 'Добавьте игры, которые будут отображаться на главной странице. Иконки автоматически сжимаются до 64x64px.',
-    admin_settings_game_name: 'Название игры',
-    admin_settings_game_icon: 'Иконка',
-    admin_settings_game_choose: 'Выбрать',
-    admin_settings_game_chosen: 'Выбрано',
-    admin_settings_game_add: 'Добавить',
-    admin_settings_game_remove: 'Удалить',
-    admin_settings_game_name_required: 'Введите название игры',
-    admin_settings_game_icon_required: 'Выберите иконку',
-    admin_settings_game_name_placeholder: 'Например: Minecraft',
-    admin_settings_registration_enable: 'Включить регистрацию пользователей',
-    admin_settings_registration_hint: 'Если выключено, новые пользователи не смогут зарегистрироваться.',
-    admin_settings_monitoring_enable: 'Открыть мониторинг для всех',
-    admin_settings_monitoring_hint: 'Если выключено, страница мониторинга доступна только администраторам.',
-
-    // Admin - Proxmox
-    admin_tab_proxmox: 'Proxmox',
-    pve_title: 'Proxmox Мониторинг',
-    pve_connection: 'Подключение к Proxmox VE',
-    pve_host: 'Хост',
-    pve_port: 'Порт',
-    pve_token_hint: 'Формат: user@realm!token-name (например root@pam!monitoring)',
-    pve_node_label: 'Имя ноды (необязательно)',
-    pve_node_placeholder: 'Авто-определение',
-    pve_node_hint: 'Заполняется автоматически при тесте подключения.',
-    pve_test: 'Тест подключения',
-    pve_checking: 'Проверка...',
-    pve_connected: 'Подключено!',
-    pve_conn_error: 'Ошибка подключения',
-    pve_saved: 'Сохранено!',
-    pve_save_error: 'Ошибка сохранения',
-    pve_guests_title: 'Контейнеры и ВМ для мониторинга',
-    pve_guests_desc: 'Нажмите «Обнаружить» чтобы получить список доступных контейнеров и ВМ с Proxmox. Отметьте те, которые хотите видеть на дашборде.',
-    pve_discover: 'Обнаружить',
-    pve_save_selection: 'Сохранить выбор',
-    pve_discovering: 'Обнаружение...',
-    pve_no_guests: 'Контейнеры/ВМ не найдены',
-    pve_perm_hint: 'API токен не имеет прав на просмотр ВМ. Исправьте в Proxmox:',
-    pve_perm_required_title: 'Необходимые права Proxmox для обнаружения LXC/VM:',
-    pve_perm_vm_audit: 'просмотр списка и статуса ВМ/контейнеров',
-    pve_perm_sys_audit: 'просмотр информации о нодах и ресурсах кластера',
-    pve_perm_ds_audit: 'просмотр данных хранилища/дисков (необязательно)',
-    pve_perm_how_to_fix: 'Как исправить:',
-    pve_perm_step1: 'Откройте Datacenter → API Tokens → выберите ваш токен',
-    pve_perm_step2: 'Отключите «Privilege Separation» и пересоздайте секрет токена',
-    pve_perm_step3: 'Или: Datacenter → Permissions → Add → Path: /, User/Token: ваш токен, Role: PVEAuditor',
-    pve_found: 'Найдено',
-    pve_click_discover: 'Нажмите «Обнаружить» для загрузки списка.',
-    pve_th_name: 'Имя',
-    pve_th_type: 'Тип',
-    pve_th_status: 'Статус',
-    pve_th_node: 'Нода',
-
-    // Monitoring Dashboard
-    mon_title: 'Мониторинг',
-    mon_desc: 'Нагрузка контейнеров и виртуальных машин в реальном времени',
-    mon_not_connected: 'Proxmox не подключён',
-    mon_not_connected_desc: 'Подключите сервер Proxmox VE для отображения данных мониторинга.',
-    mon_setup: 'Настроить Proxmox',
-    mon_no_guests: 'Контейнеры не выбраны',
-    mon_no_guests_desc: 'Выберите контейнеры/ВМ для мониторинга в панели администратора.',
-    mon_select_guests: 'Выбрать контейнеры',
-    mon_loading: 'Загрузка данных...',
-    mon_updated: 'Обновлено',
-    mon_refresh: 'Обновить',
-    mon_running: 'Работает',
-    mon_stopped: 'Остановлен',
-    mon_error: 'Ошибка',
-    mon_no_access: 'Нет доступа',
-    mon_node_offline: 'Сервер недоступен',
-    mon_node_offline_desc: 'Хост-узел выключен или не отвечает. Сервер появится, когда узел вернётся в сеть.',
-    mon_container_stopped: 'Контейнер остановлен',
-    mon_no_data: 'Нет данных.',
-    mon_net_error: 'Ошибка сети',
-    mon_core_one: 'ядро',
-    mon_core_few: 'ядра',
-    mon_core_many: 'ядер',
-    mon_uptime_days: 'д',
-    mon_uptime_hours: 'ч',
-    mon_uptime_minutes: 'м',
-    mon_start: 'Запуск',
-    mon_restart: 'Перезагрузка',
-    mon_shutdown: 'Выключение',
-    mon_confirm_action: 'Вы уверены, что хотите выполнить "{action}" для гостя {vmid}?',
-    mon_control_error: 'Ошибка управления',
+/**
+ * Register a callback for when i18n is ready.
+ * If already ready, fires immediately.
+ */
+window.i18nReady = function(cb) {
+  if (_i18nReady && window.i18n) {
+    cb();
+  } else {
+    window.addEventListener('i18nReady', cb, { once: true });
   }
 };
+
+/**
+ * Called by each lang file to register its translations
+ */
+window.__loadLang = function(data) {
+  // noop — replaced per-load by loadLanguageFile()
+};
+
+/**
+ * Load a single language file by code
+ */
+function loadLanguageFile(code) {
+  return new Promise(function(resolve) {
+    // If already loaded, skip
+    if (_i18nLanguages[code]) return resolve();
+
+    var script = document.createElement('script');
+    script.src = '/js/lang/' + code + '.js?v=' + (window.__version || Date.now());
+
+    window.__loadLang = function(data) {
+      _i18nLanguages[code] = data;
+      resolve();
+    };
+
+    script.onerror = function() {
+      console.warn('[i18n] Failed to load language: ' + code);
+      resolve(); // don't block on missing files
+    };
+
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Discover available languages from /api/languages then load them all
+ */
+function initI18nSystem() {
+  fetch('/api/languages')
+    .then(function(r) { return r.json(); })
+    .then(function(langs) {
+      // langs = ['en', 'ru', ...]
+      var chain = Promise.resolve();
+      langs.forEach(function(code) {
+        chain = chain.then(function() { return loadLanguageFile(code); });
+      });
+      return chain;
+    })
+    .catch(function() {
+      // Fallback: load en + ru if API fails
+      return loadLanguageFile('en').then(function() { return loadLanguageFile('ru'); });
+    })
+    .then(function() {
+      window.i18n = new I18n();
+      window.t = function(key, params) { return window.i18n.t(key, params); };
+      _i18nReady = true;
+
+      // Apply translations to current page
+      window.i18n.updatePageContent();
+
+      // Update language selector with available languages
+      window.i18n.buildLanguageSelector();
+
+      // Notify all listeners that i18n is ready
+      window.dispatchEvent(new Event('i18nReady'));
+    });
+}
 
 /**
  * Translation system
  */
 class I18n {
   constructor() {
+    this.translations = _i18nLanguages;
     this.currentLang = this.detectLanguage();
-    this.translations = translations;
+    document.documentElement.lang = this.currentLang;
   }
 
   /**
    * Detect user's preferred language
    */
   detectLanguage() {
+    var available = Object.keys(this.translations);
+    if (!available.length) return 'en';
+
     // Check localStorage first
-    const saved = localStorage.getItem('language');
-    if (saved && translations[saved]) return saved;
+    var saved = localStorage.getItem('language');
+    if (saved && this.translations[saved]) return saved;
 
     // Check browser language
-    const browserLang = navigator.language.split('-')[0];
-    if (translations[browserLang]) return browserLang;
+    var browserLang = navigator.language.split('-')[0];
+    if (this.translations[browserLang]) return browserLang;
 
     // Check URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLang = urlParams.get('lang');
-    if (urlLang && translations[urlLang]) return urlLang;
+    var urlParams = new URLSearchParams(window.location.search);
+    var urlLang = urlParams.get('lang');
+    if (urlLang && this.translations[urlLang]) return urlLang;
 
-    // Default to English
-    return 'en';
+    // Default to English or first available
+    return this.translations['en'] ? 'en' : available[0];
   }
 
   /**
    * Get translation for a key
    */
-  t(key, params = {}) {
-    const translation = this.translations[this.currentLang][key] || key;
-    
-    // Replace parameters in translation
-    return translation.replace(/\{(\w+)\}/g, (match, param) => {
-      return params[param] || match;
+  t(key, params) {
+    params = params || {};
+    var langData = this.translations[this.currentLang] || this.translations['en'] || {};
+    var translation = langData[key] || key;
+
+    return translation.replace(/\{(\w+)\}/g, function(match, param) {
+      return params[param] !== undefined ? params[param] : match;
     });
   }
 
@@ -991,18 +137,14 @@ class I18n {
    * Set language
    */
   setLanguage(lang) {
-    if (translations[lang]) {
+    if (this.translations[lang]) {
       this.currentLang = lang;
       localStorage.setItem('language', lang);
       document.documentElement.lang = lang;
-      
-      // Update page content
+
       this.updatePageContent();
-      
-      // Update language selector if exists
       this.updateLanguageSelector();
 
-      // Dispatch event so dynamic pages can re-render
       window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang: lang } }));
     }
   }
@@ -1018,30 +160,27 @@ class I18n {
    * Get available languages
    */
   getAvailableLanguages() {
-    return Object.keys(translations);
+    return Object.keys(this.translations);
   }
 
   /**
    * Update page content with translations
    */
   updatePageContent() {
-    // Update elements with data-i18n attribute
-    document.querySelectorAll('[data-i18n]').forEach(element => {
-      const key = element.getAttribute('data-i18n');
-      element.textContent = this.t(key);
+    document.querySelectorAll('[data-i18n]').forEach(function(element) {
+      var key = element.getAttribute('data-i18n');
+      element.textContent = window.i18n.t(key);
     });
 
-    // Update elements with data-i18n-placeholder attribute
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
-      const key = element.getAttribute('data-i18n-placeholder');
-      element.placeholder = this.t(key);
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function(element) {
+      var key = element.getAttribute('data-i18n-placeholder');
+      element.placeholder = window.i18n.t(key);
     });
 
-    // Update page title
-    const title = document.querySelector('title');
+    var title = document.querySelector('title');
     if (title && title.textContent) {
-      const titleKey = title.textContent;
-      const translated = this.t(titleKey);
+      var titleKey = title.textContent;
+      var translated = window.i18n.t(titleKey);
       if (translated !== titleKey) {
         title.textContent = translated;
       }
@@ -1049,10 +188,32 @@ class I18n {
   }
 
   /**
+   * Build language selector options dynamically from loaded languages
+   */
+  buildLanguageSelector() {
+    var selector = document.getElementById('languageSelector');
+    if (!selector) return;
+
+    var current = this.currentLang;
+    selector.innerHTML = '';
+
+    var langs = this.getAvailableLanguages();
+    langs.forEach(function(code) {
+      var opt = document.createElement('option');
+      opt.value = code;
+      // Use _label from the language file, fallback to uppercase code
+      var langData = _i18nLanguages[code];
+      opt.textContent = (langData && langData._label) ? langData._label : code.toUpperCase();
+      if (code === current) opt.selected = true;
+      selector.appendChild(opt);
+    });
+  }
+
+  /**
    * Update language selector UI
    */
   updateLanguageSelector() {
-    const selector = document.querySelector('.language-selector');
+    var selector = document.querySelector('.language-selector');
     if (selector) {
       selector.value = this.currentLang;
     }
@@ -1062,21 +223,18 @@ class I18n {
    * Format time relative to now
    */
   formatTimeAgo(timestamp) {
-    const now = Date.now();
-    const diff = now - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
+    var now = Date.now();
+    var diff = now - timestamp;
+    var minutes = Math.floor(diff / 60000);
+    var hours = Math.floor(diff / 3600000);
+    var days = Math.floor(diff / 86400000);
 
-    if (days > 0) return this.t('days_ago', { days });
-    if (hours > 0) return this.t('hours_ago', { hours });
-    if (minutes > 0) return this.t('minutes_ago', { minutes });
+    if (days > 0) return this.t('days_ago', { days: days });
+    if (hours > 0) return this.t('hours_ago', { hours: hours });
+    if (minutes > 0) return this.t('minutes_ago', { minutes: minutes });
     return this.t('just_now');
   }
 }
 
-// Global i18n instance
-window.i18n = new I18n();
-
-// Helper function for templates
-window.t = (key, params) => window.i18n.t(key, params);
+// Start loading languages immediately
+initI18nSystem();

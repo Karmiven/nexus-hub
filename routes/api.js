@@ -1,7 +1,29 @@
 const express = require('express');
 const router = express.Router();
+const path = require('path');
+const fs = require('fs');
 const db = require('../config/database');
 const { tcpPing } = require('../utils/statusChecker');
+
+// ── Available Languages (scan /js/lang/*.js once at startup) ──
+const langDir = path.join(__dirname, '..', 'public', 'js', 'lang');
+var _langCache = null;
+
+function getAvailableLanguages() {
+  if (_langCache) return _langCache;
+  try {
+    _langCache = fs.readdirSync(langDir)
+      .filter(f => f.endsWith('.js'))
+      .map(f => f.replace('.js', ''))
+      .sort((a, b) => a === 'en' ? -1 : b === 'en' ? 1 : a.localeCompare(b));
+  } catch (e) {
+    _langCache = ['en'];
+  }
+  return _langCache;
+}
+
+// Watch for new/removed language files — invalidate cache
+fs.watch(langDir, () => { _langCache = null; });
 
 // Get all servers with status (JSON)
 // Don't expose IP/port to unauthenticated users — use separate hardcoded queries
@@ -39,9 +61,13 @@ router.get('/servers/:id/status', async (req, res) => {
 });
 
 // ── Language API ──
+router.get('/languages', (req, res) => {
+  res.json(getAvailableLanguages());
+});
+
 router.post('/language', (req, res) => {
   const { language } = req.body;
-  if (language && (language === 'en' || language === 'ru')) {
+  if (language && getAvailableLanguages().includes(language)) {
     req.session.language = language;
     res.json({ success: true, language });
   } else {

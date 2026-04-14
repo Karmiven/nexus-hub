@@ -168,14 +168,17 @@
         }
       }
 
-      // Hook into the i18n language change
-      if (window.i18n) {
-        const originalSetLanguage = window.i18n.setLanguage.bind(window.i18n);
-        window.i18n.setLanguage = function(lang) {
-          originalSetLanguage(lang);
-          switchNewsLanguage(lang);
-        };
-        // Also apply on page load to ensure correct language
+      // Listen for language changes (works with async i18n)
+      window.addEventListener('languageChanged', function(e) {
+        switchNewsLanguage(e.detail.lang);
+      });
+
+      // Apply correct language on load (i18n may be ready or not yet)
+      if (typeof window.i18nReady === 'function') {
+        window.i18nReady(function() {
+          switchNewsLanguage(window.i18n.getCurrentLanguage());
+        });
+      } else if (window.i18n) {
         switchNewsLanguage(window.i18n.getCurrentLanguage());
       }
     </script>

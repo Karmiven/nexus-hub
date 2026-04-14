@@ -468,34 +468,41 @@ function setTheme(theme) {
 function initLanguageSelector() {
   const languageSelector = document.getElementById('languageSelector');
   if (!languageSelector) return;
-  if (typeof window.i18n === 'undefined') return;
 
-  const currentLang = window.i18n.getCurrentLanguage();
-  languageSelector.value = currentLang;
+  function setup() {
+    // Attach change handler (only once)
+    if (languageSelector._i18nBound) return;
+    languageSelector._i18nBound = true;
 
-  window.i18n.updatePageContent();
+    languageSelector.addEventListener('change', (e) => {
+      window.i18n.setLanguage(e.target.value);
+      formatLocalTimes();
 
-  languageSelector.addEventListener('change', (e) => {
-    window.i18n.setLanguage(e.target.value);
-    formatLocalTimes();
-  
-    // Update session language via API
-    fetch('/api/language', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || ''
-      },
-      body: JSON.stringify({ language: e.target.value })
-    }).then(function(res) {
-      var newToken = res.headers.get('X-CSRF-Token');
-      if (newToken) {
-        var meta = document.querySelector('meta[name="csrf-token"]');
-        if (meta) meta.setAttribute('content', newToken);
-      }
-    }).catch(() => {});
-  });
+      // Update session language via API
+      fetch('/api/language', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+          'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+        },
+        body: JSON.stringify({ language: e.target.value })
+      }).then(function(res) {
+        var newToken = res.headers.get('X-CSRF-Token');
+        if (newToken) {
+          var meta = document.querySelector('meta[name="csrf-token"]');
+          if (meta) meta.setAttribute('content', newToken);
+        }
+      }).catch(() => {});
+    });
+  }
+
+  // i18n may not be ready yet (async loading) — wait for it
+  if (typeof window.i18nReady === 'function') {
+    window.i18nReady(setup);
+  } else if (window.i18n) {
+    setup();
+  }
 }
 
 /**
