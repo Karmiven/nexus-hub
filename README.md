@@ -15,12 +15,14 @@ Self-hosted gaming server hub for managing, monitoring, and showcasing game serv
 
 - **Server Browser** — Live online/offline status (TCP ping), Minecraft player counts, redirect-to-launcher support
 - **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting
-- **News System** — Bilingual articles (EN/RU), image upload with 16:9 cropper, pinned posts
+- **News System** — Multilingual articles, image upload with 16:9 cropper, pinned posts
 - **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats, grouped by node
 - **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with unique visual effects
-- **i18n** — Full EN/RU support, dynamic language switching without page reload
+- **i18n** — Dynamic language system with auto-discovery (EN/RU/RO out of the box), instant switching without page reload
 - **Admin Panel** — News/servers/users/settings CRUD, hero animation styles (7 options), games showcase editor, analytics dashboard with charts
-- **User Registration** — Self-service registration (admin-toggleable), profile page with notification settings
+- **Analytics** — Buffered page-view tracking with GeoIP, charts and time-series breakdown
+- **User Registration** — Self-service registration (admin-toggleable) with Cloudflare Turnstile bot verification, profile page with notification settings
+- **Bot Protection** — Scanner/bot blocking middleware with IP strike system
 - **Security** — Helmet CSP, CSRF protection, bcrypt auth, encrypted secrets, rate limiting, session-based auth
 
 ---
@@ -56,7 +58,7 @@ NexusHub implements defence-in-depth:
 | Security | Helmet, express-rate-limit, custom CSRF middleware, AES-256-GCM encryption |
 | Uploads | Multer + Cropper.js |
 | Icons | Lucide (pinned v0.454.0) |
-| i18n | Custom client-side class + `data-i18n` attributes |
+| i18n | Dynamic language loader (`data-i18n` attributes, auto-discovered language files) |
 
 ---
 
@@ -89,17 +91,20 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 ## Project Structure
 
 ```
-├── server.js              # App entry point, middleware chain, health check
-├── config/database.js     # better-sqlite3 setup, schema, migrations
+├── server.js              # App entry point, middleware chain, health check (THIN)
+├── config/database.js     # better-sqlite3 setup, schema, migrations, getCachedSettings()
 ├── middleware/
 │   ├── auth.js            # isAuthenticated, isAdmin, isGuest
-│   └── csrf.js            # CSRF token generation & validation
+│   ├── csrf.js            # CSRF token generation & validation
+│   ├── botProtection.js   # Bot/scanner blocking, IP strike system
+│   └── analytics.js       # Buffered page-view tracking with GeoIP
 ├── routes/
 │   ├── home.js            # Homepage (hero, news, stats)
 │   ├── servers.js         # Server browser & detail pages
 │   ├── community.js       # Chat page
 │   ├── admin.js           # Admin CRUD (news/servers/users/settings/proxmox)
-│   ├── auth.js            # Login, logout, register, profile
+│   ├── admin-analytics.js # Analytics page + analytics API endpoints
+│   ├── auth.js            # Login (with Turnstile), logout, register, profile
 │   ├── monitoring.js      # Proxmox monitoring dashboard & API (auth required)
 │   ├── api.js             # Public JSON API
 │   └── setup.js           # First-run setup wizard (rate-limited)
@@ -107,11 +112,24 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 ├── utils/
 │   ├── statusChecker.js   # TCP ping, Minecraft query, periodic checks (min 10s interval)
 │   ├── proxmox.js         # Proxmox VE API client (token auth)
-│   └── crypto.js          # AES-256-GCM encrypt/decrypt for secrets at rest
-├── views/                 # EJS templates (admin/, auth/, monitoring/, errors/)
+│   ├── crypto.js          # AES-256-GCM encrypt/decrypt for secrets at rest
+│   ├── imageUpload.js     # Shared multer config + resolveImage helper
+│   └── catchAsync.js      # Promise error wrapper for async route handlers
+├── views/
+│   ├── partials/          # header.ejs, footer.ejs, admin-nav.ejs (shared layout)
+│   ├── admin/             # Admin panel pages (analytics, news, servers, users, settings, proxmox)
+│   ├── auth/              # Login, register, profile
+│   ├── monitoring/        # Proxmox dashboard
+│   └── errors/            # 404, 500
 ├── public/
-│   ├── css/               # style.css + desktop.css + 6 theme files
-│   └── js/                # main.js + translations.js (i18n) + theme-effects.js
+│   ├── css/
+│   │   ├── style.css      # Base styles + CSS variables
+│   │   ├── desktop.css    # Responsive breakpoints
+│   │   └── themes/        # 6 theme files (dark, light, cyberpunk-purple, ...)
+│   └── js/
+│       ├── main.js        # SPA nav, theme, i18n, polling
+│       ├── theme-effects.js # Canvas animations per theme
+│       └── lang/          # Auto-discovered language files (en.js, ru.js, ro.js)
 ├── data/                  # nexushub.db + .session-secret (auto-created, gitignored)
 └── uploads/news/          # Uploaded images (news article images saved as files)
 ```
@@ -136,15 +154,15 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 |---|---|---|
 | `GET` | `/api/servers` | All servers with status (IP/port hidden for non-admins) |
 | `GET` | `/api/servers/:id/status` | Single server status with latency |
-| `GET` | `/api/news?limit=10` | Latest news articles (EN/RU) |
-| `POST` | `/api/language` | Set language preference (`en` / `ru`) |
+| `GET` | `/api/news?limit=10` | Latest news articles (multilingual) |
+| `POST` | `/api/language` | Set language preference (any auto-discovered code, e.g. `en` / `ru` / `ro`) |
 
 ### Auth
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/auth/login` | Login form |
-| `POST` | `/auth/login` | Process login |
+| `GET` | `/auth/login` | Login form (with Cloudflare Turnstile if configured) |
+| `POST` | `/auth/login` | Process login (Turnstile-verified) |
 | `POST` | `/auth/logout` | Logout (POST only, CSRF-protected) |
 | `GET` | `/auth/register` | Registration form (if enabled in admin settings) |
 | `POST` | `/auth/register` | Process registration (rate-limited: 5/hour) |
@@ -168,6 +186,8 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 | `GET/POST` | `/admin/users/*` | User management |
 | `GET/POST` | `/admin/settings` | Site settings |
 | `GET/POST` | `/admin/proxmox/*` | Proxmox connection & guest management |
+| `GET` | `/admin/analytics` | Analytics dashboard (charts, time-series) |
+| `GET` | `/admin/analytics/api/*` | Analytics JSON endpoints (page views, geo, etc.) |
 
 ---
 
@@ -247,7 +267,7 @@ server {
 
 - [x] Real-time server status monitoring (TCP ping + Minecraft protocol)
 - [x] Community chat with Socket.io
-- [x] Bilingual news system (EN/RU)
+- [x] Multilingual news system (EN/RU/RO)
 - [x] 6 visual themes with special effects
 - [x] Proxmox monitoring (LXC/QEMU discovery, live stats)
 - [x] Admin panel with full CRUD
@@ -255,13 +275,15 @@ server {
 - [x] First-run setup wizard
 - [x] CSRF protection on all forms and AJAX
 - [x] User registration with admin toggle
+- [x] Cloudflare Turnstile bot verification on login
+- [x] Bot/scanner blocking middleware with IP strike system
 - [x] Proxmox secrets encrypted at rest (AES-256-GCM)
 - [x] Session secret persistence across restarts
 - [x] Health check endpoint (`/health`)
 - [ ] Telegram bot notifications for server status changes
 - [ ] Discord webhook integration
 - [x] Server-side i18n (flash messages, API responses)
-- [ ] More languages beyond EN/RU
+- [x] Dynamic language system with auto-discovery (drop a new file in `public/js/lang/`)
 - [x] Dashboard charts and analytics (Chart.js)
 - [x] Docker support with docker-compose
 - [ ] Automated database backups
