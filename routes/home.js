@@ -9,12 +9,7 @@ router.get('/', (req, res) => {
   const onlineCount = db.get("SELECT COUNT(*) as count FROM servers WHERE status = 'online'");
   const totalServers = db.get('SELECT COUNT(*) as count FROM servers');
 
-  // Batch-fetch all needed settings in one query
-  const settingsRows = db.all(
-    "SELECT key, value FROM settings WHERE key IN ('site_name', 'hero_title', 'hero_subtitle', 'hero_style', 'games_list')"
-  );
-  const settings = {};
-  for (const row of settingsRows) settings[row.key] = row.value;
+  const settings = db.getCachedSettings('site_name', 'hero_title', 'hero_subtitle', 'hero_style', 'games_list');
 
   let gamesList = [];
   try {

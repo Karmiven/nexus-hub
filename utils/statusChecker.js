@@ -192,8 +192,8 @@ async function checkAllServers() {
  * Start periodic status checking
  */
 function startStatusChecker() {
-  const intervalSetting = db.get("SELECT value FROM settings WHERE key = 'status_check_interval'");
-  const intervalSeconds = Math.max(parseInt(intervalSetting?.value) || 60, 10);
+  const s = db.getCachedSettings('status_check_interval');
+  const intervalSeconds = Math.max(parseInt(s.status_check_interval) || 60, 10);
 
   // Check immediately on start
   checkAllServers().then(() => {
@@ -208,4 +208,4 @@ function startStatusChecker() {
   console.log(`📡 Status checker running every ${intervalSeconds}s`);
 }
 
-module.exports = { tcpPing, queryMinecraft, checkAllServers, startStatusChecker };
+module.exports = { tcpPing, checkAllServers, startStatusChecker };

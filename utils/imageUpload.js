@@ -78,4 +78,4 @@ function resolveImage(croppedImageData, uploadedFile, subdir, prefix, existingIm
   return existingImage;
 }
 
-module.exports = { createUploader, resolveImage, ALLOWED_IMAGE_MIMES };
+module.exports = { createUploader, resolveImage };

@@ -5,7 +5,11 @@
  * Uses visibility:hidden → visible (no layout shift, no flash).
  * Content area fades in separately for SPA-like feel.
  */
+var _themeReady = false;
+var _i18nDone = false;
+
 function revealPage() {
+  if (!_themeReady || !_i18nDone) return;
   // Remove the inline bg override set before CSS loaded — let theme CSS take full control
   if (typeof window.__clearBgOverride === 'function') {
     window.__clearBgOverride();
@@ -23,15 +27,29 @@ function revealPage() {
 function waitForThemeAndReveal() {
   var themeLink = document.getElementById('theme-stylesheet');
   if (themeLink && !themeLink.sheet) {
-    themeLink.addEventListener('load', revealPage);
-    setTimeout(revealPage, 400);
+    themeLink.addEventListener('load', function() { _themeReady = true; revealPage(); });
+    setTimeout(function() { _themeReady = true; revealPage(); }, 400);
   } else {
+    _themeReady = true;
     revealPage();
   }
 }
 
+function waitForI18nAndReveal() {
+  if (typeof window.i18nReady === 'function') {
+    window.i18nReady(function() { _i18nDone = true; revealPage(); });
+  } else {
+    // i18n not available — don't block page
+    _i18nDone = true;
+    revealPage();
+  }
+  // Safety timeout — never leave page hidden longer than 800ms
+  setTimeout(function() { _i18nDone = true; revealPage(); }, 800);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   waitForThemeAndReveal();
+  waitForI18nAndReveal();
   initLucideIcons();
   initSpaNavigation();
   initThemeToggle();
@@ -304,7 +322,8 @@ function getSiteTimezone() {
  */
 function getLocaleForLang() {
   var lang = (typeof window.i18n !== 'undefined') ? window.i18n.getCurrentLanguage() : 'en';
-  return lang === 'ru' ? 'ru-RU' : 'en-US';
+  var localeMap = { en: 'en-US', ru: 'ru-RU', ro: 'ro-RO' };
+  return localeMap[lang] || lang;
 }
 
 /**
@@ -475,10 +494,10 @@ function initLanguageSelector() {
     languageSelector._i18nBound = true;
 
     languageSelector.addEventListener('change', (e) => {
-      window.i18n.setLanguage(e.target.value);
-      formatLocalTimes();
+      var lang = e.target.value;
+      localStorage.setItem('language', lang);
 
-      // Update session language via API
+      // Save to session, then reload so server renders the correct language
       fetch('/api/language', {
         method: 'POST',
         headers: {
@@ -486,14 +505,10 @@ function initLanguageSelector() {
           'X-Requested-With': 'XMLHttpRequest',
           'x-csrf-token': document.querySelector('meta[name="csrf-token"]')?.content || ''
         },
-        body: JSON.stringify({ language: e.target.value })
-      }).then(function(res) {
-        var newToken = res.headers.get('X-CSRF-Token');
-        if (newToken) {
-          var meta = document.querySelector('meta[name="csrf-token"]');
-          if (meta) meta.setAttribute('content', newToken);
-        }
-      }).catch(() => {});
+        body: JSON.stringify({ language: lang })
+      }).finally(function() {
+        window.location.reload();
+      });
     });
   }
 

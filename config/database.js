@@ -51,8 +51,6 @@ async function initDatabase() {
     );
   `);
 
-  // Database schema is initialized with bilingual support
-
   // Ensure columns exist for older databases upgraded in-place
   try {
     const userCols = db.pragma("table_info(users)").map(c => c.name);

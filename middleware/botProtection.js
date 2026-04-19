@@ -33,7 +33,13 @@ function botProtection(req, res, next) {
     return res.status(403).end();
   }
 
-  const urlPath = decodeURIComponent(req.path).toLowerCase();
+  let urlPath;
+  try {
+    urlPath = decodeURIComponent(req.path).toLowerCase();
+  } catch (e) {
+    // Malformed URI — treat as suspicious
+    return res.status(400).end();
+  }
   const ua = req.get('user-agent') || '';
   let blocked = false;
 

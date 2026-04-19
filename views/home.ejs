@@ -98,7 +98,6 @@
 
       function openNewsModal(element) {
         const lang = getNewsLang();
-        const suffix = lang.charAt(0).toUpperCase() + lang.slice(1);
         const title = decodeAttr(element, 'title-' + lang) || decodeAttr(element, 'title-en');
         const contentFull = decodeAttr(element, 'content-full-' + lang) || decodeAttr(element, 'content-full-en');
 
@@ -124,62 +123,20 @@
         if (e.target === this) closeNewsModal();
       });
 
-      /**
-       * Smoothly switch news card content when language changes
-       */
-      function switchNewsLanguage(lang) {
-        const cards = document.querySelectorAll('.news-card');
-        if (!cards.length) return;
-
-        const suffix = lang.charAt(0).toUpperCase() + lang.slice(1); // "En" or "Ru"
-
-        // Staggered fade-out → swap → fade-in
-        cards.forEach((card, i) => {
-          const body = card.querySelector('.news-body');
-          if (!body) return;
-
-          const delay = i * 60; // stagger each card
-
-          setTimeout(() => {
-            body.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-            body.style.opacity = '0';
-            body.style.transform = 'translateY(6px)';
-
-            setTimeout(() => {
-              // Swap content (decode from URI-encoded data attributes)
-              const titleEl = body.querySelector('.news-title');
-              const excerptEl = body.querySelector('.news-excerpt');
-              if (titleEl) titleEl.textContent = decodeAttr(card, 'title-' + lang) || decodeAttr(card, 'title-en');
-              if (excerptEl) excerptEl.textContent = decodeAttr(card, 'content-short-' + lang) || decodeAttr(card, 'content-short-en');
-
-              // Fade in
-              body.style.opacity = '1';
-              body.style.transform = 'translateY(0)';
-            }, 250);
-          }, delay);
-        });
-
-        // If modal is open, update it too
-        const modal = document.getElementById('newsModal');
-        if (modal && modal.style.display === 'flex') {
-          // Find which card is shown (match by modal title to any card)
-          // Just close the modal — user can reopen with new lang
-          closeNewsModal();
-        }
-      }
-
-      // Listen for language changes (works with async i18n)
-      window.addEventListener('languageChanged', function(e) {
-        switchNewsLanguage(e.detail.lang);
-      });
-
-      // Apply correct language on load (i18n may be ready or not yet)
+      // Apply correct language on initial load
       if (typeof window.i18nReady === 'function') {
         window.i18nReady(function() {
-          switchNewsLanguage(window.i18n.getCurrentLanguage());
+          var lang = window.i18n.getCurrentLanguage();
+          var cards = document.querySelectorAll('.news-card');
+          cards.forEach(function(card) {
+            var body = card.querySelector('.news-body');
+            if (!body) return;
+            var titleEl = body.querySelector('.news-title');
+            var excerptEl = body.querySelector('.news-excerpt');
+            if (titleEl) titleEl.textContent = decodeAttr(card, 'title-' + lang) || decodeAttr(card, 'title-en');
+            if (excerptEl) excerptEl.textContent = decodeAttr(card, 'content-short-' + lang) || decodeAttr(card, 'content-short-en');
+          });
         });
-      } else if (window.i18n) {
-        switchNewsLanguage(window.i18n.getCurrentLanguage());
       }
     </script>
   <% } %>

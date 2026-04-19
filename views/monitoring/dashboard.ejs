@@ -2,8 +2,8 @@
 
 <section class="page-header">
   <div class="container">
-    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="mon_title">Мониторинг</span></h1>
-    <p class="page-desc" data-i18n="mon_desc">Нагрузка контейнеров и виртуальных машин в реальном времени</p>
+    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="mon_title">Monitoring</span></h1>
+    <p class="page-desc" data-i18n="mon_desc">Real-time load of containers and virtual machines</p>
   </div>
 </section>
 
@@ -12,29 +12,29 @@
   <% if (!proxmoxConfigured) { %>
     <div class="empty-state">
       <i data-lucide="server-off" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"></i>
-      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_not_connected">Proxmox не подключён</h3>
-      <p style="margin-bottom:1rem;" data-i18n="mon_not_connected_desc">Подключите сервер Proxmox VE для отображения данных мониторинга.</p>
-      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_setup">Настроить Proxmox</a>
+      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_not_connected">Proxmox not connected</h3>
+      <p style="margin-bottom:1rem;" data-i18n="mon_not_connected_desc">Connect a Proxmox VE server to display monitoring data.</p>
+      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_setup">Configure Proxmox</a>
     </div>
   <% } else if (!hasSelectedGuests) { %>
     <div class="empty-state">
       <i data-lucide="list-checks" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:1rem;display:block;margin-left:auto;margin-right:auto;"></i>
-      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_no_guests">Контейнеры не выбраны</h3>
-      <p style="margin-bottom:1rem;" data-i18n="mon_no_guests_desc">Выберите контейнеры/ВМ для мониторинга в панели администратора.</p>
-      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_select_guests">Выбрать контейнеры</a>
+      <h3 style="margin-bottom:0.5rem;" data-i18n="mon_no_guests">No containers selected</h3>
+      <p style="margin-bottom:1rem;" data-i18n="mon_no_guests_desc">Select containers/VMs for monitoring in the admin panel.</p>
+      <a href="/admin/proxmox" class="btn btn-primary btn-sm" data-i18n="mon_select_guests">Select Containers</a>
     </div>
   <% } else { %>
 
   <!-- Guest Cards -->
   <div class="resources-grid" id="guestsGrid">
     <div class="empty-state">
-      <p data-i18n="mon_loading">Загрузка данных...</p>
+      <p data-i18n="mon_loading">Loading data...</p>
     </div>
   </div>
 
   <div style="text-align:right; margin-top:1rem; font-size:0.75rem; color:var(--text-muted);">
-    <span data-i18n="mon_updated">Обновлено</span>: <span id="lastUpdate">--</span> &nbsp;|&nbsp;
-    <button class="btn btn-xs btn-outline" onclick="fetchData()" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> <span data-i18n="mon_refresh">Обновить</span></button>
+    <span data-i18n="mon_updated">Updated</span>: <span id="lastUpdate">--</span> &nbsp;|&nbsp;
+    <button class="btn btn-xs btn-outline" onclick="fetchData()" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> <span data-i18n="mon_refresh">Refresh</span></button>
   </div>
 
   <% } %>
@@ -141,13 +141,15 @@ function renderGuests(guests) {
   guests.forEach(function(g) {
     var isRunning = g.status === 'running';
     var isError = g.status === 'error';
-    var typeIcon = g.type === 'lxc' ? 'container' : 'monitor';
     var label = g.displayName || g.name;
 
     var card = document.createElement('div');
     card.className = 'resource-card' + (isRunning ? ' status-online' : ' status-offline');
 
     var statusText = isRunning ? _t('mon_running') : (isError ? _t('mon_error') : _t('mon_stopped'));
+
+    // Icon: admin sees type-specific, public sees generic server icon
+    var typeIcon = _isAdmin ? (g.type === 'lxc' ? 'container' : 'monitor') : 'server';
 
     var html = '<div class="resource-header">' +
       '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> <span class="guest-name">' + escHtml(label) + '</span>';
@@ -170,19 +172,33 @@ function renderGuests(guests) {
       }
       html += '</div>';
     } else if (isRunning) {
-      html += '<div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.7rem;">' +
-        makeBar('CPU (' + g.cpus + ' ' + coreWord(g.cpus) + ')', g.cpu) +
-        makeBar('RAM — ' + fmtBytes(g.mem) + ' / ' + fmtBytes(g.maxmem), g.memUsage) +
-      '</div>';
-      html += '<div class="guest-info-row">' +
-        '<span><i data-lucide="clock" style="width:14px;height:14px;"></i> ' + fmtUptime(g.uptime) + '</span>' +
-        '<span><i data-lucide="arrow-down" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netin) + '</span>' +
-        '<span><i data-lucide="arrow-up" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netout) + '</span>' +
-      '</div>';
+      if (_isAdmin) {
+        // Admin: full details — CPU cores, exact RAM, network I/O
+        html += '<div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.7rem;">' +
+          makeBar('CPU (' + g.cpus + ' ' + coreWord(g.cpus) + ')', g.cpu) +
+          makeBar('RAM — ' + fmtBytes(g.mem) + ' / ' + fmtBytes(g.maxmem), g.memUsage) +
+        '</div>';
+        html += '<div class="guest-info-row">' +
+          '<span><i data-lucide="clock" style="width:14px;height:14px;"></i> ' + fmtUptime(g.uptime) + '</span>' +
+          '<span><i data-lucide="arrow-down" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netin) + '</span>' +
+          '<span><i data-lucide="arrow-up" style="width:14px;height:14px;"></i> ' + fmtBytes(g.netout) + '</span>' +
+        '</div>';
+      } else {
+        // Public: only CPU% and RAM% bars, uptime
+        html += '<div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:0.7rem;">' +
+          makeBar('CPU', g.cpu) +
+          makeBar('RAM', g.memUsage) +
+        '</div>';
+        if (g.uptime) {
+          html += '<div class="guest-info-row">' +
+            '<span><i data-lucide="clock" style="width:14px;height:14px;"></i> ' + fmtUptime(g.uptime) + '</span>' +
+          '</div>';
+        }
+      }
     } else {
       html += '<div style="padding:1rem;text-align:center;">' +
         '<p style="color:var(--text-muted);"><i data-lucide="power-off" style="width:1.2em;height:1.2em;vertical-align:-0.15em;"></i> ' + escHtml(_t('mon_container_stopped')) + '</p>';
-      if (g.maxmem) {
+      if (_isAdmin && g.maxmem) {
         html += '<p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.35rem;">' +
           g.cpus + ' CPU, ' + fmtBytes(g.maxmem) + ' RAM</p>';
       }
@@ -239,7 +255,7 @@ function fmtUptime(sec) {
 }
 
 function coreWord(n) {
-  var lang = (typeof window.i18n !== 'undefined') ? window.i18n.getCurrentLanguage() : 'ru';
+  var lang = (typeof window.i18n !== 'undefined') ? window.i18n.getCurrentLanguage() : 'en';
   if (lang === 'en') return n === 1 ? _t('mon_core_one') : _t('mon_core_many');
   if (n === 1) return _t('mon_core_one');
   if (n >= 2 && n <= 4) return _t('mon_core_few');
@@ -249,7 +265,7 @@ function coreWord(n) {
 async function renameGuest(vmid, btn) {
   var nameEl = btn.closest('.resource-title').querySelector('.guest-name');
   var current = nameEl ? nameEl.textContent : '';
-  var newName = prompt(_t('mon_rename_prompt') || 'Введите новое название:', current);
+  var newName = prompt(_t('mon_rename_prompt') || 'Enter new name:', current);
   if (newName === null) return;
   try {
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');

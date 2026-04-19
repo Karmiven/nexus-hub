@@ -209,18 +209,20 @@ router.get('/profile', isAuthenticated, (req, res) => {
 
 // Update notification preferences
 router.post('/profile/notifications', isAuthenticated, (req, res) => {
-  const { notify_email, notify_discord } = req.body;
-
-  // Sanitize discord ID — allow only digits
-  const cleanDiscord = String(notify_discord || '').replace(/[^0-9]/g, '').slice(0, 20);
-
-  db.run(
-    'UPDATE users SET notify_email = ?, notify_discord = ? WHERE id = ?',
-    [notify_email ? 1 : 0, cleanDiscord, req.session.user.id]
-  );
-
-  req.flash('success', 'flash_prefs_saved');
-  res.redirect('/auth/profile');
+  try {
+    const { notify_email, notify_discord } = req.body;
+    const cleanDiscord = String(notify_discord || '').replace(/[^0-9]/g, '').slice(0, 20);
+    db.run(
+      'UPDATE users SET notify_email = ?, notify_discord = ? WHERE id = ?',
+      [notify_email ? 1 : 0, cleanDiscord, req.session.user.id]
+    );
+    req.flash('success', 'flash_prefs_saved');
+    res.redirect('/auth/profile');
+  } catch (err) {
+    console.error('Profile update error:', err);
+    req.flash('error', 'flash_error');
+    res.redirect('/auth/profile');
+  }
 });
 
 // Logout handler (POST to prevent CSRF via img/link prefetch)

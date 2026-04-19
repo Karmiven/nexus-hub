@@ -3,7 +3,6 @@ const router = express.Router();
 const net = require('net');
 const db = require('../config/database');
 const { isAdmin } = require('../middleware/auth');
-const catchAsync = require('../utils/catchAsync');
 const { checkAllServers } = require('../utils/statusChecker');
 const { encrypt } = require('../utils/crypto');
 const { createUploader, resolveImage } = require('../utils/imageUpload');
@@ -155,7 +154,7 @@ router.get('/servers/new', (req, res) => {
 });
 
 // ── Force Status Refresh (must be before :id routes) ──
-router.post('/servers/refresh', catchAsync(async (req, res) => {
+router.post('/servers/refresh', async (req, res) => {
   try {
     await checkAllServers();
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest') {
@@ -170,7 +169,7 @@ router.post('/servers/refresh', catchAsync(async (req, res) => {
     req.flash('error', 'flash_servers_refresh_failed');
   }
   res.redirect('/admin/servers');
-}));
+});
 
 router.post('/servers', uploadServer.single('image'), (req, res) => {
   const { name, game, ip, port, description, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
@@ -311,6 +310,7 @@ router.post('/proxmox/save-connection', (req, res) => {
   for (const [key, value] of Object.entries(keys)) {
     db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
   }
+  db.invalidateSettingsCache();
   res.json({ success: true });
 });
 
@@ -318,6 +318,7 @@ router.post('/proxmox/save-guests', (req, res) => {
   const { guests } = req.body || {};
   const list = Array.isArray(guests) ? guests : [];
   db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['proxmox_guests', JSON.stringify(list)]);
+  db.invalidateSettingsCache();
   res.json({ success: true });
 });
 

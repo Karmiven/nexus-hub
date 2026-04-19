@@ -157,11 +157,22 @@
   socket.on('chat:message', (msg) => {
     const div = document.createElement('div');
     div.className = 'chat-msg';
-    div.innerHTML = `
-      <span class="chat-user">${escapeHtml(msg.username)}</span>
-      <span class="chat-time"><span class="local-time" data-timestamp="${msg.created_at}" data-format="time"></span></span>
-      <p class="chat-text">${escapeHtml(msg.message)}</p>
-    `;
+    const userSpan = document.createElement('span');
+    userSpan.className = 'chat-user';
+    userSpan.textContent = msg.username || '';
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'chat-time';
+    const timeContent = document.createElement('span');
+    timeContent.className = 'local-time';
+    timeContent.setAttribute('data-timestamp', msg.created_at || '');
+    timeContent.setAttribute('data-format', 'time');
+    timeSpan.appendChild(timeContent);
+    const p = document.createElement('p');
+    p.className = 'chat-text';
+    p.textContent = msg.message || '';
+    div.appendChild(userSpan);
+    div.appendChild(timeSpan);
+    div.appendChild(p);
     messagesDiv.appendChild(div);
     if (window.formatLocalTimes) window.formatLocalTimes();
     scrollToBottom();
@@ -211,12 +222,6 @@
       });
     }
   });
-
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 </script>
 
 <%- include('partials/footer') %>

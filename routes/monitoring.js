@@ -16,12 +16,7 @@ function getProxmoxClient() {
   let node = process.env.PROXMOX_NODE || '';
 
   try {
-    // Batch-read all proxmox settings in one query
-    const rows = db.all(
-      "SELECT key, value FROM settings WHERE key IN ('proxmox_host', 'proxmox_port', 'proxmox_token_id', 'proxmox_token_secret', 'proxmox_node')"
-    );
-    const s = {};
-    for (const r of rows) s[r.key] = r.value;
+    const s = db.getCachedSettings('proxmox_host', 'proxmox_port', 'proxmox_token_id', 'proxmox_token_secret', 'proxmox_node');
 
     if (s.proxmox_host) host = s.proxmox_host;
     if (s.proxmox_port) port = parseInt(s.proxmox_port) || 8006;
@@ -39,8 +34,8 @@ function getProxmoxClient() {
  */
 function getSelectedGuests() {
   try {
-    const row = db.get("SELECT value FROM settings WHERE key = 'proxmox_guests'");
-    if (row?.value) return JSON.parse(row.value);
+    const s = db.getCachedSettings('proxmox_guests');
+    if (s.proxmox_guests) return JSON.parse(s.proxmox_guests);
   } catch (e) { /* ignore */ }
   return [];
 }
@@ -77,7 +72,19 @@ router.get('/resources', monitoringAccess, async (req, res) => {
     const nameMap = {};
     selected.forEach(s => { if (s.displayName) nameMap[s.vmid] = s.displayName; });
     guests.forEach(g => { if (nameMap[g.vmid]) g.displayName = nameMap[g.vmid]; });
-    res.json({ success: true, guests, timestamp: new Date().toISOString() });
+
+    const isAdminUser = req.session?.user?.role === 'admin';
+
+    // Admin gets everything; public gets only safe display data
+    const safeGuests = isAdminUser ? guests : guests.map(g => ({
+      name: g.displayName || g.name,
+      status: g.status,
+      cpu: g.cpu || 0,
+      memUsage: g.memUsage || 0,
+      uptime: g.uptime || 0
+    }));
+
+    res.json({ success: true, guests: safeGuests, timestamp: new Date().toISOString() });
   } catch (err) {
     console.error('Proxmox monitoring error:', err.message);
     res.status(500).json({ success: false, error: 'Failed to fetch monitoring data' });
@@ -145,6 +152,7 @@ router.post('/rename/:vmid', isAdmin, (req, res) => {
   guest.displayName = displayName || undefined;
   if (!displayName) delete guest.displayName;
   db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['proxmox_guests', JSON.stringify(selected)]);
+  db.invalidateSettingsCache();
   res.json({ success: true });
 });
 
@@ -187,7 +195,7 @@ router.get('/dashboard', monitoringAccess, (req, res) => {
   const pve = getProxmoxClient();
   const selected = getSelectedGuests();
   res.render('monitoring/dashboard', {
-    title: 'Мониторинг',
+    title: 'Monitoring',
     proxmoxConfigured: pve.isConfigured(),
     hasSelectedGuests: selected.length > 0,
     isAdmin: req.session?.user?.role === 'admin'

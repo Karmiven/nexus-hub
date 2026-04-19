@@ -16,16 +16,6 @@ const userMessageTimestamps = new Map(); // lowercase username -> [timestamps]
 const TYPING_COOLDOWN_MS = 2000;
 const lastTypingTime = new Map(); // socket.id -> timestamp
 
-// Server-side HTML escaping to prevent stored XSS
-function escapeHtml(str) {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 module.exports = function(io) {
   io.on('connection', (socket) => {
 
@@ -36,7 +26,7 @@ module.exports = function(io) {
     socket.emit('chat:history', messages);
 
     // Send current online users
-    socket.emit('chat:online_users', Array.from(usedNicknames));
+    socket.emit('chat:online_users', Array.from(activeUsers.values()));
 
     // Handle user joining
     socket.on('chat:join', (username, callback) => {
@@ -89,8 +79,8 @@ module.exports = function(io) {
       recentTimestamps.push(now);
       userMessageTimestamps.set(lowerUser, recentTimestamps);
 
-      // Escape HTML server-side to prevent stored XSS
-      const message = escapeHtml(String(data.message).slice(0, 500).trim());
+      // Store raw text, escape at display time (client uses textContent)
+      const message = String(data.message).slice(0, 500).trim();
 
       if (!message) return;
 
