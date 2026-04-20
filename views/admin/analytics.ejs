@@ -698,8 +698,13 @@
     setTimeout(window.loadAllCharts, 100);
   }
 
-  // Start init
-  waitForChart(0);
+  // Start init — wait for i18n so t() is defined before charts build
+  function start() { waitForChart(0); }
+  if (typeof window.i18nReady === 'function') {
+    window.i18nReady(start);
+  } else {
+    start();
+  }
 })();
 </script>
 
