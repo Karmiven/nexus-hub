@@ -737,6 +737,20 @@
     };
   }
 
+  function escHtml(value) {
+    const d = document.createElement('div');
+    d.textContent = value === null || value === undefined ? '' : String(value);
+    return d.innerHTML;
+  }
+
+  function escPreviewText(value) {
+    return escHtml(value).replace(/\n/g, '<br>');
+  }
+
+  function safeCssImageUrl(value) {
+    return String(value || '').replace(/['"\\()]/g, '');
+  }
+
   function openPreviewModal() {
     previewLang = 'en';
     renderPreview();
@@ -762,13 +776,15 @@
   function renderPreview() {
     const d = getPreviewData();
     const lang = previewLang;
-    const title = lang === 'ru' ? d.title_ru : d.title_en;
-    const shortContent = lang === 'ru' ? d.content_short_ru : d.content_short_en;
-    const fullContent = lang === 'ru' ? d.content_full_ru : d.content_full_en;
+    const title = escHtml(lang === 'ru' ? d.title_ru : d.title_en);
+    const shortContent = escPreviewText(lang === 'ru' ? d.content_short_ru : d.content_short_en);
+    const fullContent = escPreviewText(lang === 'ru' ? d.content_full_ru : d.content_full_en);
+    const author = escHtml(d.author);
+    const date = escHtml(d.date);
     const imageHtml = d.image && !d.image.endsWith('#')
-      ? `<div class="news-image" style="background-image: url('${d.image}')"></div>`
+      ? `<div class="news-image" style="background-image: url('${safeCssImageUrl(d.image)}')"></div>`
       : `<div class="news-image news-image-default"></div>`;
-    const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${t('admin_news_pinned_label')}</span>` : '';
+    const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${escHtml(t('admin_news_pinned_label'))}</span>` : '';
 
     const langSwitcher = `
       <div class="preview-lang-switch">
@@ -788,8 +804,8 @@
             <h3 class="news-title">${title}</h3>
             <p class="news-excerpt">${shortContent}</p>
             <div class="news-meta">
-              <span class="news-author">${d.author}</span>
-              <span class="news-date">${d.date}</span>
+              <span class="news-author">${author}</span>
+              <span class="news-date">${date}</span>
             </div>
           </div>
         </article>
@@ -802,8 +818,8 @@
       <div class="preview-full-article">
         <h1 class="pfa-title">${title}</h1>
         <div class="pfa-meta">
-          <span>${d.author}</span>
-          <span>${d.date}</span>
+          <span>${author}</span>
+          <span>${date}</span>
         </div>
         <div class="pfa-content">${fullContent}</div>
       </div>

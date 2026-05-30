@@ -249,6 +249,12 @@
       return window.formatTimestamp ? window.formatTimestamp(dateStr + 'T00:00:00', 'date') : new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    function escHtml(value) {
+      var d = document.createElement('div');
+      d.textContent = value === null || value === undefined ? '' : String(value);
+      return d.innerHTML;
+    }
+
     function fetchData(endpoint) {
       var days = getDays();
       return fetch('/admin/analytics/' + endpoint + '?days=' + days)
@@ -282,7 +288,7 @@
       if (existing) existing.remove();
       var div = document.createElement('div');
       div.className = 'chart-no-data';
-      div.innerHTML = '<i data-lucide="bar-chart-2"></i><span>' + noDataLabel + '</span>';
+      div.innerHTML = '<i data-lucide="bar-chart-2"></i><span>' + escHtml(noDataLabel) + '</span>';
       wrap.appendChild(div);
       if (window.lucide) lucide.createIcons({ nodes: [div] });
     }
@@ -294,7 +300,7 @@
       if (ld) ld.remove();
       var div = document.createElement('div');
       div.className = 'chart-error';
-      div.innerHTML = '<span>Error: ' + msg + '</span>';
+      div.innerHTML = '<span>Error: ' + escHtml(msg) + '</span>';
       wrap.appendChild(div);
     }
 
@@ -513,6 +519,7 @@
 
     // ── Country code → flag emoji ──
     function countryFlag(code) {
+      if (!/^[A-Za-z]{2}$/.test(code || '')) return '🏳️';
       if (!code || code === 'Unknown') return '🏳️';
       var chars = code.toUpperCase().split('').map(function(c) { return String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0)); });
       return chars.join('');
@@ -553,8 +560,8 @@
           tbody.innerHTML = data.map(function(d) {
             var pct = total > 0 ? (d.visitors / total * 100).toFixed(1) : 0;
             var barW = total > 0 ? Math.round(d.visitors / total * 80) : 0;
-            return '<tr><td><span class="country-flag">' + countryFlag(d.country) + '</span>' + d.country + '</td>' +
-                   '<td>' + d.visitors + '</td>' +
+            return '<tr><td><span class="country-flag">' + countryFlag(d.country) + '</span>' + escHtml(d.country) + '</td>' +
+                   '<td>' + escHtml(d.visitors) + '</td>' +
                    '<td>' + pct + '%<span class="country-bar" style="width:' + barW + 'px"></span></td></tr>';
           }).join('');
           table.style.display = '';
@@ -574,10 +581,10 @@
       var show = 5;
       var visible = pages.slice(0, show);
       var hidden = pages.slice(show);
-      var html = visible.map(function(p) { return '<span class="vp-tag">' + p + '</span>'; }).join('');
+      var html = visible.map(function(p) { return '<span class="vp-tag">' + escHtml(p) + '</span>'; }).join('');
       if (hidden.length > 0) {
         var uid = 'vp_' + Math.random().toString(36).substr(2, 6);
-        var hiddenHtml = hidden.map(function(p) { return '<span class="vp-tag">' + p + '</span>'; }).join('');
+        var hiddenHtml = hidden.map(function(p) { return '<span class="vp-tag">' + escHtml(p) + '</span>'; }).join('');
         var tMore = t('admin_visitor_more');
         var tCollapse = t('admin_visitor_collapse');
         html += '<span id="' + uid + '" style="display:none">' + hiddenHtml + '</span>';
@@ -597,19 +604,19 @@
           if (!tbody) return;
           if (!data.visitors || data.visitors.length === 0) {
             var noDataText = t('admin_visitor_nodata');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">' + noDataText + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-muted)">' + escHtml(noDataText) + '</td></tr>';
             return;
           }
           tbody.innerHTML = data.visitors.map(function(v) {
             var firstVisit = window.formatTimestamp ? window.formatTimestamp(v.first_visit, 'datetime') : v.first_visit;
             var lastVisit = window.formatTimestamp ? window.formatTimestamp(v.last_visit, 'datetime') : v.last_visit;
             return '<tr>' +
-              '<td class="mono">' + v.ip + '</td>' +
-              '<td style="text-align:center"><span class="country-flag">' + countryFlag(v.country) + '</span>' + v.country + '</td>' +
-              '<td style="text-align:center">' + v.total_views + '</td>' +
-              '<td style="text-align:center">' + v.unique_pages + '</td>' +
-              '<td>' + firstVisit + '</td>' +
-              '<td>' + lastVisit + '</td>' +
+              '<td class="mono">' + escHtml(v.ip) + '</td>' +
+              '<td style="text-align:center"><span class="country-flag">' + countryFlag(v.country) + '</span>' + escHtml(v.country) + '</td>' +
+              '<td style="text-align:center">' + escHtml(v.total_views) + '</td>' +
+              '<td style="text-align:center">' + escHtml(v.unique_pages) + '</td>' +
+              '<td>' + escHtml(firstVisit) + '</td>' +
+              '<td>' + escHtml(lastVisit) + '</td>' +
               '<td class="visitor-pages-cell">' + renderPages(v.pages) + '</td>' +
               '</tr>';
           }).join('');

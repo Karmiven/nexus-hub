@@ -16,8 +16,22 @@ const userMessageTimestamps = new Map(); // lowercase username -> [timestamps]
 const TYPING_COOLDOWN_MS = 2000;
 const lastTypingTime = new Map(); // socket.id -> timestamp
 
+function isCommunityEnabled() {
+  try {
+    const s = db.getCachedSettings('community_enabled');
+    return s.community_enabled !== '0';
+  } catch (e) {
+    return true;
+  }
+}
+
 module.exports = function(io) {
   io.on('connection', (socket) => {
+    if (!isCommunityEnabled()) {
+      socket.emit('chat:error', 'Community chat is disabled.');
+      socket.disconnect(true);
+      return;
+    }
 
     // Send recent messages on connect
     const messages = db.all(
@@ -31,6 +45,7 @@ module.exports = function(io) {
     // Handle user joining
     socket.on('chat:join', (username, callback) => {
       if (typeof callback !== 'function') return;
+      if (!isCommunityEnabled()) return callback({ success: false, error: 'Community chat is disabled.' });
       if (!username) return callback({ success: false, error: 'Nickname is required' });
       
       const sanitizedUsername = String(username).slice(0, 30).replace(/[<>&"'/]/g, '').trim();
@@ -56,6 +71,9 @@ module.exports = function(io) {
 
     // Handle new message
     socket.on('chat:message', (data) => {
+      if (!isCommunityEnabled()) return;
+      if (!data || typeof data !== 'object') return;
+
       // Ensure user is joined and using their registered nickname
       const registeredUsername = activeUsers.get(socket.id);
       if (!registeredUsername || registeredUsername !== data.username) return;
@@ -117,6 +135,7 @@ module.exports = function(io) {
 
     // Handle typing indicator with server-side debounce
     socket.on('chat:typing', () => {
+      if (!isCommunityEnabled()) return;
       const registeredUsername = activeUsers.get(socket.id);
       if (!registeredUsername) return;
       const now = Date.now();

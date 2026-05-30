@@ -28,6 +28,8 @@
     var container = document.getElementById('turnstile-container');
     var btn = document.getElementById('loginBtn');
     if (!container || !btn) return;
+    if (container.dataset.rendered === '1') return;
+    container.dataset.rendered = '1';
     container.innerHTML = '';
     btn.disabled = true;
     turnstile.render(container, {

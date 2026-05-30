@@ -281,6 +281,12 @@ function initSpaNavigation() {
 
   // ── Handle browser back/forward ──
   window.addEventListener('popstate', function (e) {
+    // Pages excluded from SPA (e.g. /admin) must do a full reload — their
+    // inline scripts and state-bound DOM don't reliably replay via SPA swap.
+    if (!isSpaEligible(window.location.href)) {
+      window.location.reload();
+      return;
+    }
     spaNavigateTo(window.location.href, false);
   });
 
@@ -429,9 +435,17 @@ function initFlashMessages() {
   });
 }
 
+var _serverPollingInterval = null;
+
 function initServerPolling() {
+  if (_serverPollingInterval) {
+    clearInterval(_serverPollingInterval);
+    _serverPollingInterval = null;
+  }
+
   if (!document.querySelector('.server-card')) return;
-  setInterval(async () => {
+
+  async function pollServers() {
     try {
       const res = await fetch('/api/servers');
       const data = await res.json();
@@ -441,7 +455,9 @@ function initServerPolling() {
     } catch (e) {
       // Silent fail
     }
-  }, 30000);
+  }
+
+  _serverPollingInterval = setInterval(pollServers, 30000);
 }
 
 /**
