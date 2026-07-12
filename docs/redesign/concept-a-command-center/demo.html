@@ -1,0 +1,560 @@
+<title>NexusHub — Концепт A «Командный центр»</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   КОНЦЕПТ A — «Командный центр»
+   Сайт как игровой лаунчер: боковая панель, вкладки-экраны,
+   HUD-эстетика, моноширинные метрики, неон циан+фиолет.
+   Тёмный по умолчанию — осознанно (консоль). Светлый — токенами.
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg: #04060c;
+  --bg-2: #070b14;
+  --panel: #0a1020;
+  --panel-2: #0e1628;
+  --line: rgba(0, 229, 255, 0.10);
+  --line-2: rgba(0, 229, 255, 0.25);
+  --text: #dbe7f4;
+  --text-2: #7e8ca3;
+  --muted: #4a5670;
+  --cyan: #00e5ff;
+  --cyan-dim: rgba(0, 229, 255, 0.12);
+  --violet: #8f6fff;
+  --violet-dim: rgba(143, 111, 255, 0.14);
+  --ok: #2be08a;
+  --bad: #ff5d6b;
+  --warn: #ffb347;
+  --glow-c: 0 0 20px rgba(0, 229, 255, 0.35);
+  --glow-v: 0 0 20px rgba(143, 111, 255, 0.35);
+  --r: 8px;
+  --font-d: 'Exo 2', 'Segoe UI', system-ui, sans-serif;
+  --font-b: 'Inter', system-ui, sans-serif;
+  --font-m: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #eef1f6;
+  --bg-2: #e4e9f2;
+  --panel: #ffffff;
+  --panel-2: #f2f5fb;
+  --line: rgba(10, 60, 90, 0.12);
+  --line-2: rgba(10, 60, 90, 0.28);
+  --text: #101827;
+  --text-2: #4c5a72;
+  --muted: #8a96ab;
+  --cyan: #0087b3;
+  --cyan-dim: rgba(0, 135, 179, 0.10);
+  --violet: #6a48e0;
+  --violet-dim: rgba(106, 72, 224, 0.10);
+  --ok: #0d9e63;
+  --bad: #d24552;
+  --warn: #b57a10;
+  --glow-c: 0 0 20px rgba(0, 135, 179, 0.18);
+  --glow-v: 0 0 20px rgba(106, 72, 224, 0.18);
+  color-scheme: light;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: var(--font-b); background: var(--bg); color: var(--text);
+  font-size: 14.5px; line-height: 1.6; overflow-x: hidden;
+}
+body::before { /* фоновая сетка */
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 44px 44px; opacity: .35;
+  mask-image: radial-gradient(80% 80% at 30% 0%, black, transparent);
+  -webkit-mask-image: radial-gradient(80% 80% at 30% 0%, black, transparent);
+}
+a { color: var(--cyan); text-decoration: none; }
+button { font: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* ── демо-панель ── */
+.demo-bar {
+  position: sticky; top: 0; z-index: 300; font-size: 12.5px;
+  background: linear-gradient(90deg, #071e2e, #1d1145); color: #cfe9ff;
+  border-bottom: 1px solid var(--line-2); padding: 7px 16px;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+}
+.demo-tag { border: 1px solid rgba(0,229,255,.5); color: #7df0ff; padding: 1px 9px; border-radius: 4px; font-weight: 700; font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; font-family: var(--font-m); }
+.demo-bar .sp { flex: 1; }
+.tswitch { display: inline-flex; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; overflow: hidden; }
+.tswitch button { background: transparent; border: 0; color: #cfe9ff; padding: 3px 12px; font-size: 12px; }
+.tswitch button.on { background: rgba(0,229,255,.18); color: #9ff3ff; }
+
+/* ── каркас: сайдбар + экран ── */
+.shell { display: grid; grid-template-columns: 218px 1fr; min-height: calc(100vh - 34px); position: relative; z-index: 1; }
+.side {
+  background: var(--bg-2); border-right: 1px solid var(--line);
+  padding: 20px 12px; display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 34px; height: calc(100vh - 34px);
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 10px 18px; }
+.brand-mark {
+  width: 34px; height: 34px; border: 1px solid var(--line-2); border-radius: var(--r);
+  display: grid; place-items: center; color: var(--cyan); font-size: 17px;
+  background: var(--cyan-dim); box-shadow: var(--glow-c);
+}
+.brand-name { font-family: var(--font-d); font-weight: 800; font-size: 16px; letter-spacing: .06em; }
+.brand-sub { font-family: var(--font-m); font-size: 9.5px; color: var(--muted); letter-spacing: .18em; text-transform: uppercase; }
+.side-label { font-family: var(--font-m); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); padding: 14px 10px 6px; }
+.side-item {
+  display: flex; align-items: center; gap: 11px; width: 100%; text-align: left;
+  background: transparent; border: 1px solid transparent; color: var(--text-2);
+  padding: 9px 12px; border-radius: var(--r); font-size: 14px; font-weight: 500;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.side-item .ico { width: 20px; text-align: center; font-size: 15px; }
+.side-item:hover { color: var(--text); background: var(--panel-2); }
+.side-item.on {
+  color: var(--cyan); background: var(--cyan-dim); border-color: var(--line-2);
+  box-shadow: inset 2px 0 0 var(--cyan);
+}
+.side-item .cnt { margin-left: auto; font-family: var(--font-m); font-size: 11px; color: var(--muted); }
+.side-item.on .cnt { color: var(--cyan); }
+.side .sp { flex: 1; }
+.side-user {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--line); border-radius: var(--r); background: var(--panel);
+}
+.side-user .av { width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center; background: var(--violet-dim); color: var(--violet); font-weight: 700; font-size: 13px; border: 1px solid var(--line-2); }
+.side-user b { font-size: 13px; display: block; line-height: 1.2; }
+.side-user span { font-family: var(--font-m); font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+
+/* ── верхний тикер экрана ── */
+.screen { padding: 0 28px 40px; min-width: 0; }
+.ticker {
+  display: flex; align-items: center; gap: 22px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line); padding: 13px 2px; margin-bottom: 26px;
+  font-family: var(--font-m); font-size: 12px; color: var(--text-2);
+}
+.ticker b { color: var(--text); font-weight: 600; }
+.tick { display: flex; align-items: center; gap: 7px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); animation: blink 2.2s infinite; }
+.dot.bad { background: var(--bad); }
+@keyframes blink { 50% { opacity: .4; } }
+.ticker .time { margin-left: auto; color: var(--muted); }
+
+/* ── заголовки экрана ── */
+.scr-head { margin-bottom: 22px; }
+.scr-eyebrow { font-family: var(--font-m); font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--cyan); margin-bottom: 5px; }
+.scr-title { font-family: var(--font-d); font-weight: 800; font-size: 26px; letter-spacing: .01em; }
+.scr-sub { color: var(--text-2); font-size: 13.5px; margin-top: 4px; max-width: 46em; }
+
+/* ── панели ── */
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  position: relative;
+}
+.panel:hover { border-color: var(--line-2); }
+.panel .corner { /* HUD-уголок */
+  position: absolute; width: 10px; height: 10px; border-color: var(--line-2); border-style: solid; pointer-events: none;
+}
+.panel .corner.tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.panel .corner.br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+.panel-head {
+  display: flex; align-items: center; gap: 10px; padding: 13px 18px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--font-m); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-2);
+}
+.panel-head .right { margin-left: auto; color: var(--muted); letter-spacing: 0; }
+
+/* ── экран: Обзор ── */
+.ov-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+.stat {
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 16px 18px;
+}
+.stat .k { font-family: var(--font-m); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.stat .v { font-family: var(--font-d); font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.stat .v em { font-style: normal; font-size: 15px; color: var(--muted); }
+.stat .d { font-family: var(--font-m); font-size: 11px; }
+.stat .d.up { color: var(--ok); }
+.stat.hl .v { color: var(--cyan); text-shadow: var(--glow-c); }
+.ov-main { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
+.ov-col { display: grid; gap: 14px; align-content: start; }
+
+.mini-srv { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.mini-srv:last-child { border-bottom: 0; }
+.mini-srv .nm { font-weight: 600; font-size: 13.5px; flex: 1; min-width: 0; }
+.mini-srv .nm span { display: block; font-family: var(--font-m); font-size: 10.5px; color: var(--muted); font-weight: 400; }
+.mini-srv .pl { font-family: var(--font-m); font-size: 12px; color: var(--text-2); }
+.badge { font-family: var(--font-m); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; border: 1px solid; }
+.badge.ok { color: var(--ok); border-color: color-mix(in srgb, var(--ok) 45%, transparent); background: color-mix(in srgb, var(--ok) 10%, transparent); }
+.badge.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 45%, transparent); background: color-mix(in srgb, var(--bad) 10%, transparent); }
+
+.mini-news { padding: 13px 18px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background .15s; }
+.mini-news:hover { background: var(--panel-2); }
+.mini-news:last-child { border-bottom: 0; }
+.mini-news .t { font-weight: 600; font-size: 13.5px; margin-bottom: 2px; }
+.mini-news .m { font-family: var(--font-m); font-size: 11px; color: var(--muted); }
+.mini-news .pin { color: var(--warn); font-size: 11px; margin-right: 6px; }
+
+.mini-chat { padding: 10px 18px; display: grid; gap: 10px; }
+.mc-line { font-size: 13px; color: var(--text-2); }
+.mc-line b { color: var(--text); font-weight: 600; }
+.mc-line b.adm { color: var(--violet); }
+.mc-line .tm { font-family: var(--font-m); font-size: 10.5px; color: var(--muted); margin-right: 7px; }
+.panel-foot { padding: 12px 18px; border-top: 1px solid var(--line); }
+.link-m { font-family: var(--font-m); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--cyan); background: none; border: none; padding: 0; }
+.link-m:hover { text-shadow: var(--glow-c); }
+
+/* ── экран: Серверы ── */
+.srv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+.srv-card { overflow: hidden; }
+.srv-body { padding: 16px 18px; display: grid; gap: 12px; }
+.srv-row1 { display: flex; align-items: center; gap: 12px; }
+.srv-ico { width: 42px; height: 42px; border-radius: var(--r); border: 1px solid var(--line-2); background: var(--violet-dim); display: grid; place-items: center; font-size: 20px; }
+.srv-name { font-family: var(--font-d); font-weight: 700; font-size: 16px; }
+.srv-game { font-family: var(--font-m); font-size: 11px; color: var(--muted); }
+.srv-row1 .badge { margin-left: auto; }
+.addr { display: flex; gap: 8px; }
+.addr code {
+  flex: 1; font-family: var(--font-m); font-size: 12px; color: var(--text-2);
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px;
+  overflow-x: auto; white-space: nowrap;
+}
+.addr button { background: var(--panel-2); border: 1px solid var(--line); color: var(--text-2); border-radius: 6px; padding: 6px 11px; font-family: var(--font-m); font-size: 11px; }
+.addr button:hover { color: var(--cyan); border-color: var(--line-2); }
+.pbar { display: flex; align-items: center; gap: 10px; font-family: var(--font-m); font-size: 11.5px; color: var(--text-2); }
+.pbar .bar { flex: 1; height: 5px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
+.pbar .fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+.srv-foot { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; border-top: 1px solid var(--line); font-family: var(--font-m); font-size: 11px; color: var(--muted); }
+.btn-c {
+  background: var(--cyan-dim); color: var(--cyan); border: 1px solid var(--line-2);
+  border-radius: 6px; padding: 6px 16px; font-size: 12.5px; font-weight: 600;
+  transition: box-shadow .2s;
+}
+.btn-c:hover { box-shadow: var(--glow-c); }
+
+/* ── экран: Новости ── */
+.news-list { display: grid; gap: 14px; max-width: 780px; }
+.news-item { display: grid; grid-template-columns: 150px 1fr; overflow: hidden; cursor: pointer; }
+.news-item:hover { border-color: var(--line-2); }
+.news-thumb { background: linear-gradient(135deg, #123a52, #2a1a5e); min-height: 110px; position: relative; }
+.news-thumb.v2 { background: linear-gradient(135deg, #45164a, #16234f); }
+.news-thumb.v3 { background: linear-gradient(135deg, #0e4436, #1d2a5b); }
+.news-thumb::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.16) 1px, transparent 1px); background-size: 14px 14px; }
+.news-cont { padding: 14px 18px; }
+.news-cont .m { font-family: var(--font-m); font-size: 10.5px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px; }
+.news-cont .m .pin { color: var(--warn); }
+.news-cont h3 { font-family: var(--font-d); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.news-cont p { font-size: 13px; color: var(--text-2); }
+
+/* ── экран: Чат ── */
+.chat-wrap { display: grid; grid-template-columns: 1fr 230px; gap: 14px; align-items: start; max-width: 980px; }
+.chat-msgs { padding: 16px 18px; display: grid; gap: 13px; max-height: 420px; overflow-y: auto; }
+.cmsg { display: grid; gap: 2px; }
+.cmsg .h { display: flex; align-items: baseline; gap: 8px; }
+.cmsg .u { font-weight: 700; font-size: 13px; }
+.cmsg .u.adm { color: var(--violet); }
+.cmsg .adm-b { font-family: var(--font-m); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--violet); border: 1px solid color-mix(in srgb, var(--violet) 45%, transparent); border-radius: 4px; padding: 0 5px; }
+.cmsg .tm { font-family: var(--font-m); font-size: 10.5px; color: var(--muted); }
+.cmsg .tx { font-size: 13.5px; color: var(--text-2); }
+.chat-in { display: flex; gap: 8px; padding: 13px 18px; border-top: 1px solid var(--line); }
+.chat-in input {
+  flex: 1; background: var(--bg-2); border: 1px solid var(--line); color: var(--text);
+  border-radius: 6px; padding: 8px 14px; font-size: 13.5px; font-family: var(--font-b);
+}
+.chat-in input::placeholder { color: var(--muted); }
+.on-list { padding: 12px 18px; display: grid; gap: 8px; }
+.on-list div { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+
+/* ── экран: Мониторинг ── */
+.mon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.mon-body { padding: 16px 18px; }
+.mon-row { display: flex; align-items: center; gap: 9px; margin-bottom: 13px; }
+.mon-row b { font-family: var(--font-m); font-size: 13.5px; }
+.mon-type { font-family: var(--font-m); font-size: 9.5px; letter-spacing: .12em; color: var(--cyan); border: 1px solid var(--line-2); padding: 1px 6px; border-radius: 4px; }
+.mon-up { margin-left: auto; font-family: var(--font-m); font-size: 10.5px; color: var(--muted); }
+.meter { margin-bottom: 9px; }
+.meter .mh { display: flex; justify-content: space-between; font-family: var(--font-m); font-size: 11px; color: var(--text-2); margin-bottom: 4px; }
+.meter .mb { height: 5px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
+.meter .mf { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+.meter .mf.hot { background: linear-gradient(90deg, var(--warn), var(--bad)); }
+
+/* ── переключение экранов ── */
+.view { display: none; animation: viewIn .25s ease; }
+.view.on { display: block; }
+@keyframes viewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ── модалка ── */
+.mback { position: fixed; inset: 0; background: rgba(2,4,10,.78); backdrop-filter: blur(6px); display: none; place-items: center; z-index: 400; padding: 20px; }
+.mback.open { display: grid; }
+.mwin { background: var(--panel); border: 1px solid var(--line-2); border-radius: var(--r); max-width: 620px; width: 100%; max-height: 80vh; overflow-y: auto; box-shadow: var(--glow-v); }
+.mwin .mh2 { display: flex; justify-content: space-between; gap: 14px; padding: 20px 22px 0; }
+.mwin h3 { font-family: var(--font-d); font-size: 20px; }
+.mwin .x { background: var(--panel-2); border: 1px solid var(--line); color: var(--text-2); border-radius: 6px; width: 30px; height: 30px; flex-shrink: 0; }
+.mwin .mb2 { padding: 10px 22px 22px; color: var(--text-2); font-size: 14px; }
+.mwin .mm { font-family: var(--font-m); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; margin-bottom: 10px; }
+
+@media (max-width: 880px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { position: static; height: auto; flex-direction: row; flex-wrap: wrap; align-items: center; border-right: 0; border-bottom: 1px solid var(--line); }
+  .side-label, .side .sp, .side-user, .brand-sub { display: none; }
+  .ov-grid { grid-template-columns: repeat(2, 1fr); }
+  .ov-main, .chat-wrap { grid-template-columns: 1fr; }
+  .screen { padding: 0 16px 32px; }
+}
+</style>
+
+<div class="demo-bar">
+  <span class="demo-tag">Концепт A</span>
+  <span>«Командный центр» — сайт как игровой лаунчер: сайдбар + экраны-вкладки. Кликай по разделам слева.</span>
+  <span class="sp"></span>
+  <div class="tswitch"><button id="tD" class="on" onclick="setTheme('dark')">Тёмная</button><button id="tL" onclick="setTheme('light')">Светлая</button></div>
+</div>
+
+<div class="shell">
+  <!-- ═══ САЙДБАР ═══ -->
+  <aside class="side">
+    <div class="brand">
+      <div class="brand-mark">⚡</div>
+      <div><div class="brand-name">NEXUSHUB</div><div class="brand-sub">game ops console</div></div>
+    </div>
+    <div class="side-label">Разделы</div>
+    <button class="side-item on" data-view="overview" onclick="go('overview',this)"><span class="ico">◈</span> Обзор</button>
+    <button class="side-item" data-view="servers" onclick="go('servers',this)"><span class="ico">▣</span> Серверы <span class="cnt">4/5</span></button>
+    <button class="side-item" data-view="news" onclick="go('news',this)"><span class="ico">▤</span> Новости <span class="cnt">12</span></button>
+    <button class="side-item" data-view="chat" onclick="go('chat',this)"><span class="ico">◉</span> Чат <span class="cnt">3</span></button>
+    <button class="side-item" data-view="mon" onclick="go('mon',this)"><span class="ico">∿</span> Мониторинг</button>
+    <span class="sp"></span>
+    <div class="side-user">
+      <div class="av">K</div>
+      <div><b>Karmiven</b><span>admin</span></div>
+    </div>
+  </aside>
+
+  <!-- ═══ ЭКРАН ═══ -->
+  <main class="screen">
+    <div class="ticker">
+      <span class="tick"><span class="dot ok"></span><b>4/5</b>&nbsp;серверов онлайн</span>
+      <span class="tick"><b>27</b>&nbsp;игроков</span>
+      <span class="tick">аптайм 30д:&nbsp;<b>99.2%</b></span>
+      <span class="tick"><span class="dot bad"></span>CS2 Retake — оффлайн</span>
+      <span class="time">MSK 19:05:12</span>
+    </div>
+
+    <!-- ── ОБЗОР ── -->
+    <section class="view on" id="v-overview">
+      <div class="scr-head">
+        <div class="scr-eyebrow">// главный экран</div>
+        <h1 class="scr-title">Обзор</h1>
+        <p class="scr-sub">Главная больше не «простыня»: только сводка и быстрые переходы. Всё остальное — в своих разделах.</p>
+      </div>
+      <div class="ov-grid">
+        <div class="stat hl"><div class="k">Игроков сейчас</div><div class="v">27</div><div class="d up">▲ +6 за час</div></div>
+        <div class="stat"><div class="k">Серверов онлайн</div><div class="v">4<em>/5</em></div><div class="d">&nbsp;</div></div>
+        <div class="stat"><div class="k">Аптайм 30 дней</div><div class="v">99.2<em>%</em></div><div class="d up">▲ 0.3%</div></div>
+        <div class="stat"><div class="k">Средний пинг</div><div class="v">15<em>мс</em></div><div class="d">&nbsp;</div></div>
+      </div>
+      <div class="ov-main">
+        <div class="ov-col">
+          <div class="panel">
+            <span class="corner tl"></span><span class="corner br"></span>
+            <div class="panel-head">Серверы <span class="right">live</span></div>
+            <div class="mini-srv"><div class="nm">Minecraft Vanilla+ <span>play.nexushub.example:25565</span></div><span class="pl">18/60</span><span class="badge ok">online</span></div>
+            <div class="mini-srv"><div class="nm">Rust Main ×2 <span>rust.nexushub.example:28015</span></div><span class="pl">9/100</span><span class="badge ok">online</span></div>
+            <div class="mini-srv"><div class="nm">CS2 Retake #1 <span>cs.nexushub.example:27015</span></div><span class="pl">—</span><span class="badge bad">offline</span></div>
+            <div class="panel-foot"><button class="link-m" onclick="go('servers')">Все серверы →</button></div>
+          </div>
+          <div class="panel">
+            <span class="corner tl"></span><span class="corner br"></span>
+            <div class="panel-head">Чат — #general <span class="right">3 онлайн</span></div>
+            <div class="mini-chat">
+              <div class="mc-line"><span class="tm">19:02</span><b>Kira</b> — кто сегодня на ивент в майне?</div>
+              <div class="mc-line"><span class="tm">19:04</span><b>Dexter</b> — я в деле, Rust после вайпа глянем?</div>
+              <div class="mc-line"><span class="tm">19:05</span><b class="adm">Admin</b> — ивент стартует в 20:00.</div>
+            </div>
+            <div class="panel-foot"><button class="link-m" onclick="go('chat')">Открыть чат →</button></div>
+          </div>
+        </div>
+        <div class="ov-col">
+          <div class="panel">
+            <span class="corner tl"></span><span class="corner br"></span>
+            <div class="panel-head">Новости</div>
+            <div class="mini-news" onclick="openM('Большое летнее обновление Minecraft','12 июля 2026 · Admin','Новый спавн, система кланов и сезонные ивенты каждые выходные. Прогресс игроков сохранён, карта расширена на 4000 блоков. Вечером — первый ивент с призами!')">
+              <div class="t"><span class="pin">◆</span>Большое летнее обновление Minecraft</div><div class="m">12.07 · закреплено</div>
+            </div>
+            <div class="mini-news" onclick="openM('Rust: вайп в пятницу','10 июля 2026 · Admin','В пятницу в 20:00 — полный вайп карты и чертежей. Новая карта 4000, лимит команды — 4 человека.')">
+              <div class="t">Rust: вайп в пятницу</div><div class="m">10.07</div>
+            </div>
+            <div class="mini-news" onclick="openM('Турнир по CS2','06 июля 2026 · Admin','Открыта регистрация на летний турнир 5×5. Призовой фонд — привилегии на всех серверах. Заявки — в чате до 20 июля.')">
+              <div class="t">Турнир по CS2 — регистрация открыта</div><div class="m">06.07</div>
+            </div>
+            <div class="panel-foot"><button class="link-m" onclick="go('news')">Все новости →</button></div>
+          </div>
+          <div class="panel">
+            <span class="corner tl"></span><span class="corner br"></span>
+            <div class="panel-head">Инфраструктура</div>
+            <div class="mon-body">
+              <div class="meter"><div class="mh"><span>rust-main · CPU</span><b>81%</b></div><div class="mb"><div class="mf hot" style="width:81%"></div></div></div>
+              <div class="meter"><div class="mh"><span>mc-vanilla · CPU</span><b>23%</b></div><div class="mb"><div class="mf" style="width:23%"></div></div></div>
+              <div class="meter" style="margin-bottom:0;"><div class="mh"><span>web-nexushub · CPU</span><b>4%</b></div><div class="mb"><div class="mf" style="width:4%"></div></div></div>
+            </div>
+            <div class="panel-foot"><button class="link-m" onclick="go('mon')">Мониторинг →</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── СЕРВЕРЫ ── -->
+    <section class="view" id="v-servers">
+      <div class="scr-head">
+        <div class="scr-eyebrow">// game servers</div>
+        <h1 class="scr-title">Серверы</h1>
+        <p class="scr-sub">Карточки с адресом, копированием, прогрессом игроков и пингом.</p>
+      </div>
+      <div class="srv-grid">
+        <div class="panel srv-card">
+          <span class="corner tl"></span><span class="corner br"></span>
+          <div class="srv-body">
+            <div class="srv-row1"><div class="srv-ico">⛏️</div><div><div class="srv-name">Minecraft Vanilla+</div><div class="srv-game">minecraft · 1.21</div></div><span class="badge ok">online</span></div>
+            <div class="addr"><code>play.nexushub.example:25565</code><button onclick="copyA(this)">copy</button></div>
+            <div class="pbar"><span>18/60</span><div class="bar"><div class="fill" style="width:30%"></div></div></div>
+          </div>
+          <div class="srv-foot"><span>ping <b style="color:var(--ok)">12ms</b></span><button class="btn-c">Подробнее</button></div>
+        </div>
+        <div class="panel srv-card">
+          <span class="corner tl"></span><span class="corner br"></span>
+          <div class="srv-body">
+            <div class="srv-row1"><div class="srv-ico">🔧</div><div><div class="srv-name">Rust Main ×2</div><div class="srv-game">rust · вайп по пятницам</div></div><span class="badge ok">online</span></div>
+            <div class="addr"><code>rust.nexushub.example:28015</code><button onclick="copyA(this)">copy</button></div>
+            <div class="pbar"><span>9/100</span><div class="bar"><div class="fill" style="width:9%"></div></div></div>
+          </div>
+          <div class="srv-foot"><span>ping <b style="color:var(--ok)">18ms</b></span><button class="btn-c">Запустить</button></div>
+        </div>
+        <div class="panel srv-card">
+          <span class="corner tl"></span><span class="corner br"></span>
+          <div class="srv-body">
+            <div class="srv-row1"><div class="srv-ico">🎯</div><div><div class="srv-name">CS2 Retake #1</div><div class="srv-game">counter-strike 2</div></div><span class="badge bad">offline</span></div>
+            <div class="addr"><code>cs.nexushub.example:27015</code><button onclick="copyA(this)">copy</button></div>
+            <div class="pbar"><span>—</span><div class="bar"><div class="fill" style="width:0%"></div></div></div>
+          </div>
+          <div class="srv-foot"><span>проверен 2 мин назад</span><button class="btn-c">Подробнее</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── НОВОСТИ ── -->
+    <section class="view" id="v-news">
+      <div class="scr-head">
+        <div class="scr-eyebrow">// intel feed</div>
+        <h1 class="scr-title">Новости</h1>
+        <p class="scr-sub">Хронологическая лента. Закреплённые — с маркером.</p>
+      </div>
+      <div class="news-list">
+        <article class="panel news-item" onclick="openM('Большое летнее обновление Minecraft','12 июля 2026 · Admin','Новый спавн, система кланов и сезонные ивенты каждые выходные. Прогресс игроков сохранён, карта расширена на 4000 блоков. Вечером — первый ивент с призами!')">
+          <div class="news-thumb"></div>
+          <div class="news-cont"><div class="m"><span class="pin">◆ закреплено · </span>12.07.2026 · Admin</div><h3>Большое летнее обновление Minecraft-сервера</h3><p>Новый спавн, система кланов и сезонные ивенты каждые выходные.</p></div>
+        </article>
+        <article class="panel news-item" onclick="openM('Rust: вайп в пятницу','10 июля 2026 · Admin','В пятницу в 20:00 — полный вайп карты и чертежей. Новая карта 4000, лимит команды — 4 человека.')">
+          <div class="news-thumb v2"></div>
+          <div class="news-cont"><div class="m">10.07.2026 · Admin</div><h3>Rust: вайп в пятницу</h3><p>Полный вайп карты и чертежей. Новая карта 4000, лимит команды — 4.</p></div>
+        </article>
+        <article class="panel news-item" onclick="openM('Турнир по CS2','06 июля 2026 · Admin','Открыта регистрация на летний турнир 5×5. Призовой фонд — привилегии на всех серверах. Заявки — в чате до 20 июля.')">
+          <div class="news-thumb v3"></div>
+          <div class="news-cont"><div class="m">06.07.2026 · Admin</div><h3>Турнир по CS2 — регистрация открыта</h3><p>Летний турнир 5×5, призовой фонд — привилегии на серверах проекта.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ── ЧАТ ── -->
+    <section class="view" id="v-chat">
+      <div class="scr-head">
+        <div class="scr-eyebrow">// comms</div>
+        <h1 class="scr-title">Чат сообщества</h1>
+        <p class="scr-sub">Канал #general. Ники зарегистрированных пользователей защищены.</p>
+      </div>
+      <div class="chat-wrap">
+        <div class="panel">
+          <span class="corner tl"></span><span class="corner br"></span>
+          <div class="panel-head">#general <span class="right">live</span></div>
+          <div class="chat-msgs" id="chatMsgs">
+            <div class="cmsg"><div class="h"><span class="u">Kira</span><span class="tm">19:02</span></div><div class="tx">Кто сегодня на ивент в майне? Собираем группу от спавна</div></div>
+            <div class="cmsg"><div class="h"><span class="u">Dexter</span><span class="tm">19:04</span></div><div class="tx">Я в деле. Rust после вайпа тоже глянем?</div></div>
+            <div class="cmsg"><div class="h"><span class="u adm">Admin</span><span class="adm-b">admin</span><span class="tm">19:05</span></div><div class="tx">Ивент стартует в 20:00, тп со спавна откроется за 10 минут.</div></div>
+          </div>
+          <div class="chat-in"><input id="chatIn" placeholder="Сообщение в #general…" maxlength="500"><button class="btn-c" onclick="sendC()">Отпр.</button></div>
+        </div>
+        <div class="panel">
+          <span class="corner tl"></span><span class="corner br"></span>
+          <div class="panel-head">Онлайн <span class="right">3</span></div>
+          <div class="on-list">
+            <div><span class="dot ok"></span>Admin</div>
+            <div><span class="dot ok"></span>Dexter</div>
+            <div><span class="dot ok"></span>Kira</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── МОНИТОРИНГ ── -->
+    <section class="view" id="v-mon">
+      <div class="scr-head">
+        <div class="scr-eyebrow">// proxmox</div>
+        <h1 class="scr-title">Мониторинг</h1>
+        <p class="scr-sub">Гости Proxmox: CPU, RAM, аптайм. Перегрев — тёплым градиентом.</p>
+      </div>
+      <div class="mon-grid">
+        <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
+          <div class="mon-body">
+            <div class="mon-row"><b>mc-vanilla</b><span class="mon-type">LXC</span><span class="mon-up">up 26d</span></div>
+            <div class="meter"><div class="mh"><span>CPU</span><b>23%</b></div><div class="mb"><div class="mf" style="width:23%"></div></div></div>
+            <div class="meter" style="margin-bottom:0;"><div class="mh"><span>RAM</span><b>3.1/8G</b></div><div class="mb"><div class="mf" style="width:39%"></div></div></div>
+          </div>
+        </div>
+        <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
+          <div class="mon-body">
+            <div class="mon-row"><b>rust-main</b><span class="mon-type">VM</span><span class="mon-up">up 6d</span></div>
+            <div class="meter"><div class="mh"><span>CPU</span><b>81%</b></div><div class="mb"><div class="mf hot" style="width:81%"></div></div></div>
+            <div class="meter" style="margin-bottom:0;"><div class="mh"><span>RAM</span><b>11.2/16G</b></div><div class="mb"><div class="mf" style="width:70%"></div></div></div>
+          </div>
+        </div>
+        <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
+          <div class="mon-body">
+            <div class="mon-row"><b>web-nexushub</b><span class="mon-type">LXC</span><span class="mon-up">up 41d</span></div>
+            <div class="meter"><div class="mh"><span>CPU</span><b>4%</b></div><div class="mb"><div class="mf" style="width:4%"></div></div></div>
+            <div class="meter" style="margin-bottom:0;"><div class="mh"><span>RAM</span><b>0.6/2G</b></div><div class="mb"><div class="mf" style="width:30%"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="mback" id="mback" onclick="if(event.target===this)closeM()">
+  <div class="mwin" role="dialog" aria-modal="true">
+    <div class="mh2"><h3 id="mTitle"></h3><button class="x" onclick="closeM()" aria-label="Закрыть">✕</button></div>
+    <div class="mb2"><div class="mm" id="mMeta"></div><div id="mText"></div></div>
+  </div>
+</div>
+
+<script>
+function setTheme(t){document.documentElement.setAttribute('data-theme',t);document.getElementById('tD').classList.toggle('on',t==='dark');document.getElementById('tL').classList.toggle('on',t==='light');}
+function go(view, btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+view).classList.add('on');
+  document.querySelectorAll('.side-item').forEach(b=>b.classList.toggle('on', b.dataset.view===view));
+  window.scrollTo({top:0});
+}
+function openM(t,m,x){document.getElementById('mTitle').textContent=t;document.getElementById('mMeta').textContent=m;document.getElementById('mText').textContent=x;document.getElementById('mback').classList.add('open');}
+function closeM(){document.getElementById('mback').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeM();});
+function copyA(btn){const a=btn.parentElement.querySelector('code').textContent;if(navigator.clipboard)navigator.clipboard.writeText(a);const o=btn.textContent;btn.textContent='ok ✓';setTimeout(()=>btn.textContent=o,1400);}
+function sendC(){
+  const i=document.getElementById('chatIn');const t=i.value.trim();if(!t)return;
+  const w=document.getElementById('chatMsgs');
+  const m=document.createElement('div');m.className='cmsg';
+  const h=document.createElement('div');h.className='h';
+  const u=document.createElement('span');u.className='u';u.textContent='Вы';
+  const tm=document.createElement('span');tm.className='tm';tm.textContent=new Date().toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  h.appendChild(u);h.appendChild(tm);
+  const tx=document.createElement('div');tx.className='tx';tx.textContent=t;
+  m.appendChild(h);m.appendChild(tx);w.appendChild(m);w.scrollTop=w.scrollHeight;i.value='';
+}
+document.getElementById('chatIn').addEventListener('keydown',e=>{if(e.key==='Enter')sendC();});
+</script>
