@@ -9,6 +9,12 @@ const rateLimit = require('express-rate-limit');
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
 const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY;
 
+// Pre-computed bcrypt hash used for constant-time login when username is unknown
+const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', 12);
+
+// bcrypt only uses the first 72 bytes; cap input to avoid hashing huge payloads
+const MAX_PASSWORD_LENGTH = 128;
+
 
 async function verifyTurnstile(token, ip) {
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -53,7 +59,7 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
     return res.redirect('/auth/login');
   }
 
-  if (!username || !password) {
+  if (!username || !password || password.length > MAX_PASSWORD_LENGTH) {
     req.flash('error', 'flash_fill_all');
     return res.redirect('/auth/login');
   }
@@ -68,13 +74,10 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
 
   const user = db.get('SELECT * FROM users WHERE username = ?', [username]);
 
-  if (!user) {
-    req.flash('error', 'flash_invalid_creds');
-    return res.redirect('/auth/login');
-  }
-
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) {
+  // Always run bcrypt.compare (dummy hash when user is unknown) so response
+  // time doesn't reveal whether the username exists (user enumeration)
+  const valid = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
+  if (!user || !valid) {
     req.flash('error', 'flash_invalid_creds');
     return res.redirect('/auth/login');
   }
@@ -160,7 +163,7 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
     return res.redirect('/auth/register');
   }
 
-  if (password.length < 8) {
+  if (password.length < 8 || password.length > MAX_PASSWORD_LENGTH) {
     req.flash('error', 'flash_password_short');
     return res.redirect('/auth/register');
   }

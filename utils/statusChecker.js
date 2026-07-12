@@ -36,6 +36,20 @@ function tcpPing(host, port, timeout = 3000) {
 }
 
 /**
+ * Encode an integer as a Minecraft protocol VarInt
+ */
+function writeVarInt(value) {
+  const bytes = [];
+  do {
+    let temp = value & 0x7F;
+    value >>>= 7;
+    if (value !== 0) temp |= 0x80;
+    bytes.push(temp);
+  } while (value !== 0);
+  return Buffer.from(bytes);
+}
+
+/**
  * Query Minecraft server for player count (basic protocol)
  * Sends a Server List Ping packet and parses the response
  */
@@ -47,30 +61,22 @@ function queryMinecraft(host, port, timeout = 5000) {
     let data = Buffer.alloc(0);
 
     socket.on('connect', () => {
-      // Minecraft Server List Ping - legacy ping (works on most servers)
-      // Handshake packet
+      // Minecraft Server List Ping (1.7+ protocol)
+      // Handshake packet: [packet id 0x00][protocol varint][host len varint][host][port u16][next state 0x01]
       const hostBuf = Buffer.from(host, 'utf8');
-      const handshake = Buffer.alloc(7 + hostBuf.length);
-      let offset = 0;
+      const portBuf = Buffer.alloc(2);
+      portBuf.writeUInt16BE(port, 0);
+      const handshake = Buffer.concat([
+        Buffer.from([0x00]),      // Packet ID
+        writeVarInt(47),          // Protocol version (47 = 1.8+)
+        writeVarInt(hostBuf.length),
+        hostBuf,
+        portBuf,
+        Buffer.from([0x01])       // Next state: status
+      ]);
 
-      // Packet ID (0x00)
-      handshake[offset++] = 0x00;
-      // Protocol version (varint: 47 for 1.8+)
-      handshake[offset++] = 47;
-      // Host string length (varint)
-      handshake[offset++] = hostBuf.length;
-      hostBuf.copy(handshake, offset);
-      offset += hostBuf.length;
-      // Port (unsigned short, big endian)
-      handshake.writeUInt16BE(port, offset);
-      offset += 2;
-      // Next state: 1 (status)
-      handshake[offset++] = 0x01;
-
-      // Send handshake with length prefix
-      const hsLen = Buffer.alloc(1);
-      hsLen[0] = offset;
-      socket.write(Buffer.concat([hsLen, handshake.slice(0, offset)]));
+      // Send handshake with varint length prefix
+      socket.write(Buffer.concat([writeVarInt(handshake.length), handshake]));
 
       // Send status request (packet id 0x00, length 1)
       socket.write(Buffer.from([0x01, 0x00]));

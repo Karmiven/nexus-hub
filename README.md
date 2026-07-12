@@ -219,7 +219,8 @@ NexusHub features 6 immersive visual themes, each with unique animated backgroun
 | `PORT` | No | `3000` | Server port |
 | `SESSION_SECRET` | No | Auto-generated | Session signing secret (persisted to `data/.session-secret`) |
 | `ENCRYPTION_KEY` | No | Derived from `SESSION_SECRET` | 64-char hex key for AES-256-GCM encryption |
-| `NODE_ENV` | No | `development` | Set to `production` for secure cookies + HSTS |
+| `NODE_ENV` | No | `development` | Set to `production` for view caching + static asset caching |
+| `COOKIE_SECURE` | No | `false` | Set to `true` to mark session cookies `Secure` (requires HTTPS) |
 | `RATE_LIMIT_WINDOW_MS` | No | `900000` (15 min) | Rate limit window |
 | `RATE_LIMIT_MAX` | No | `100` | Max requests per window |
 | `ADMIN_USERNAME` | No | `Admin` | Seed script admin username |
@@ -229,6 +230,7 @@ NexusHub features 6 immersive visual themes, each with unique animated backgroun
 | `PROXMOX_TOKEN_ID` | No | — | Proxmox API token ID |
 | `PROXMOX_TOKEN_SECRET` | No | — | Proxmox API token secret |
 | `PROXMOX_NODE` | No | — | Proxmox node name |
+| `PROXMOX_VERIFY_SSL` | No | `false` | Set to `true` to verify the Proxmox API TLS certificate |
 
 ---
 

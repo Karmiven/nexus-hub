@@ -42,7 +42,7 @@ function analyticsTracker(req, res, next) {
     const country = (geo && geo.country) || '';
 
     _analyticsBuffer.push(
-      [req.path, req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255), country]
+      [req.path.substring(0, 255), req.method, req.session?.user?.id || null, req.ip, (req.headers['user-agent'] || '').substring(0, 255), country]
     );
   }
   next();

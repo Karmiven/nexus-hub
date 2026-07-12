@@ -57,7 +57,7 @@ router.post('/', setupLimiter, catchAsync(async (req, res) => {
     return res.redirect('/setup');
   }
 
-  if (admin_password.length < 8) {
+  if (admin_password.length < 8 || admin_password.length > 128) {
     req.flash('error', 'flash_password_short');
     return res.redirect('/setup');
   }

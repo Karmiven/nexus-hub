@@ -12,7 +12,11 @@ class ProxmoxClient {
     this.tokenId = config.tokenId || '';
     this.tokenSecret = config.tokenSecret || '';
     this.node = config.node || '';
-    this.verifySsl = config.verifySsl || false;
+    // TLS verification off by default (self-signed PVE certs are the norm);
+    // set PROXMOX_VERIFY_SSL=true to enforce it
+    this.verifySsl = config.verifySsl !== undefined
+      ? config.verifySsl
+      : process.env.PROXMOX_VERIFY_SSL === 'true';
     this.timeout = config.timeout || 10000;
   }
 

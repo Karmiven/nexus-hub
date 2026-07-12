@@ -23,7 +23,11 @@ function getAvailableLanguages() {
 }
 
 // Watch for new/removed language files — invalidate cache
-fs.watch(langDir, () => { _langCache = null; });
+try {
+  fs.watch(langDir, () => { _langCache = null; });
+} catch (e) {
+  console.warn('Language dir watch unavailable:', e.message);
+}
 
 // Get all servers with status (JSON)
 // Don't expose IP/port to unauthenticated users — use separate hardcoded queries

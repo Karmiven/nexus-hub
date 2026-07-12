@@ -24,8 +24,21 @@ function csrfTokenMiddleware(req, res, next) {
 }
 
 /**
+ * Constant-time string comparison (prevents timing attacks on token match)
+ */
+function safeCompare(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
  * Middleware: validate CSRF token on state-changing methods
- * Checks body._csrf, query._csrf, and x-csrf-token header
+ * Checks body._csrf and x-csrf-token header.
+ * query._csrf is accepted ONLY for multipart forms (body is parsed later by
+ * multer, so it's unavailable here); token rotation limits URL-leak exposure.
  */
 function csrfProtection(req, res, next) {
   // Only check state-changing methods
@@ -33,10 +46,13 @@ function csrfProtection(req, res, next) {
     return next();
   }
 
+  const isMultipart = (req.headers['content-type'] || '').startsWith('multipart/form-data');
   const sessionToken = req.session._csrf;
-  const submittedToken = req.body?._csrf || req.query?._csrf || req.headers['x-csrf-token'];
+  const submittedToken = req.body?._csrf
+    || req.headers['x-csrf-token']
+    || (isMultipart ? req.query?._csrf : undefined);
 
-  if (!sessionToken || !submittedToken || sessionToken !== submittedToken) {
+  if (!sessionToken || !submittedToken || !safeCompare(sessionToken, submittedToken)) {
     // For AJAX requests, return JSON error
     if (req.xhr || req.headers['x-requested-with'] === 'XMLHttpRequest' ||
         (req.headers.accept && req.headers.accept.includes('application/json'))) {
