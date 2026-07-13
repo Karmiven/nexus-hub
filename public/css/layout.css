@@ -563,6 +563,22 @@ body::before {
 .error-message { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 6px; }
 .error-content p { color: var(--text-secondary); margin-bottom: 18px; }
 
+/* ═══════════ PAGER ═══════════ */
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+.pager-info {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+}
+
 /* ═══════════ MOBILE ═══════════ */
 
 .mobile-topbar { display: none; }

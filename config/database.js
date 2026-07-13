@@ -105,6 +105,18 @@ async function initDatabase() {
     );
   `);
 
+  // Audit trail of admin actions (settings changes, CRUD, role changes…)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS admin_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL,
+      action TEXT NOT NULL,
+      details TEXT DEFAULT '',
+      ip TEXT DEFAULT '',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // ── Analytics tables ──
   db.exec(`
     CREATE TABLE IF NOT EXISTS page_views (
@@ -144,6 +156,7 @@ async function initDatabase() {
   db.exec(`CREATE INDEX IF NOT EXISTS idx_chat_messages_channel_created ON chat_messages(channel, created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_news_pinned_created ON news(pinned, created_at);`);
   db.exec(`CREATE INDEX IF NOT EXISTS idx_servers_sort ON servers(sort_order);`);
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_admin_log_created ON admin_log(created_at);`);
 
   // Insert default settings
   const defaults = {

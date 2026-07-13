@@ -1,0 +1,98 @@
+<%- include('../partials/header') %>
+
+<section class="admin-header">
+  <div class="container">
+    <h1 class="page-title"><i data-lucide="database"></i> <span data-i18n="admin_system_title">System & audit</span></h1>
+    <%- include('../partials/admin-nav', { activeTab: 'system' }) %>
+  </div>
+</section>
+
+<section class="section container">
+  <!-- Backups -->
+  <div class="admin-table-wrapper">
+    <div class="admin-section-header">
+      <h2 data-i18n="admin_system_backups">Database backups</h2>
+      <form action="/admin/system/backup" method="POST">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn-sm btn-primary"><i data-lucide="database-backup"></i> <span data-i18n="admin_system_backup_create">Create backup</span></button>
+      </form>
+    </div>
+    <p class="form-hint" style="margin: 0 0 1rem;" data-i18n="admin_system_backup_hint">Backups run automatically once a day; the 7 most recent are kept.</p>
+    <% if (backups.length === 0) { %>
+      <p style="color: var(--text-secondary);" data-i18n="admin_system_no_backups">No backups yet.</p>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-i18n="admin_th_file">File</th>
+            <th data-i18n="admin_th_size">Size</th>
+            <th data-i18n="admin_th_created">Created</th>
+            <th data-i18n="admin_th_actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% backups.forEach(function(b) { %>
+            <tr>
+              <td class="mono"><%= b.name %></td>
+              <td><%= (b.size / 1024 / 1024).toFixed(2) %> MB</td>
+              <td><span class="local-time" data-timestamp="<%= b.mtime.toISOString() %>" data-format="datetime"></span></td>
+              <td class="actions-cell">
+                <a href="/admin/system/backup/<%= encodeURIComponent(b.name) %>/download" class="btn btn-xs btn-outline" download><i data-lucide="download"></i> <span data-i18n="download">Download</span></a>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Audit log -->
+  <div class="admin-table-wrapper" style="margin-top: 2rem;">
+    <div class="admin-section-header">
+      <h2 data-i18n="admin_system_log">Action log</h2>
+      <form action="/admin/system/cleanup" method="POST" onsubmit="return confirm(t('admin_system_cleanup_confirm'))">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn-sm btn-outline"><i data-lucide="trash-2"></i> <span data-i18n="admin_system_cleanup">Clean analytics (90d+)</span></button>
+      </form>
+    </div>
+    <% if (logs.length === 0) { %>
+      <p style="color: var(--text-secondary);" data-i18n="admin_system_log_empty">No admin actions recorded yet.</p>
+    <% } else { %>
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-i18n="admin_th_time">Time</th>
+            <th data-i18n="admin_th_username">Name</th>
+            <th data-i18n="admin_th_action">Action</th>
+            <th data-i18n="admin_th_details">Details</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% logs.forEach(function(l) { %>
+            <tr>
+              <td><span class="local-time" data-timestamp="<%= l.created_at %>" data-format="datetime"></span></td>
+              <td><strong><%= l.username %></strong></td>
+              <td class="mono"><%= l.action %></td>
+              <td><%= l.details %></td>
+              <td class="mono"><%= l.ip %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+    <% if (totalPages > 1) { %>
+      <div class="pager">
+        <% if (page > 1) { %><a class="btn btn-xs btn-outline" href="/admin/system?page=<%= page - 1 %>" data-i18n="page_prev">Prev</a><% } %>
+        <span class="pager-info"><%= page %> / <%= totalPages %></span>
+        <% if (page < totalPages) { %><a class="btn btn-xs btn-outline" href="/admin/system?page=<%= page + 1 %>" data-i18n="page_next">Next</a><% } %>
+      </div>
+    <% } %>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -22,6 +22,7 @@ const { Server } = require('socket.io');
 const db = require('./config/database');
 const { initDatabase } = db;
 const { startStatusChecker } = require('./utils/statusChecker');
+const { startMaintenance } = require('./utils/maintenance');
 
 
 const app = express();
@@ -266,6 +267,7 @@ async function start() {
   });
 
   startStatusChecker();
+  startMaintenance();
 
   server.listen(PORT, () => {
     console.log(`\n🎮 NexusHub is running on http://localhost:${PORT}`);

@@ -6,6 +6,8 @@ const { isAdmin } = require('../middleware/auth');
 const { checkAllServers } = require('../utils/statusChecker');
 const { encrypt } = require('../utils/crypto');
 const { createUploader, resolveImage } = require('../utils/imageUpload');
+const { logAdmin } = require('../utils/adminLog');
+const { createBackup, listBackups, backupPath, cleanupAnalytics } = require('../utils/maintenance');
 
 const upload = createUploader('news');
 const uploadServer = createUploader('servers');
@@ -107,6 +109,7 @@ router.post('/news/create', upload.single('image'), (req, res) => {
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.session.user.username]
   );
 
+  logAdmin(req, 'news.create', title_en);
   req.flash('success', 'flash_news_created');
   res.redirect('/admin/news');
 });
@@ -133,12 +136,15 @@ router.post('/news/:id', upload.single('image'), (req, res) => {
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.params.id]
   );
 
+  logAdmin(req, 'news.update', `#${req.params.id} ${title_en}`);
   req.flash('success', 'flash_news_updated');
   res.redirect('/admin/news');
 });
 
 router.post('/news/:id/delete', (req, res) => {
+  const article = db.get('SELECT title_en FROM news WHERE id = ?', [req.params.id]);
   db.run('DELETE FROM news WHERE id = ?', [req.params.id]);
+  logAdmin(req, 'news.delete', `#${req.params.id} ${article ? article.title_en : ''}`);
   req.flash('success', 'flash_news_deleted');
   res.redirect('/admin/news');
 });
@@ -191,6 +197,7 @@ router.post('/servers', uploadServer.single('image'), (req, res) => {
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0]
   );
 
+  logAdmin(req, 'server.create', `${name} (${ip}:${portNum})`);
   req.flash('success', 'flash_server_added');
   res.redirect('/admin/servers');
 });
@@ -226,12 +233,15 @@ router.post('/servers/:id', uploadServer.single('image'), (req, res) => {
     req.params.id]
   );
 
+  logAdmin(req, 'server.update', `#${req.params.id} ${name} (${ip}:${portNum})`);
   req.flash('success', 'flash_server_updated');
   res.redirect('/admin/servers');
 });
 
 router.post('/servers/:id/delete', (req, res) => {
+  const srv = db.get('SELECT name FROM servers WHERE id = ?', [req.params.id]);
   db.run('DELETE FROM servers WHERE id = ?', [req.params.id]);
+  logAdmin(req, 'server.delete', `#${req.params.id} ${srv ? srv.name : ''}`);
   req.flash('success', 'flash_server_deleted');
   res.redirect('/admin/servers');
 });
@@ -266,6 +276,7 @@ router.post('/settings', (req, res) => {
   // Invalidate cached settings so changes take effect immediately
   db.invalidateSettingsCache();
 
+  logAdmin(req, 'settings.save');
   req.flash('success', 'flash_settings_saved');
   res.redirect('/admin/settings');
 });
@@ -298,6 +309,7 @@ router.post('/users/:id/role', (req, res) => {
   // Re-check the setup guard in case the last other admin was demoted
   const resetCache = req.app.get('resetInstalledCache');
   if (resetCache) resetCache();
+  logAdmin(req, 'user.role', `#${targetId} → ${role}`);
   req.flash('success', 'flash_role_updated');
   res.redirect('/admin/users');
 });
@@ -307,12 +319,50 @@ router.post('/users/:id/delete', (req, res) => {
     req.flash('error', 'flash_cannot_delete_self');
     return res.redirect('/admin/users');
   }
+  const target = db.get('SELECT username FROM users WHERE id = ?', [req.params.id]);
   db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
   // Reset installed cache so the setup guard re-checks admin count
   const resetCache = req.app.get('resetInstalledCache');
   if (resetCache) resetCache();
+  logAdmin(req, 'user.delete', `#${req.params.id} ${target ? target.username : ''}`);
   req.flash('success', 'flash_user_deleted');
   res.redirect('/admin/users');
+});
+
+// ── System: audit log + database backups ──
+router.get('/system', (req, res) => {
+  const page = Math.max(parseInt(req.query.page) || 1, 1);
+  const perPage = 50;
+  const total = db.get('SELECT COUNT(*) AS c FROM admin_log');
+  const totalPages = Math.max(Math.ceil((total ? total.c : 0) / perPage), 1);
+  const logs = db.all('SELECT * FROM admin_log ORDER BY id DESC LIMIT ? OFFSET ?', [perPage, (page - 1) * perPage]);
+  res.render('admin/system', { title: 'System', logs, page, totalPages, backups: listBackups() });
+});
+
+router.post('/system/backup', async (req, res) => {
+  try {
+    const name = await createBackup();
+    logAdmin(req, 'backup.create', name);
+    req.flash('success', 'flash_backup_created');
+  } catch (e) {
+    console.error('Backup error:', e);
+    req.flash('error', 'flash_backup_failed');
+  }
+  res.redirect('/admin/system');
+});
+
+router.get('/system/backup/:name/download', (req, res) => {
+  const p = backupPath(req.params.name);
+  if (!p) return res.status(404).render('errors/404', { title: 'Not Found' });
+  logAdmin(req, 'backup.download', req.params.name);
+  res.download(p);
+});
+
+router.post('/system/cleanup', (req, res) => {
+  const removed = cleanupAnalytics();
+  logAdmin(req, 'analytics.cleanup', `page_views: ${removed.pageViews}, status_log: ${removed.statusLog}`);
+  req.flash('success', 'flash_cleanup_done');
+  res.redirect('/admin/system');
 });
 
 // ── Proxmox Admin Page ──
@@ -337,6 +387,7 @@ router.post('/proxmox/save-connection', (req, res) => {
     db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
   }
   db.invalidateSettingsCache();
+  logAdmin(req, 'proxmox.connection', host || '');
   res.json({ success: true });
 });
 

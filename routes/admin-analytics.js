@@ -223,12 +223,12 @@ router.get('/visitors', (req, res) => {
 
 // Cleanup old analytics data (keep last 90 days)
 router.post('/cleanup', (req, res) => {
-  const pvDeleted = db.run("DELETE FROM page_views WHERE created_at < datetime('now', '-90 days')");
-  const slDeleted = db.run("DELETE FROM server_status_log WHERE created_at < datetime('now', '-90 days')");
+  const removed = require('../utils/maintenance').cleanupAnalytics();
+  require('../utils/adminLog').logAdmin(req, 'analytics.cleanup', `page_views: ${removed.pageViews}, status_log: ${removed.statusLog}`);
   res.json({
     success: true,
-    pageViewsDeleted: pvDeleted.changes,
-    statusLogsDeleted: slDeleted.changes
+    pageViewsDeleted: removed.pageViews,
+    statusLogsDeleted: removed.statusLog
   });
 });
 
