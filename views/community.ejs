@@ -20,13 +20,20 @@
       <button type="button" id="nicknameBtn" class="btn-c" data-i18n="join_chat">Join Chat</button>
     </div>
 
+    <% const isStaff = user && (user.role === 'admin' || user.role === 'gm'); %>
     <div class="chat-msgs2" id="chatMessages">
       <% messages.forEach(function(msg) { %>
-        <div class="cmsg">
+        <div class="cmsg" data-id="<%= msg.id %>">
           <div class="h">
             <span class="u <%= msg.role === 'admin' ? 'adm' : (msg.role === 'gm' ? 'gm' : '') %>"><%= msg.username %></span>
             <% if (msg.role === 'admin' || msg.role === 'gm') { %><span class="role-badge role-<%= msg.role %>"><%= msg.role %></span><% } %>
             <span class="tm local-time" data-timestamp="<%= msg.created_at %>" data-format="time"></span>
+            <% if (isStaff) { %>
+              <span class="modact">
+                <button type="button" class="cmsg-mute" data-user="<%= msg.username %>" aria-label="Mute user" title="Mute">⊘</button>
+                <button type="button" class="cmsg-del" aria-label="Delete message" title="Delete">✕</button>
+              </span>
+            <% } %>
           </div>
           <div class="tx"><%= msg.message %></div>
         </div>
@@ -51,6 +58,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
   const socket = io();
+  const IS_STAFF = <%= isStaff ? 'true' : 'false' %>;
   let username = '';
   const messagesDiv = document.getElementById('chatMessages');
   const chatForm = document.getElementById('chatForm');
@@ -126,6 +134,7 @@
   function appendMessage(msg) {
     const div = document.createElement('div');
     div.className = 'cmsg';
+    if (msg.id) div.dataset.id = msg.id;
 
     const head = document.createElement('div');
     head.className = 'h';
@@ -145,6 +154,27 @@
     timeSpan.setAttribute('data-format', 'time');
     head.appendChild(timeSpan);
 
+    if (IS_STAFF) {
+      const act = document.createElement('span');
+      act.className = 'modact';
+      const muteBtn = document.createElement('button');
+      muteBtn.type = 'button';
+      muteBtn.className = 'cmsg-mute';
+      muteBtn.dataset.user = msg.username || '';
+      muteBtn.title = 'Mute';
+      muteBtn.setAttribute('aria-label', 'Mute user');
+      muteBtn.textContent = '⊘';
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'cmsg-del';
+      delBtn.title = 'Delete';
+      delBtn.setAttribute('aria-label', 'Delete message');
+      delBtn.textContent = '✕';
+      act.appendChild(muteBtn);
+      act.appendChild(delBtn);
+      head.appendChild(act);
+    }
+
     const text = document.createElement('div');
     text.className = 'tx';
     text.textContent = msg.message || '';
@@ -157,6 +187,36 @@
   }
 
   socket.on('chat:message', appendMessage);
+
+  // ── Moderation (admin / GM) ──
+  socket.on('chat:deleted', (data) => {
+    const el = messagesDiv.querySelector('.cmsg[data-id="' + parseInt(data.id) + '"]');
+    if (el) el.remove();
+  });
+
+  if (IS_STAFF) {
+    messagesDiv.addEventListener('click', (e) => {
+      const delBtn = e.target.closest('.cmsg-del');
+      const muteBtn = e.target.closest('.cmsg-mute');
+      if (delBtn) {
+        const card = delBtn.closest('.cmsg');
+        if (!card || !card.dataset.id) return;
+        socket.emit('chat:delete', parseInt(card.dataset.id), (res) => {
+          if (!res.success) typingIndicator.textContent = res.error || 'Error';
+        });
+      } else if (muteBtn) {
+        const target = muteBtn.dataset.user;
+        if (!target || target === username) return;
+        const raw = prompt((window.i18n ? window.i18n.t('chat_mute_prompt') : 'Mute for how many minutes?'), '10');
+        if (raw === null) return;
+        socket.emit('chat:mute', { username: target, minutes: parseInt(raw) || 10 }, (res) => {
+          typingIndicator.textContent = res.success
+            ? (target + ' muted for ' + res.minutes + ' min')
+            : (res.error || 'Error');
+        });
+      }
+    });
+  }
 
   socket.on('chat:history', (messages) => {
     // History is already rendered server-side on full page load;

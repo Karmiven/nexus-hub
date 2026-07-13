@@ -469,4 +469,5 @@ window.__loadLang({
   srv_history_empty: 'Noch nicht genug Daten — der Verlauf erscheint nach einigen Statusprüfungen.',
   srv_history_uptime: 'Uptime',
   srv_history_players: 'Spieler',
+  chat_mute_prompt: 'Für wie viele Minuten stummschalten?',
 });

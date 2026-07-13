@@ -469,4 +469,5 @@ window.__loadLang({
   srv_history_empty: 'Încă nu sunt destule date — istoricul apare după câteva verificări de status.',
   srv_history_uptime: 'uptime',
   srv_history_players: 'jucători',
+  chat_mute_prompt: 'Pe câte minute să fie mut?',
 });

@@ -469,4 +469,5 @@ window.__loadLang({
   srv_history_empty: 'Not enough data yet — history appears after a few status checks.',
   srv_history_uptime: 'uptime',
   srv_history_players: 'players',
+  chat_mute_prompt: 'Mute for how many minutes?',
 });

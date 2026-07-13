@@ -461,6 +461,24 @@ body::before {
 .news-search { display: flex; gap: 8px; align-items: center; }
 .news-search .form-input { width: 220px; margin: 0; }
 
+/* ── Chat moderation (admin / GM) ── */
+.cmsg .modact { margin-left: auto; display: inline-flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+.cmsg:hover .modact { opacity: 1; }
+.cmsg .modact button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.cmsg .modact .cmsg-del:hover { color: var(--danger); border-color: var(--danger); }
+.cmsg .modact .cmsg-mute:hover { color: var(--warning); border-color: var(--warning); }
+
 /* ── Server history chart ── */
 .hist-range { display: inline-flex; gap: 6px; }
 .hist-range .btn.on { color: var(--primary); border-color: var(--primary); }

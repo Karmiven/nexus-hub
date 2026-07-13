@@ -469,4 +469,5 @@ window.__loadLang({
   srv_history_empty: 'Данных пока мало — история появится после нескольких проверок статуса.',
   srv_history_uptime: 'аптайм',
   srv_history_players: 'игроки',
+  chat_mute_prompt: 'На сколько минут замьютить?',
 });

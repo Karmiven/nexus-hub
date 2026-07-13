@@ -16,6 +16,26 @@ const userMessageTimestamps = new Map(); // lowercase username -> [timestamps]
 const TYPING_COOLDOWN_MS = 2000;
 const lastTypingTime = new Map(); // socket.id -> timestamp
 
+// Moderation: muted nicknames (lowercase) -> unmute timestamp (ms)
+const mutedUsers = new Map();
+const MAX_MUTE_MINUTES = 1440; // 24h
+
+// Staff check is session-based (not join-based) so it can't be spoofed
+function staffRole(socket) {
+  const su = socket.request && socket.request.session && socket.request.session.user;
+  return su && (su.role === 'admin' || su.role === 'gm') ? su : null;
+}
+
+// Audit trail for moderation actions (mirrors utils/adminLog for sockets)
+function logModeration(staff, action, details) {
+  try {
+    db.run(
+      'INSERT INTO admin_log (username, action, details, ip) VALUES (?, ?, ?, ?)',
+      [staff.username, action, String(details).slice(0, 500), '']
+    );
+  } catch (e) { /* audit must not break moderation */ }
+}
+
 function isCommunityEnabled() {
   try {
     const s = db.getCachedSettings('community_enabled');
@@ -98,6 +118,17 @@ module.exports = function(io) {
 
       if (!data.message) return;
 
+      // Muted users can't post
+      const muteUntil = mutedUsers.get(registeredUsername.toLowerCase());
+      if (muteUntil) {
+        if (Date.now() < muteUntil) {
+          const minLeft = Math.ceil((muteUntil - Date.now()) / 60000);
+          socket.emit('chat:error', `You are muted for another ${minLeft} min.`);
+          return;
+        }
+        mutedUsers.delete(registeredUsername.toLowerCase());
+      }
+
       // Rate limit: enforce cooldown between messages
       const now = Date.now();
       const lastTime = lastMessageTime.get(socket.id) || 0;
@@ -151,6 +182,51 @@ module.exports = function(io) {
           db.run(`DELETE FROM chat_messages WHERE channel = 'general' AND id <= ?`, [oldest.id]);
         }
       }
+    });
+
+    // ── Moderation: delete a message (admin / GM only) ──
+    socket.on('chat:delete', (id, callback) => {
+      if (typeof callback !== 'function') callback = () => {};
+      const staff = staffRole(socket);
+      if (!staff) return callback({ success: false, error: 'Not allowed' });
+      const msgId = parseInt(id);
+      if (!Number.isInteger(msgId)) return callback({ success: false, error: 'Bad id' });
+      const msg = db.get('SELECT id, username, message FROM chat_messages WHERE id = ?', [msgId]);
+      if (!msg) return callback({ success: false, error: 'Not found' });
+      db.run('DELETE FROM chat_messages WHERE id = ?', [msgId]);
+      logModeration(staff, 'chat.delete', `#${msgId} ${msg.username}: ${msg.message.slice(0, 80)}`);
+      io.emit('chat:deleted', { id: msgId });
+      callback({ success: true });
+    });
+
+    // ── Moderation: mute a nickname (admin / GM only) ──
+    socket.on('chat:mute', (data, callback) => {
+      if (typeof callback !== 'function') callback = () => {};
+      const staff = staffRole(socket);
+      if (!staff) return callback({ success: false, error: 'Not allowed' });
+      if (!data || typeof data !== 'object') return callback({ success: false, error: 'Bad request' });
+
+      const target = String(data.username || '').slice(0, 30).trim();
+      const minutes = Math.min(Math.max(parseInt(data.minutes) || 10, 1), MAX_MUTE_MINUTES);
+      if (target.length < 2) return callback({ success: false, error: 'Bad username' });
+
+      // Staff can't be muted
+      const registered = db.get('SELECT role FROM users WHERE username = ? COLLATE NOCASE', [target]);
+      if (registered && (registered.role === 'admin' || registered.role === 'gm')) {
+        return callback({ success: false, error: 'Cannot mute staff' });
+      }
+
+      const lower = target.toLowerCase();
+      mutedUsers.set(lower, Date.now() + minutes * 60000);
+      logModeration(staff, 'chat.mute', `${target} for ${minutes} min`);
+
+      // Tell the muted user directly if they're online
+      for (const [sockId, name] of activeUsers) {
+        if (name.toLowerCase() === lower) {
+          io.to(sockId).emit('chat:error', `You have been muted for ${minutes} min.`);
+        }
+      }
+      callback({ success: true, minutes });
     });
 
     // Handle typing indicator with server-side debounce
