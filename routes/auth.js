@@ -10,6 +10,42 @@ const catchAsync = require('../utils/catchAsync');
 const rateLimit = require('express-rate-limit');
 
 const uploadAvatar = createUploader('avatars');
+const { generateSecret, verifyToken, otpauthUrl } = require('../utils/totp');
+
+const PENDING_2FA_TTL = 5 * 60 * 1000;
+
+// Shared login completion: last-login bookkeeping + session fixation defense
+function completeLogin(req, res, user) {
+  let clientIP = req.ip || 'unknown';
+  if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') clientIP = '127.0.0.1';
+  if (clientIP.startsWith('::ffff:')) clientIP = clientIP.slice(7);
+  db.run(
+    'UPDATE users SET last_login = CURRENT_TIMESTAMP, last_ip = ? WHERE id = ?',
+    [clientIP, user.id]
+  );
+
+  const userData = {
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    avatar: user.avatar || ''
+  };
+  const redirectTo = user.role === 'admin' ? '/admin' : '/';
+
+  req.session.regenerate((err) => {
+    if (err) {
+      console.error('Session regeneration error:', err);
+      req.flash('error', 'flash_session_error');
+      return res.redirect('/auth/login');
+    }
+    req.session.user = userData;
+    req.session.save((saveErr) => {
+      if (saveErr) console.error('Session save error:', saveErr);
+      return res.redirect(redirectTo);
+    });
+  });
+}
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
 const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY;
@@ -91,38 +127,89 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
     return res.redirect('/auth/login');
   }
 
-  // Update last login and IP (trust proxy is configured, so req.ip is correct)
-  let clientIP = req.ip || 'unknown';
-  if (clientIP === '::1' || clientIP === '::ffff:127.0.0.1') clientIP = '127.0.0.1';
-  if (clientIP.startsWith('::ffff:')) clientIP = clientIP.slice(7);
-  db.run(
-    'UPDATE users SET last_login = CURRENT_TIMESTAMP, last_ip = ? WHERE id = ?',
-    [clientIP, user.id]
-  );
+  // Second factor required — park the login until the code is verified
+  if (user.totp_secret) {
+    req.session.pending2fa = { userId: user.id, at: Date.now() };
+    return req.session.save(() => res.redirect('/auth/2fa'));
+  }
 
-  // Regenerate session ID to prevent session fixation attacks
-  const userData = {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    role: user.role,
-    avatar: user.avatar || ''
-  };
-  const redirectTo = user.role === 'admin' ? '/admin' : '/';
+  completeLogin(req, res, user);
+}));
 
-  req.session.regenerate((err) => {
-    if (err) {
-      console.error('Session regeneration error:', err);
-      req.flash('error', 'flash_session_error');
-      return res.redirect('/auth/login');
-    }
-    req.session.user = userData;
-    req.session.save((saveErr) => {
-      if (saveErr) console.error('Session save error:', saveErr);
-      // flash won't work after regenerate without save, so set it after save
-      return res.redirect(redirectTo);
-    });
-  });
+// ── Two-factor: login second step ──
+const twofaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+router.get('/2fa', isGuest, (req, res) => {
+  const p = req.session.pending2fa;
+  if (!p || Date.now() - p.at > PENDING_2FA_TTL) {
+    delete req.session.pending2fa;
+    return res.redirect('/auth/login');
+  }
+  res.render('auth/twofa', { title: 'Two-Factor Authentication' });
+});
+
+router.post('/2fa', isGuest, twofaLimiter, (req, res) => {
+  const p = req.session.pending2fa;
+  if (!p || Date.now() - p.at > PENDING_2FA_TTL) {
+    delete req.session.pending2fa;
+    req.flash('error', 'flash_2fa_expired');
+    return res.redirect('/auth/login');
+  }
+  const user = db.get('SELECT * FROM users WHERE id = ?', [p.userId]);
+  if (!user || !user.totp_secret || !verifyToken(user.totp_secret, req.body.code)) {
+    req.flash('error', 'flash_2fa_invalid_code');
+    return res.redirect('/auth/2fa');
+  }
+  delete req.session.pending2fa;
+  completeLogin(req, res, user);
+});
+
+// ── Two-factor: enable / disable from the profile ──
+router.post('/2fa/setup', isAuthenticated, (req, res) => {
+  const user = db.get('SELECT totp_secret FROM users WHERE id = ?', [req.session.user.id]);
+  if (user && user.totp_secret) return res.redirect('/auth/profile');
+  req.session.pendingTotpSecret = generateSecret();
+  res.redirect('/auth/profile');
+});
+
+router.post('/2fa/setup/cancel', isAuthenticated, (req, res) => {
+  delete req.session.pendingTotpSecret;
+  res.redirect('/auth/profile');
+});
+
+router.post('/2fa/enable', isAuthenticated, twofaLimiter, (req, res) => {
+  const secret = req.session.pendingTotpSecret;
+  if (!secret) return res.redirect('/auth/profile');
+  if (!verifyToken(secret, req.body.code)) {
+    req.flash('error', 'flash_2fa_invalid_code');
+    return res.redirect('/auth/profile');
+  }
+  db.run('UPDATE users SET totp_secret = ? WHERE id = ?', [secret, req.session.user.id]);
+  delete req.session.pendingTotpSecret;
+  req.flash('success', 'flash_2fa_enabled');
+  res.redirect('/auth/profile');
+});
+
+router.post('/2fa/disable', isAuthenticated, twofaLimiter, catchAsync(async (req, res) => {
+  const user = db.get('SELECT * FROM users WHERE id = ?', [req.session.user.id]);
+  if (!user || !user.totp_secret) return res.redirect('/auth/profile');
+
+  const password = String(req.body.password || '').slice(0, MAX_PASSWORD_LENGTH);
+  const okPass = await bcrypt.compare(password, user.password);
+  const okCode = verifyToken(user.totp_secret, req.body.code);
+  if (!okPass || !okCode) {
+    req.flash('error', 'flash_2fa_disable_failed');
+    return res.redirect('/auth/profile');
+  }
+  db.run("UPDATE users SET totp_secret = '' WHERE id = ?", [user.id]);
+  req.flash('success', 'flash_2fa_disabled');
+  res.redirect('/auth/profile');
 }));
 
 // Register page
@@ -217,7 +304,15 @@ router.get('/profile', isAuthenticated, (req, res) => {
     req.flash('error', 'flash_user_not_found');
     return res.redirect('/');
   }
-  res.render('auth/profile', { title: 'Profile', profile });
+  const pendingTotp = req.session.pendingTotpSecret || null;
+  const issuer = db.getCachedSettings('navbar_title').navbar_title || 'NexusHub';
+  res.render('auth/profile', {
+    title: 'Profile',
+    profile,
+    twofaEnabled: !!profile.totp_secret,
+    pendingTotp,
+    otpauth: pendingTotp ? otpauthUrl(pendingTotp, profile.username, issuer) : null
+  });
 });
 
 // ── Avatar upload / removal ──

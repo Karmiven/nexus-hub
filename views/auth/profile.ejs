@@ -54,6 +54,51 @@
       </div>
     </div>
 
+    <div class="profile-card">
+      <h2 data-i18n="profile_2fa">Two-Factor Authentication</h2>
+      <% if (twofaEnabled) { %>
+        <p class="twofa-status on"><span class="tick-dot ok"></span> <span data-i18n="twofa_status_on">2FA is enabled for this account.</span></p>
+        <form action="/auth/2fa/disable" method="POST" class="auth-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label for="twofa_password" data-i18n="password">Password</label>
+            <input type="password" id="twofa_password" name="password" class="form-input" required autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label for="twofa_code_off" data-i18n="twofa_enter_code">6-digit code</label>
+            <input type="text" id="twofa_code_off" name="code" class="form-input code-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code">
+          </div>
+          <button type="submit" class="btn btn-sm btn-outline" data-i18n="twofa_disable">Disable 2FA</button>
+        </form>
+      <% } else if (pendingTotp) { %>
+        <p class="form-hint" data-i18n="twofa_setup_hint">Add this secret to your authenticator app (Google Authenticator, Aegis, 1Password…), then confirm with a code.</p>
+        <div class="twofa-secret">
+          <code><%= pendingTotp %></code>
+        </div>
+        <p class="form-hint"><a href="<%= otpauth %>" class="link-m" data-i18n="twofa_open_app">Open in authenticator app</a></p>
+        <form action="/auth/2fa/enable" method="POST" class="auth-form twofa-confirm">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-group">
+            <label for="twofa_code_on" data-i18n="twofa_enter_code">6-digit code</label>
+            <input type="text" id="twofa_code_on" name="code" class="form-input code-input" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="one-time-code" autofocus>
+          </div>
+          <div class="twofa-actions">
+            <button type="submit" class="btn btn-sm btn-primary" data-i18n="twofa_confirm">Confirm & enable</button>
+          </div>
+        </form>
+        <form action="/auth/2fa/setup/cancel" method="POST" class="twofa-cancel">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-xs btn-outline" data-i18n="cancel">Cancel</button>
+        </form>
+      <% } else { %>
+        <p class="twofa-status"><span class="tick-dot bad"></span> <span data-i18n="twofa_status_off">2FA is not enabled. Protect your account with one-time codes.</span></p>
+        <form action="/auth/2fa/setup" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="btn btn-sm btn-primary" data-i18n="twofa_enable">Enable 2FA</button>
+        </form>
+      <% } %>
+    </div>
+
   </div>
 </section>
 
