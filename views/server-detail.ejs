@@ -19,7 +19,7 @@
       <div class="addr">
         <code><%= server.ip %>:<%= server.port %></code>
         <% if (user && user.role === 'admin') { %>
-          <button type="button" onclick="copyAddr(this)" data-i18n="copy">copy</button>
+          <button type="button" class="addr-copy" data-i18n="copy">copy</button>
         <% } %>
       </div>
     <% } %>
@@ -46,15 +46,185 @@
   </div>
 </div>
 
+<div class="panel" style="max-width:760px; margin-top:14px;">
+  <span class="panel-corner tl"></span>
+  <div class="panel-head">
+    <span data-i18n="srv_history">History</span>
+    <span class="hist-range">
+      <button type="button" class="btn btn-xs btn-outline on" data-range="24h">24h</button>
+      <button type="button" class="btn btn-xs btn-outline" data-range="7d">7d</button>
+    </span>
+  </div>
+  <div class="hist-body">
+    <canvas id="histChart" height="180" aria-label="Server history chart" role="img"></canvas>
+    <p id="histEmpty" class="hist-empty" style="display:none;" data-i18n="srv_history_empty">Not enough data yet — history appears after a few status checks.</p>
+    <div class="hist-legend">
+      <span><i class="sw sw-up"></i> <span data-i18n="srv_history_uptime">uptime</span></span>
+      <span><i class="sw sw-pl"></i> <span data-i18n="srv_history_players">players</span></span>
+    </div>
+  </div>
+</div>
+
 <script>
-function copyAddr(btn) {
-  var code = btn.parentElement.querySelector('code');
-  if (!code) return;
-  if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
-  var original = btn.textContent;
-  btn.textContent = 'ok ✓';
-  setTimeout(function () { btn.textContent = original; }, 1400);
-}
+(function () {
+  var copyBtn = document.querySelector('.addr-copy');
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var code = copyBtn.parentElement.querySelector('code');
+    if (!code) return;
+    if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
+    var original = copyBtn.textContent;
+    copyBtn.textContent = 'ok ✓';
+    setTimeout(function () { copyBtn.textContent = original; }, 1400);
+  });
+
+  // ── History chart (vanilla canvas, theme-aware) ──
+  var serverId = <%= server.id %>;
+  var canvas = document.getElementById('histChart');
+  var emptyMsg = document.getElementById('histEmpty');
+  if (!canvas) return;
+  var currentRange = '24h';
+  var lastPoints = null;
+
+  function cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  function fmtTick(tSec, range) {
+    var d = new Date(tSec * 1000);
+    var opts = range === '7d'
+      ? { month: 'short', day: 'numeric' }
+      : { hour: '2-digit', minute: '2-digit' };
+    try {
+      return new Intl.DateTimeFormat(undefined, Object.assign({ timeZone: window.SITE_TIMEZONE }, opts)).format(d);
+    } catch (e) {
+      return d.toLocaleTimeString();
+    }
+  }
+
+  function draw(points, range) {
+    var wrap = canvas.parentElement;
+    var W = wrap.clientWidth - 4;
+    var H = 180;
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    var ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    var padL = 8, padR = 8, padT = 10, padB = 22;
+    var cw = W - padL - padR, ch = H - padT - padB;
+    var n = points.length;
+    var maxPl = 0;
+    points.forEach(function (p) { if (p.peak > maxPl) maxPl = p.peak; });
+    var plScale = maxPl > 0 ? maxPl * 1.2 : 1;
+
+    var success = cssVar('--success', '#2be08a');
+    var primary = cssVar('--primary', '#00e5ff');
+    var border = cssVar('--border', 'rgba(255,255,255,0.1)');
+    var textSec = cssVar('--text-secondary', '#8b93a7');
+
+    // grid
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 1;
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + ch * g / 4;
+      ctx.beginPath(); ctx.moveTo(padL, gy); ctx.lineTo(W - padR, gy); ctx.stroke();
+    }
+
+    var bw = cw / n;
+
+    // uptime bars (0–100%)
+    var danger = cssVar('--danger', '#ff5d6b');
+    points.forEach(function (p, i) {
+      var h = ch * (p.up / 100);
+      if (p.up > 0) {
+        ctx.globalAlpha = p.up >= 99.9 ? 0.33 : 0.2;
+        ctx.fillStyle = success;
+        ctx.fillRect(padL + i * bw + 1, padT + ch - h, Math.max(bw - 2, 1), h);
+      }
+      if (p.up < 100) {
+        // red cap marks downtime share
+        var dh = ch * ((100 - p.up) / 100);
+        ctx.globalAlpha = 0.27;
+        ctx.fillStyle = danger;
+        ctx.fillRect(padL + i * bw + 1, padT, Math.max(bw - 2, 1), dh);
+      }
+      ctx.globalAlpha = 1;
+    });
+
+    // players line
+    if (maxPl > 0) {
+      ctx.strokeStyle = primary;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      points.forEach(function (p, i) {
+        var x = padL + i * bw + bw / 2;
+        var y = padT + ch - ch * (p.players / plScale);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+
+    // x labels (~5 ticks)
+    ctx.fillStyle = textSec;
+    ctx.font = '10px ' + (cssVar('--mono', 'monospace'));
+    ctx.textAlign = 'center';
+    var step = Math.max(Math.round(n / 5), 1);
+    for (var i = 0; i < n; i += step) {
+      ctx.fillText(fmtTick(points[i].t, range), padL + i * bw + bw / 2, H - 7);
+    }
+    // max players label
+    if (maxPl > 0) {
+      ctx.textAlign = 'left';
+      ctx.fillStyle = primary;
+      ctx.fillText('max ' + maxPl, padL + 2, padT + 10);
+    }
+  }
+
+  function load(range) {
+    fetch('/api/servers/' + serverId + '/history?range=' + range)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.success) return;
+        lastPoints = data.points;
+        if (data.points.length < 2) {
+          canvas.style.display = 'none';
+          emptyMsg.style.display = 'block';
+          return;
+        }
+        canvas.style.display = 'block';
+        emptyMsg.style.display = 'none';
+        draw(data.points, range);
+      })
+      .catch(function () {});
+  }
+
+  document.querySelectorAll('.hist-range button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.hist-range button').forEach(function (b) { b.classList.remove('on'); });
+      btn.classList.add('on');
+      currentRange = btn.dataset.range;
+      load(currentRange);
+    });
+  });
+
+  // Redraw on resize (replace any listener left from a previous SPA visit)
+  if (window.__histResize) window.removeEventListener('resize', window.__histResize);
+  var resizeTimer = null;
+  window.__histResize = function () {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function () {
+      if (lastPoints && lastPoints.length >= 2 && document.getElementById('histChart')) draw(lastPoints, currentRange);
+    }, 150);
+  };
+  window.addEventListener('resize', window.__histResize);
+
+  load(currentRange);
+})();
 </script>
 
 <%- include('partials/footer') %>

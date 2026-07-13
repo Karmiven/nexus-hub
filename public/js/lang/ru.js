@@ -465,4 +465,8 @@ window.__loadLang({
   news_search_placeholder: 'Поиск по новостям…',
   news_no_results: 'Ничего не найдено. Попробуйте другой запрос.',
   news_back: 'Все новости',
+  srv_history: 'История',
+  srv_history_empty: 'Данных пока мало — история появится после нескольких проверок статуса.',
+  srv_history_uptime: 'аптайм',
+  srv_history_players: 'игроки',
 });

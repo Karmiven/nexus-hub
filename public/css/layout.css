@@ -461,6 +461,25 @@ body::before {
 .news-search { display: flex; gap: 8px; align-items: center; }
 .news-search .form-input { width: 220px; margin: 0; }
 
+/* ── Server history chart ── */
+.hist-range { display: inline-flex; gap: 6px; }
+.hist-range .btn.on { color: var(--primary); border-color: var(--primary); }
+.hist-body { padding: 14px 16px 10px; }
+.hist-empty { color: var(--text-secondary); font-size: 0.85rem; padding: 18px 4px; margin: 0; }
+.hist-legend {
+  display: flex;
+  gap: 18px;
+  padding: 8px 4px 4px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+.hist-legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+.hist-legend .sw-up { background: color-mix(in srgb, var(--success) 40%, transparent); border: 1px solid var(--success); }
+.hist-legend .sw-pl { background: var(--primary); height: 3px; border-radius: 2px; vertical-align: 2px; }
+
 /* ── Single article page ── */
 .article-panel { max-width: 860px; padding: 0; overflow: hidden; }
 .article-hero-img {

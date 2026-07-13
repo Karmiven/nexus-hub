@@ -64,6 +64,32 @@ router.get('/servers/:id/status', async (req, res) => {
   }
 });
 
+// ── Server history (uptime + players from status log) ──
+// 24h → 1h buckets (~24 points), 7d → 6h buckets (~28 points)
+router.get('/servers/:id/history', (req, res) => {
+  const server = db.get('SELECT id FROM servers WHERE id = ?', [req.params.id]);
+  if (!server) {
+    return res.status(404).json({ success: false, error: 'Server not found' });
+  }
+  const range = req.query.range === '7d' ? '7d' : '24h';
+  const bucketSec = range === '7d' ? 21600 : 3600;
+  const since = range === '7d' ? '-7 days' : '-24 hours';
+
+  // bucketSec is inlined: bound parameters coerce the division to REAL,
+  // which breaks integer bucketing. Value is server-controlled (3600/21600).
+  const rows = db.all(
+    `SELECT (CAST(strftime('%s', created_at) AS INTEGER) / ${bucketSec}) * ${bucketSec} AS t,
+            ROUND(AVG(status = 'online') * 100, 1) AS up,
+            CAST(ROUND(AVG(player_count)) AS INTEGER) AS players,
+            MAX(player_count) AS peak
+     FROM server_status_log
+     WHERE server_id = ? AND created_at >= datetime('now', ?)
+     GROUP BY t ORDER BY t`,
+    [server.id, since]
+  );
+  res.json({ success: true, range, bucketSec, points: rows });
+});
+
 // ── Language API ──
 router.get('/languages', (req, res) => {
   res.json(getAvailableLanguages());

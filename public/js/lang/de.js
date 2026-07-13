@@ -465,4 +465,8 @@ window.__loadLang({
   news_search_placeholder: 'News durchsuchen…',
   news_no_results: 'Nichts gefunden. Versuche eine andere Suche.',
   news_back: 'Alle News',
+  srv_history: 'Verlauf',
+  srv_history_empty: 'Noch nicht genug Daten — der Verlauf erscheint nach einigen Statusprüfungen.',
+  srv_history_uptime: 'Uptime',
+  srv_history_players: 'Spieler',
 });

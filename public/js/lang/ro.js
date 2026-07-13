@@ -465,4 +465,8 @@ window.__loadLang({
   news_search_placeholder: 'Caută în știri…',
   news_no_results: 'Nu s-a găsit nimic. Încearcă altă căutare.',
   news_back: 'Toate știrile',
+  srv_history: 'Istoric',
+  srv_history_empty: 'Încă nu sunt destule date — istoricul apare după câteva verificări de status.',
+  srv_history_uptime: 'uptime',
+  srv_history_players: 'jucători',
 });
