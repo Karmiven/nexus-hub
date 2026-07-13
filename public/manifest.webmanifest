@@ -1,0 +1,13 @@
+{
+  "name": "NexusHub",
+  "short_name": "NexusHub",
+  "description": "Game server command center",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#04060c",
+  "theme_color": "#04060c",
+  "icons": [
+    { "src": "/img/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
