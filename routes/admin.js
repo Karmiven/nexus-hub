@@ -8,6 +8,7 @@ const { encrypt } = require('../utils/crypto');
 const { createUploader, resolveImage } = require('../utils/imageUpload');
 const { logAdmin } = require('../utils/adminLog');
 const { createBackup, listBackups, backupPath, cleanupAnalytics } = require('../utils/maintenance');
+const { isValidWebhookUrl, notifyNews } = require('../utils/discord');
 
 const upload = createUploader('news');
 const uploadServer = createUploader('servers');
@@ -104,11 +105,12 @@ router.post('/news/create', upload.single('image'), (req, res) => {
 
   const imageData = resolveImage(croppedImageData, req.file, 'news', 'cropped');
 
-  db.run(
+  const inserted = db.run(
     'INSERT INTO news (title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, image, pinned, author) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [title_en, title_ru, content_short_en, content_short_ru, content_full_en, content_full_ru, imageData, pinned ? 1 : 0, req.session.user.username]
   );
 
+  notifyNews(title_en, content_short_en, `${req.protocol}://${req.get('host')}/news/${inserted.lastInsertRowid}`);
   logAdmin(req, 'news.create', title_en);
   req.flash('success', 'flash_news_created');
   res.redirect('/admin/news');
@@ -259,8 +261,15 @@ router.post('/settings', (req, res) => {
     'registration_enabled', 'monitoring_public',
     'hero_subtitle', // shown as the Overview subtitle
     'site_timezone',
-    'footer_tagline', 'footer_copyright'
+    'footer_tagline', 'footer_copyright',
+    'discord_webhook_url', 'discord_notify_status', 'discord_notify_news'
   ];
+
+  // Reject malformed Discord webhook URLs (empty = disabled is fine)
+  if (req.body.discord_webhook_url && !isValidWebhookUrl(req.body.discord_webhook_url)) {
+    req.flash('error', 'flash_invalid_webhook');
+    return res.redirect('/admin/settings');
+  }
 
   for (const key of keys) {
     if (req.body[key] !== undefined) {

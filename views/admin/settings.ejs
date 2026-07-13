@@ -174,6 +174,27 @@
             </label>
             <small class="form-hint" data-i18n="admin_settings_monitoring_hint">If disabled, the monitoring page is only accessible to staff (admin / GM).</small>
           </div>
+
+          <h3 class="settings-subheading"><i data-lucide="bell"></i> <span data-i18n="admin_settings_discord">Discord notifications</span></h3>
+          <div class="form-group">
+            <label for="discord_webhook_url" data-i18n="admin_settings_discord_webhook">Webhook URL</label>
+            <input type="text" id="discord_webhook_url" name="discord_webhook_url" class="form-input" value="<%= settings.discord_webhook_url || '' %>" placeholder="https://discord.com/api/webhooks/…" autocomplete="off">
+            <small class="form-hint" data-i18n="admin_settings_discord_webhook_hint">Server Settings → Integrations → Webhooks in your Discord server. Leave empty to disable.</small>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="discord_notify_status" value="0">
+              <input type="checkbox" name="discord_notify_status" value="1" <%= String(settings.discord_notify_status) === '1' ? 'checked' : '' %>>
+              <span data-i18n="admin_settings_discord_status">Notify when a server goes up or down</span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="discord_notify_news" value="0">
+              <input type="checkbox" name="discord_notify_news" value="1" <%= String(settings.discord_notify_news) === '1' ? 'checked' : '' %>>
+              <span data-i18n="admin_settings_discord_news">Notify when a news article is published</span>
+            </label>
+          </div>
         </fieldset>
       </div>
 

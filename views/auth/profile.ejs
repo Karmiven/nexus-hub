@@ -30,24 +30,6 @@
       </div>
     </div>
 
-    <div class="profile-card">
-      <h2 data-i18n="notification_prefs">Notification Preferences</h2>
-      <form action="/auth/profile/notifications" method="POST" class="auth-form">
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <div class="form-group">
-          <label class="checkbox-label">
-            <input type="checkbox" name="notify_email" value="1" <%= profile.notify_email ? 'checked' : '' %>>
-            <span data-i18n="notify_email_label">Receive email notifications for new servers/news</span>
-          </label>
-        </div>
-        <div class="form-group">
-          <label for="notify_discord" data-i18n="discord_id_label">Discord User ID (for bot notifications)</label>
-          <input type="text" id="notify_discord" name="notify_discord" class="form-input" value="<%= profile.notify_discord || '' %>" placeholder="e.g. 123456789012345678">
-        </div>
-        <button type="submit" class="btn btn-primary" data-i18n="save_preferences">Save Preferences</button>
-      </form>
-    </div>
-
   </div>
 </section>
 

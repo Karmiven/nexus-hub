@@ -206,30 +206,12 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
 
 // Profile page
 router.get('/profile', isAuthenticated, (req, res) => {
-  const profile = db.get('SELECT id, username, email, role, notify_email, notify_discord, created_at FROM users WHERE id = ?', [req.session.user.id]);
+  const profile = db.get('SELECT id, username, email, role, created_at FROM users WHERE id = ?', [req.session.user.id]);
   if (!profile) {
     req.flash('error', 'flash_user_not_found');
     return res.redirect('/');
   }
   res.render('auth/profile', { title: 'Profile', profile });
-});
-
-// Update notification preferences
-router.post('/profile/notifications', isAuthenticated, (req, res) => {
-  try {
-    const { notify_email, notify_discord } = req.body;
-    const cleanDiscord = String(notify_discord || '').replace(/[^0-9]/g, '').slice(0, 20);
-    db.run(
-      'UPDATE users SET notify_email = ?, notify_discord = ? WHERE id = ?',
-      [notify_email ? 1 : 0, cleanDiscord, req.session.user.id]
-    );
-    req.flash('success', 'flash_prefs_saved');
-    res.redirect('/auth/profile');
-  } catch (err) {
-    console.error('Profile update error:', err);
-    req.flash('error', 'flash_error');
-    res.redirect('/auth/profile');
-  }
 });
 
 // Logout handler (POST to prevent CSRF via img/link prefetch)

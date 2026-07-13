@@ -6,16 +6,26 @@
     <h1 class="scr-title" data-i18n="latest_news">Latest News</h1>
     <p class="scr-sub" data-i18n="news_sub">Pinned articles first. Click to read the full story.</p>
   </div>
+  <form action="/news" method="GET" class="news-search" role="search">
+    <input type="search" name="q" value="<%= q %>" class="form-input" maxlength="100"
+           placeholder="Search news…" data-i18n-placeholder="news_search_placeholder" aria-label="Search news">
+    <button type="submit" class="btn btn-sm btn-primary"><i data-lucide="search"></i></button>
+  </form>
 </div>
 
 <% if (news.length === 0) { %>
   <div class="empty-state">
-    <p data-i18n="no_news">No news yet. Check back soon!</p>
+    <% if (q) { %>
+      <p data-i18n="news_no_results">Nothing found. Try another search.</p>
+    <% } else { %>
+      <p data-i18n="no_news">No news yet. Check back soon!</p>
+    <% } %>
   </div>
 <% } else { %>
-  <div class="news-list">
+  <div class="news-list" id="newsList">
     <% news.forEach(function(article) { %>
-      <article class="panel news-item2" onclick="openNewsModal(this)"
+      <article class="panel news-item2"
+        data-id="<%= article.id %>"
         data-title-en="<%- encodeURIComponent(article.title_en) %>"
         data-title-ru="<%- encodeURIComponent(article.title_ru) %>"
         data-content-short-en="<%- encodeURIComponent(article.content_short_en) %>"
@@ -33,16 +43,26 @@
           <h3><%= currentLang === 'ru' ? article.title_ru : article.title_en %></h3>
           <p><%= (currentLang === 'ru' ? article.content_short_ru : article.content_short_en) %></p>
         </div>
+        <a href="/news/<%= article.id %>" class="news-perma" title="Permalink" aria-label="Permalink"><i data-lucide="link"></i></a>
       </article>
     <% }); %>
   </div>
+
+  <% if (totalPages > 1) { %>
+    <div class="pager">
+      <% var qs = q ? '&q=' + encodeURIComponent(q) : ''; %>
+      <% if (page > 1) { %><a class="btn btn-xs btn-outline" href="/news?page=<%= page - 1 %><%= qs %>" data-i18n="page_prev">Prev</a><% } %>
+      <span class="pager-info"><%= page %> / <%= totalPages %></span>
+      <% if (page < totalPages) { %><a class="btn btn-xs btn-outline" href="/news?page=<%= page + 1 %><%= qs %>" data-i18n="page_next">Next</a><% } %>
+    </div>
+  <% } %>
 
   <!-- News Modal -->
   <div id="newsModal" class="modal" style="display:none;">
     <div class="modal-content">
       <div class="modal-header">
         <h2 id="modalTitle"></h2>
-        <button class="modal-close" onclick="closeNewsModal()">&times;</button>
+        <button class="modal-close" id="newsModalClose">&times;</button>
       </div>
       <div class="modal-body">
         <div class="modal-meta">
@@ -82,6 +102,14 @@
       document.getElementById('newsModal').style.display = 'none';
     }
 
+    // Event delegation: card click opens the modal, permalink navigates
+    document.getElementById('newsList').addEventListener('click', function (e) {
+      if (e.target.closest('.news-perma')) return;
+      var card = e.target.closest('.news-item2');
+      if (card) openNewsModal(card);
+    });
+
+    document.getElementById('newsModalClose').addEventListener('click', closeNewsModal);
     document.getElementById('newsModal').addEventListener('click', function (e) {
       if (e.target === this) closeNewsModal();
     });

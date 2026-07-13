@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
+  <% if (typeof og !== 'undefined' && og) { %>
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="<%= og.title %>">
+  <meta property="og:description" content="<%= og.description %>">
+  <meta property="og:url" content="<%= og.url %>">
+  <% if (og.image) { %><meta property="og:image" content="<%= og.image %>"><% } %>
+  <meta name="twitter:card" content="summary">
+  <% } %>
+  <link rel="alternate" type="application/rss+xml" title="News RSS" href="/rss.xml">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300e5ff'%3E%3Cpath d='M13 2 3 14h7l-1 8 10-12h-7l1-8z'/%3E%3C/svg%3E">
   <script>
     // Apply saved theme IMMEDIATELY — before any CSS loads — to prevent white flash

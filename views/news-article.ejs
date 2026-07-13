@@ -1,0 +1,54 @@
+<%- include('partials/header') %>
+
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="news_eyebrow">intel feed</span></div>
+    <h1 class="scr-title article-title"
+        data-title-en="<%- encodeURIComponent(article.title_en) %>"
+        data-title-ru="<%- encodeURIComponent(article.title_ru) %>"><%= currentLang === 'ru' ? article.title_ru : article.title_en %></h1>
+    <p class="scr-sub">
+      <% if (article.pinned) { %><span class="pin">◆ <span data-i18n="pinned">Pinned</span></span> · <% } %>
+      <span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span> · <%= article.author %>
+    </p>
+  </div>
+  <a href="/news" class="btn btn-sm btn-outline"><i data-lucide="arrow-left"></i> <span data-i18n="news_back">All news</span></a>
+</div>
+
+<article class="panel article-panel">
+  <span class="panel-corner"></span>
+  <% if (article.image) { %>
+    <div class="article-hero-img" style="background-image:url('<%= article.image %>')"></div>
+  <% } %>
+  <div class="article-body"
+       data-content-en="<%- encodeURIComponent(article.content_full_en) %>"
+       data-content-ru="<%- encodeURIComponent(article.content_full_ru) %>">
+    <% (currentLang === 'ru' ? article.content_full_ru : article.content_full_en).split('\n').forEach(function(line) { %>
+      <p><%= line %></p>
+    <% }); %>
+  </div>
+</article>
+
+<script>
+  // Re-render title/body when language switches
+  if (typeof window.i18nReady === 'function') {
+    window.i18nReady(function () {
+      var lang = window.i18n.getCurrentLanguage() === 'ru' ? 'ru' : 'en';
+      var titleEl = document.querySelector('.article-title');
+      var bodyEl = document.querySelector('.article-body');
+      if (!titleEl || !bodyEl) return;
+      function dec(el, key) {
+        try { return decodeURIComponent(el.getAttribute('data-' + key) || ''); } catch (e) { return ''; }
+      }
+      titleEl.textContent = dec(titleEl, 'title-' + lang) || dec(titleEl, 'title-en');
+      var content = dec(bodyEl, 'content-' + lang) || dec(bodyEl, 'content-en');
+      bodyEl.textContent = '';
+      content.split('\n').forEach(function (line) {
+        var p = document.createElement('p');
+        p.textContent = line;
+        bodyEl.appendChild(p);
+      });
+    });
+  }
+</script>
+
+<%- include('partials/footer') %>

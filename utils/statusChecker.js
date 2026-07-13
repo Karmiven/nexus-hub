@@ -1,5 +1,10 @@
 const net = require('net');
 const db = require('../config/database');
+const { notifyServerStatus } = require('./discord');
+
+// Suppress up/down notifications for the very first check after boot —
+// stored statuses may be stale and would produce false transitions.
+let firstCheck = true;
 
 /**
  * Check if a TCP port is open on a given host
@@ -172,6 +177,19 @@ async function checkAllServers() {
   });
 
   batchUpdate(updates);
+
+  // Discord notifications on status transitions (skipped on the first check)
+  if (!firstCheck) {
+    const byId = {};
+    for (const srv of servers) byId[srv.id] = srv;
+    for (const result of updates) {
+      if (result.status !== 'fulfilled') continue;
+      const { id, status } = result.value;
+      const prev = byId[id];
+      if (prev && prev.status !== status) notifyServerStatus(prev, status);
+    }
+  }
+  firstCheck = false;
 
   // 3. Log status history for analytics (separate transaction to not break updates)
   try {
