@@ -4,6 +4,7 @@
    КОНЦЕПТ A «Командный центр» — ПОЛНАЯ ДЕМКА
    Все экраны работают на общем клиентском состоянии:
    правки в админке сразу видны на публичной части.
+   Интерактив — через делегирование (data-act), без inline-JS.
    ═══════════════════════════════════════════════════════════ */
 :root {
   --bg: #04060c; --bg-2: #070b14;
@@ -117,7 +118,7 @@ button { font:inherit; cursor:pointer; }
 .btn-d:hover, .btn-d.armed { background:color-mix(in srgb,var(--bad) 14%,transparent); }
 .btn-sm { padding:4px 10px; font-size:11.5px; }
 
-/* бейджи, статусы */
+/* бейджи */
 .badge { font-family:var(--font-m); font-size:10px; letter-spacing:.1em; text-transform:uppercase; padding:2px 8px; border-radius:4px; border:1px solid; white-space:nowrap; }
 .badge.ok { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 45%,transparent); background:color-mix(in srgb,var(--ok) 10%,transparent); }
 .badge.bad { color:var(--bad); border-color:color-mix(in srgb,var(--bad) 45%,transparent); background:color-mix(in srgb,var(--bad) 10%,transparent); }
@@ -215,7 +216,7 @@ textarea.inp { resize:vertical; min-height:64px; }
 .meter .mf.hot { background:linear-gradient(90deg,var(--warn),var(--bad)); }
 .mon-ctl { display:flex; gap:8px; padding:10px 18px; border-top:1px solid var(--line); }
 
-/* формы админки */
+/* формы */
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px 16px; padding:16px 18px; }
 .form-grid .full { grid-column:1 / -1; }
 .field label { display:block; font-family:var(--font-m); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
@@ -238,7 +239,6 @@ td b { color:var(--text); font-weight:600; }
 tr:hover td { background:var(--panel-2); }
 .row-actions { display:flex; gap:6px; justify-content:flex-end; }
 
-/* админ-дашборд */
 .adm-tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:14px; }
 
 /* аналитика */
@@ -282,9 +282,9 @@ canvas { width:100%; display:block; }
 
 <div class="demo-bar">
   <span class="demo-tag">Концепт A · Full</span>
-  <span>Полная демка: публичная часть + вся админка. Всё интерактивно — правь в админке и смотри результат на «сайте».</span>
+  <span>Полная демка: публичная часть + вся админка. Правь в админке — смотри результат на «сайте».</span>
   <span class="sp"></span>
-  <div class="tswitch"><button id="tD" class="on" onclick="setTheme('dark')">Тёмная</button><button id="tL" onclick="setTheme('light')">Светлая</button></div>
+  <div class="tswitch"><button id="tD" class="on" data-act="theme" data-theme="dark">Тёмная</button><button id="tL" data-act="theme" data-theme="light">Светлая</button></div>
 </div>
 
 <div class="shell">
@@ -295,19 +295,19 @@ canvas { width:100%; display:block; }
     <div><div class="brand-name" id="brandName">NEXUSHUB</div><div class="brand-sub">game ops console</div></div>
   </div>
   <div class="side-label">Разделы</div>
-  <button class="side-item on" data-view="overview" onclick="go('overview')"><span class="ico">◈</span> Обзор</button>
-  <button class="side-item" data-view="servers" onclick="go('servers')"><span class="ico">▣</span> Серверы <span class="cnt" id="cntSrv"></span></button>
-  <button class="side-item" data-view="news" onclick="go('news')"><span class="ico">▤</span> Новости <span class="cnt" id="cntNews"></span></button>
-  <button class="side-item" data-view="chat" onclick="go('chat')"><span class="ico">◉</span> Чат <span class="cnt" id="cntChat"></span></button>
-  <button class="side-item" data-view="mon" onclick="go('mon')"><span class="ico">∿</span> Мониторинг</button>
+  <button class="side-item on" data-act="go" data-view="overview"><span class="ico">◈</span> Обзор</button>
+  <button class="side-item" data-act="go" data-view="servers"><span class="ico">▣</span> Серверы <span class="cnt" id="cntSrv"></span></button>
+  <button class="side-item" data-act="go" data-view="news"><span class="ico">▤</span> Новости <span class="cnt" id="cntNews"></span></button>
+  <button class="side-item" data-act="go" data-view="chat"><span class="ico">◉</span> Чат <span class="cnt" id="cntChat"></span></button>
+  <button class="side-item" data-act="go" data-view="mon"><span class="ico">∿</span> Мониторинг</button>
   <div class="side-label adm">Админ-панель</div>
-  <button class="side-item" data-view="adm-dash" onclick="go('adm-dash')"><span class="ico">▦</span> Дашборд</button>
-  <button class="side-item" data-view="adm-news" onclick="go('adm-news')"><span class="ico">✎</span> Новости</button>
-  <button class="side-item" data-view="adm-servers" onclick="go('adm-servers')"><span class="ico">⚙</span> Серверы</button>
-  <button class="side-item" data-view="adm-users" onclick="go('adm-users')"><span class="ico">☰</span> Пользователи <span class="cnt" id="cntUsers"></span></button>
-  <button class="side-item" data-view="adm-analytics" onclick="go('adm-analytics')"><span class="ico">∿</span> Аналитика</button>
-  <button class="side-item" data-view="adm-proxmox" onclick="go('adm-proxmox')"><span class="ico">▥</span> Proxmox</button>
-  <button class="side-item" data-view="adm-settings" onclick="go('adm-settings')"><span class="ico">✦</span> Настройки</button>
+  <button class="side-item" data-act="go" data-view="adm-dash"><span class="ico">▦</span> Дашборд</button>
+  <button class="side-item" data-act="go" data-view="adm-news"><span class="ico">✎</span> Новости</button>
+  <button class="side-item" data-act="go" data-view="adm-servers"><span class="ico">⚙</span> Серверы</button>
+  <button class="side-item" data-act="go" data-view="adm-users"><span class="ico">☰</span> Пользователи <span class="cnt" id="cntUsers"></span></button>
+  <button class="side-item" data-act="go" data-view="adm-analytics"><span class="ico">∿</span> Аналитика</button>
+  <button class="side-item" data-act="go" data-view="adm-proxmox"><span class="ico">▥</span> Proxmox</button>
+  <button class="side-item" data-act="go" data-view="adm-settings"><span class="ico">✦</span> Настройки</button>
   <span class="sp"></span>
   <div class="side-user"><div class="av">K</div><div><b>Karmiven</b><span>admin</span></div></div>
 </aside>
@@ -335,24 +335,24 @@ canvas { width:100%; display:block; }
         <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
           <div class="panel-head">Серверы <span class="right">live</span></div>
           <div id="ovSrv"></div>
-          <div class="panel-foot"><button class="link-m" onclick="go('servers')">Все серверы →</button></div>
+          <div class="panel-foot"><button class="link-m" data-act="go" data-view="servers">Все серверы →</button></div>
         </div>
         <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
           <div class="panel-head">Чат — #general <span class="right" id="ovChatCnt"></span></div>
           <div class="mini-chat" id="ovChat"></div>
-          <div class="panel-foot"><button class="link-m" onclick="go('chat')">Открыть чат →</button></div>
+          <div class="panel-foot"><button class="link-m" data-act="go" data-view="chat">Открыть чат →</button></div>
         </div>
       </div>
       <div class="ov-col">
         <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
           <div class="panel-head">Новости</div>
           <div id="ovNews"></div>
-          <div class="panel-foot"><button class="link-m" onclick="go('news')">Все новости →</button></div>
+          <div class="panel-foot"><button class="link-m" data-act="go" data-view="news">Все новости →</button></div>
         </div>
         <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
           <div class="panel-head">Инфраструктура</div>
           <div class="mon-body" id="ovMon"></div>
-          <div class="panel-foot"><button class="link-m" onclick="go('mon')">Мониторинг →</button></div>
+          <div class="panel-foot"><button class="link-m" data-act="go" data-view="mon">Мониторинг →</button></div>
         </div>
       </div>
     </div>
@@ -387,14 +387,14 @@ canvas { width:100%; display:block; }
     </div></div>
     <div id="chatDisabled" class="panel hidden" style="max-width:520px; padding:26px;">
       <b style="font-family:var(--font-d);">Чат отключён</b>
-      <p class="scr-sub" style="margin-top:6px;">Администратор выключил чат в настройках. Включи «Чат сообщества» в разделе Настройки.</p>
+      <p class="scr-sub" style="margin-top:6px;">Администратор выключил чат. Включи «Чат сообщества» в разделе Настройки.</p>
     </div>
     <div class="chat-wrap" id="chatWrap">
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
         <div class="panel-head">#general <span class="right">live</span></div>
         <div class="chat-msgs" id="chatMsgs"></div>
         <div class="typing" id="chatTyping"></div>
-        <div class="chat-in"><input id="chatIn" placeholder="Сообщение в #general…" maxlength="500"><button class="btn-c" onclick="sendChat()">Отпр.</button></div>
+        <div class="chat-in"><input id="chatIn" placeholder="Сообщение в #general…" maxlength="500"><button class="btn-c" data-act="send-chat">Отпр.</button></div>
       </div>
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
         <div class="panel-head">Онлайн <span class="right" id="onCnt"></span></div>
@@ -422,16 +422,16 @@ canvas { width:100%; display:block; }
       <h1 class="scr-title">Дашборд</h1>
       <p class="scr-sub">Сводка проекта и быстрые действия.</p>
     </div>
-      <button class="btn-v" onclick="refreshStatuses()">⟳ Проверить статусы</button>
+      <button class="btn-v" data-act="refresh">⟳ Проверить статусы</button>
     </div>
     <div class="adm-tiles" id="admTiles"></div>
     <div class="ov-main">
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
-        <div class="panel-head">Серверы <span class="right"><button class="link-m v" onclick="go('adm-servers')">Управлять →</button></span></div>
+        <div class="panel-head">Серверы <span class="right"><button class="link-m v" data-act="go" data-view="adm-servers">Управлять →</button></span></div>
         <div class="tbl-wrap"><table id="dashSrvTbl"></table></div>
       </div>
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
-        <div class="panel-head">Последние новости <span class="right"><button class="link-m v" onclick="go('adm-news')">Управлять →</button></span></div>
+        <div class="panel-head">Последние новости <span class="right"><button class="link-m v" data-act="go" data-view="adm-news">Управлять →</button></span></div>
         <div id="dashNews"></div>
       </div>
     </div>
@@ -444,11 +444,11 @@ canvas { width:100%; display:block; }
       <h1 class="scr-title">Новости</h1>
       <p class="scr-sub">Создание, редактирование, закрепление. Публикации сразу видны на сайте.</p>
     </div>
-      <button class="btn-v" id="newsFormToggle" onclick="toggleNewsForm()">+ Добавить новость</button>
+      <button class="btn-v" data-act="news-form">+ Добавить новость</button>
     </div>
     <div class="panel hidden" id="newsFormPanel" style="margin-bottom:14px;">
       <div class="panel-head" id="newsFormTitle">Новая новость</div>
-      <form onsubmit="return saveNews(event)">
+      <form id="newsForm">
         <div class="form-grid">
           <div class="field full"><label>Заголовок</label><input class="inp" id="nfTitle" required maxlength="120"></div>
           <div class="field full"><label>Короткий анонс</label><input class="inp" id="nfShort" required maxlength="200"></div>
@@ -457,7 +457,7 @@ canvas { width:100%; display:block; }
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-v">Сохранить</button>
-          <button type="button" class="btn-x" onclick="toggleNewsForm(true)">Отмена</button>
+          <button type="button" class="btn-x" data-act="news-form" data-close="1">Отмена</button>
         </div>
       </form>
     </div>
@@ -474,11 +474,11 @@ canvas { width:100%; display:block; }
       <h1 class="scr-title">Серверы</h1>
       <p class="scr-sub">CRUD серверов. Флаги «показывать IP / игроков» управляют публичной карточкой.</p>
     </div>
-      <button class="btn-v" id="srvFormToggle" onclick="toggleSrvForm()">+ Добавить сервер</button>
+      <button class="btn-v" data-act="srv-form">+ Добавить сервер</button>
     </div>
     <div class="panel hidden" id="srvFormPanel" style="margin-bottom:14px;">
       <div class="panel-head" id="srvFormTitle">Новый сервер</div>
-      <form onsubmit="return saveSrv(event)">
+      <form id="srvForm">
         <div class="form-grid">
           <div class="field"><label>Название</label><input class="inp" id="sfName" required maxlength="60"></div>
           <div class="field"><label>Игра</label><input class="inp" id="sfGame" required maxlength="40" placeholder="Minecraft / Rust / CS2…"></div>
@@ -491,7 +491,7 @@ canvas { width:100%; display:block; }
         </div>
         <div class="form-actions">
           <button type="submit" class="btn-v">Сохранить</button>
-          <button type="button" class="btn-x" onclick="toggleSrvForm(true)">Отмена</button>
+          <button type="button" class="btn-x" data-act="srv-form" data-close="1">Отмена</button>
         </div>
       </form>
     </div>
@@ -521,7 +521,7 @@ canvas { width:100%; display:block; }
       <h1 class="scr-title">Аналитика</h1>
       <p class="scr-sub">Визиты, популярные страницы, активность по часам. Данные демонстрационные.</p>
     </div>
-      <button class="btn-x" onclick="cleanupAnalytics(this)">Очистить данные &gt; 90 дней</button>
+      <button class="btn-x" data-act="an-clean">Очистить данные &gt; 90 дней</button>
     </div>
     <div class="chart-grid">
       <div class="panel full"><span class="corner tl"></span><span class="corner br"></span>
@@ -549,7 +549,7 @@ canvas { width:100%; display:block; }
     <div class="ov-main">
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
         <div class="panel-head">Подключение <span class="right" id="pxStatus"></span></div>
-        <form onsubmit="return pxSave(event)">
+        <form id="pxForm">
           <div class="form-grid">
             <div class="field"><label>Хост</label><input class="inp" id="pxHost" value="192.168.1.10"></div>
             <div class="field"><label>Порт</label><input class="inp" id="pxPort" type="number" value="8006"></div>
@@ -558,13 +558,13 @@ canvas { width:100%; display:block; }
             <div class="field"><label>Нода (опц.)</label><input class="inp" id="pxNode" value="pve-node01"></div>
           </div>
           <div class="form-actions">
-            <button type="button" class="btn-c" onclick="pxTest(this)">Проверить связь</button>
+            <button type="button" class="btn-c" data-act="px-test">Проверить связь</button>
             <button type="submit" class="btn-v">Сохранить</button>
           </div>
         </form>
       </div>
       <div class="panel"><span class="corner tl"></span><span class="corner br"></span>
-        <div class="panel-head">Гости для мониторинга <span class="right"><button class="link-m v" onclick="pxDiscover(this)">⟳ Найти гостей</button></span></div>
+        <div class="panel-head">Гости для мониторинга <span class="right"><button class="link-m v" data-act="px-discover">⟳ Найти гостей</button></span></div>
         <div class="tbl-wrap"><table id="pxGuestsTbl"></table></div>
       </div>
     </div>
@@ -577,7 +577,7 @@ canvas { width:100%; display:block; }
       <h1 class="scr-title">Настройки</h1>
       <p class="scr-sub">Применяются мгновенно: смени название — обновится сайдбар; выключи чат — раздел закроется.</p>
     </div></div>
-    <form onsubmit="return saveSettings(event)" style="max-width:760px;">
+    <form id="setForm" style="max-width:760px;">
       <div class="panel" style="margin-bottom:14px;"><span class="corner tl"></span><span class="corner br"></span>
         <div class="panel-head">Сайт</div>
         <div class="form-grid">
@@ -605,9 +605,9 @@ canvas { width:100%; display:block; }
 
 <div id="toast"></div>
 
-<div class="mback" id="mback" onclick="if(event.target===this)closeM()">
+<div class="mback" id="mback">
   <div class="mwin" role="dialog" aria-modal="true">
-    <div class="mh2"><h3 id="mTitle"></h3><button class="x" onclick="closeM()" aria-label="Закрыть">✕</button></div>
+    <div class="mh2"><h3 id="mTitle"></h3><button class="x" data-act="close-modal" aria-label="Закрыть">✕</button></div>
     <div class="mb2"><div class="mm" id="mMeta"></div><div id="mText"></div></div>
   </div>
 </div>
@@ -716,7 +716,7 @@ function renderOverview() {
      <span class="badge ${s.online ? 'ok' : 'bad'}">${s.online ? 'online' : 'offline'}</span></div>`).join('');
   const sorted = newsSorted();
   $('ovNews').innerHTML = sorted.slice(0, 3).map(n =>
-    `<div class="mini-news" onclick="openNews(${n.id})"><div class="t">${n.pinned ? '<span class="pin">◆</span>' : ''}${esc(n.title)}</div><div class="m">${esc(n.date)}${n.pinned ? ' · закреплено' : ''}</div></div>`).join('');
+    `<div class="mini-news" data-act="open-news" data-id="${n.id}"><div class="t">${n.pinned ? '<span class="pin">◆</span>' : ''}${esc(n.title)}</div><div class="m">${esc(n.date)}${n.pinned ? ' · закреплено' : ''}</div></div>`).join('');
   $('ovChat').innerHTML = S.chat.slice(-3).map(c =>
     `<div class="mc-line"><span class="tm">${esc(c.tm)}</span><b class="${c.adm ? 'adm' : ''}">${esc(c.u)}</b> — ${esc(c.t)}</div>`).join('');
   $('ovChatCnt').textContent = S.online.length + ' онлайн';
@@ -732,7 +732,7 @@ function renderPubServers() {
         <div class="srv-row1"><div class="srv-ico">${esc(s.ico || '🎮')}</div>
           <div><div class="srv-name">${esc(s.name)}</div><div class="srv-game">${esc(s.game)}</div></div>
           <span class="badge ${s.online ? 'ok' : 'bad'}">${s.online ? 'online' : 'offline'}</span></div>
-        ${s.showIp ? `<div class="addr"><code>${esc(s.ip)}:${s.port}</code><button onclick="copyAddr(this)">copy</button></div>` : ''}
+        ${s.showIp ? `<div class="addr"><code>${esc(s.ip)}:${s.port}</code><button data-act="copy">copy</button></div>` : ''}
         ${s.showPl ? `<div class="pbar"><span>${s.online ? s.players + '/' + s.max : '—'}</span><div class="bar"><div class="fill" style="width:${s.online && s.max ? Math.round(s.players / s.max * 100) : 0}%"></div></div></div>` : ''}
       </div>
       <div class="srv-foot"><span>${s.online ? 'ping <b class="g">' + s.ping + 'ms</b>' : 'проверен только что'}</span><button class="btn-c btn-sm">Подробнее</button></div>
@@ -742,7 +742,7 @@ function newsSorted() { return [...S.news].sort((a, b) => (b.pinned - a.pinned) 
 function renderPubNews() {
   const th = ['', 'v2', 'v3'];
   $('pubNews').innerHTML = newsSorted().map((n, i) => `
-    <article class="panel news-item" onclick="openNews(${n.id})">
+    <article class="panel news-item" data-act="open-news" data-id="${n.id}">
       <div class="news-thumb ${th[i % 3]}"></div>
       <div class="news-cont"><div class="m">${n.pinned ? '<span class="pin">◆ закреплено · </span>' : ''}${esc(n.date)} · ${esc(n.author)}</div>
       <h3>${esc(n.title)}</h3><p>${esc(n.short)}</p></div>
@@ -771,8 +771,8 @@ function renderMon() {
       </div>
       <div class="mon-ctl">
         ${g.run
-          ? `<button class="btn-x btn-sm" onclick="ctlGuest(${g.vmid},'stop')">■ Стоп</button><button class="btn-c btn-sm" onclick="ctlGuest(${g.vmid},'reboot')">⟳ Рестарт</button>`
-          : `<button class="btn-c btn-sm" onclick="ctlGuest(${g.vmid},'start')">▶ Старт</button>`}
+          ? `<button class="btn-x btn-sm" data-act="guest" data-vmid="${g.vmid}" data-cmd="stop">■ Стоп</button><button class="btn-c btn-sm" data-act="guest" data-vmid="${g.vmid}" data-cmd="reboot">⟳ Рестарт</button>`
+          : `<button class="btn-c btn-sm" data-act="guest" data-vmid="${g.vmid}" data-cmd="start">▶ Старт</button>`}
       </div>
     </div>`).join('')
     : '<div class="panel" style="padding:22px;"><b style="font-family:var(--font-d);">Гости не выбраны</b><p class="scr-sub" style="margin-top:4px;">Отметь гостей в разделе Админ → Proxmox.</p></div>';
@@ -788,7 +788,7 @@ function renderAdmDash() {
   $('dashSrvTbl').innerHTML = '<thead><tr><th>Сервер</th><th>Статус</th><th>Игроки</th></tr></thead><tbody>' +
     S.servers.map(s => `<tr><td><b>${esc(s.name)}</b></td><td><span class="badge ${s.online ? 'ok' : 'bad'}">${s.online ? 'online' : 'offline'}</span></td><td class="mono">${s.online ? s.players + '/' + s.max : '—'}</td></tr>`).join('') + '</tbody>';
   $('dashNews').innerHTML = newsSorted().slice(0, 3).map(n =>
-    `<div class="mini-news" onclick="editNews(${n.id})"><div class="t">${n.pinned ? '<span class="pin">◆</span>' : ''}${esc(n.title)}</div><div class="m">${esc(n.date)} · нажми для редактирования</div></div>`).join('');
+    `<div class="mini-news" data-act="news-edit" data-id="${n.id}"><div class="t">${n.pinned ? '<span class="pin">◆</span>' : ''}${esc(n.title)}</div><div class="m">${esc(n.date)} · нажми для редактирования</div></div>`).join('');
 }
 function renderAdmNews() {
   $('admNewsCnt').textContent = S.news.length + ' шт.';
@@ -798,9 +798,9 @@ function renderAdmNews() {
       <td class="mono">${esc(n.date)}</td>
       <td>${n.pinned ? '<span class="badge w">◆ закреп</span>' : '<span class="badge c">опубл.</span>'}</td>
       <td><div class="row-actions">
-        <button class="btn-x btn-sm" onclick="togglePin(${n.id})">${n.pinned ? 'Открепить' : 'Закрепить'}</button>
-        <button class="btn-v btn-sm" onclick="editNews(${n.id})">Изменить</button>
-        <button class="btn-d btn-sm" onclick="confirm2(this,()=>delNews(${n.id}))">Удалить</button>
+        <button class="btn-x btn-sm" data-act="news-pin" data-id="${n.id}">${n.pinned ? 'Открепить' : 'Закрепить'}</button>
+        <button class="btn-v btn-sm" data-act="news-edit" data-id="${n.id}">Изменить</button>
+        <button class="btn-d btn-sm" data-act="news-del" data-id="${n.id}">Удалить</button>
       </div></td></tr>`).join('') + '</tbody>';
 }
 function renderAdmServers() {
@@ -812,8 +812,8 @@ function renderAdmServers() {
       <td><span class="badge ${s.online ? 'ok' : 'bad'}">${s.online ? 'online' : 'offline'}</span></td>
       <td style="font-family:var(--font-m);font-size:10.5px;">${s.showIp ? 'IP ' : ''}${s.showPl ? '· игроки' : ''}</td>
       <td><div class="row-actions">
-        <button class="btn-v btn-sm" onclick="editSrv(${s.id})">Изменить</button>
-        <button class="btn-d btn-sm" onclick="confirm2(this,()=>delSrv(${s.id}))">Удалить</button>
+        <button class="btn-v btn-sm" data-act="srv-edit" data-id="${s.id}">Изменить</button>
+        <button class="btn-d btn-sm" data-act="srv-del" data-id="${s.id}">Удалить</button>
       </div></td></tr>`).join('') + '</tbody>';
 }
 function renderAdmUsers() {
@@ -825,13 +825,13 @@ function renderAdmUsers() {
       <td>${u.role === 'admin' ? '<span class="badge v">admin</span>' : '<span class="badge c">user</span>'}</td>
       <td class="mono">${esc(u.created)}</td>
       <td class="mono">${esc(u.ip)}</td>
-      <td><div class="row-actions"><button class="btn-d btn-sm" onclick="confirm2(this,()=>delUser(${u.id}))">Удалить</button></div></td></tr>`).join('') + '</tbody>';
+      <td><div class="row-actions"><button class="btn-d btn-sm" data-act="user-del" data-id="${u.id}">Удалить</button></div></td></tr>`).join('') + '</tbody>';
 }
 function renderPx() {
   $('pxStatus').innerHTML = S.px.connected ? '<span class="badge ok">✓ подключено</span>' : '<span class="badge bad">нет связи</span>';
   $('pxGuestsTbl').innerHTML = '<thead><tr><th></th><th>Гость</th><th>Тип</th><th>Нода</th><th>Статус</th></tr></thead><tbody>' +
     S.guests.map(g => `<tr>
-      <td style="width:40px;"><label class="check"><input type="checkbox" ${g.sel ? 'checked' : ''} onchange="pxToggle(${g.vmid},this.checked)"><span class="sw"></span></label></td>
+      <td style="width:40px;"><label class="check"><input type="checkbox" ${g.sel ? 'checked' : ''} data-chg="px-sel" data-vmid="${g.vmid}"><span class="sw"></span></label></td>
       <td><b>${esc(g.name)}</b> <span class="mono" style="font-size:11px;color:var(--muted);">#${g.vmid}</span></td>
       <td><span class="mon-type">${g.type}</span></td>
       <td class="mono">${esc(g.node)}</td>
@@ -851,10 +851,10 @@ function renderAll() {
   renderChat(); renderMon(); renderAdmDash(); renderAdmNews(); renderAdmServers(); renderAdmUsers(); renderPx();
 }
 
-/* ═══════════ ДЕЙСТВИЯ: публичные ═══════════ */
+/* ═══════════ ДЕЙСТВИЯ ═══════════ */
 function copyAddr(btn) {
   const a = btn.parentElement.querySelector('code').textContent;
-  if (navigator.clipboard) navigator.clipboard.writeText(a);
+  if (navigator.clipboard) navigator.clipboard.writeText(a).catch(() => {});
   const o = btn.textContent; btn.textContent = 'ok ✓';
   setTimeout(() => btn.textContent = o, 1400);
 }
@@ -866,7 +866,6 @@ function openNews(id) {
   $('mback').classList.add('open');
 }
 function closeM() { $('mback').classList.remove('open'); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeM(); });
 
 const REPLIES = ['+', 'го!', 'я тоже буду', 'звучит неплохо', 'после рестарта зайду', 'кто ещё с нами?'];
 function sendChat() {
@@ -876,7 +875,6 @@ function sendChat() {
   if (!S.online.includes('Karmiven')) S.online.push('Karmiven');
   i.value = '';
   renderChat(); renderOverview(); renderCounts();
-  // имитация собеседника
   setTimeout(() => { $('chatTyping').textContent = 'Kira печатает…'; }, 700);
   setTimeout(() => {
     $('chatTyping').textContent = '';
@@ -884,8 +882,6 @@ function sendChat() {
     renderChat(); renderOverview();
   }, 2000);
 }
-$('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
-
 function ctlGuest(vmid, act) {
   const g = S.guests.find(x => x.vmid === vmid); if (!g) return;
   if (act === 'start') { g.run = true; g.cpu = 5 + Math.round(Math.random() * 20); g.ram = +(g.maxram * .3).toFixed(1); g.up = '1м'; toast('▶ ' + g.name + ': запуск (UPID:pve-node01:0012F3…)'); }
@@ -893,8 +889,6 @@ function ctlGuest(vmid, act) {
   if (act === 'reboot') { g.up = '0м'; toast('⟳ ' + g.name + ': перезагрузка'); }
   renderMon(); renderOverview(); renderPx();
 }
-
-/* ═══════════ ДЕЙСТВИЯ: админка ═══════════ */
 function refreshStatuses() {
   S.servers.forEach(s => {
     s.online = Math.random() > .25;
@@ -925,14 +919,13 @@ function editNews(id) {
 function saveNews(e) {
   e.preventDefault();
   const data = { title: $('nfTitle').value.trim(), short: $('nfShort').value.trim(), full: $('nfFull').value.trim(), pinned: $('nfPinned').checked };
-  if (!data.title || !data.short || !data.full) return false;
+  if (!data.title || !data.short || !data.full) return;
   if (editNewsId) { Object.assign(S.news.find(x => x.id === editNewsId), data); toast('✓ Новость обновлена'); }
   else {
     S.news.unshift({ id: Math.max(0, ...S.news.map(n => n.id)) + 1, ...data, date: new Date().toLocaleDateString('ru-RU'), author: 'Karmiven' });
     toast('✓ Новость опубликована — смотри раздел «Новости»');
   }
   toggleNewsForm(true); renderAll();
-  return false;
 }
 function togglePin(id) { const n = S.news.find(x => x.id === id); n.pinned = !n.pinned; renderAll(); toast(n.pinned ? '◆ Закреплено' : 'Откреплено'); }
 function delNews(id) { S.news = S.news.filter(x => x.id !== id); renderAll(); toast('Новость удалена'); }
@@ -957,24 +950,23 @@ function editSrv(id) {
 function saveSrv(e) {
   e.preventDefault();
   const port = parseInt($('sfPort').value);
-  if (!port || port < 1 || port > 65535) { toast('Порт должен быть 1–65535', true); return false; }
+  if (!port || port < 1 || port > 65535) { toast('Порт должен быть 1–65535', true); return; }
   const data = { name: $('sfName').value.trim(), game: $('sfGame').value.trim(), ip: $('sfIp').value.trim(), port,
     ico: $('sfIco').value.trim() || '🎮', max: parseInt($('sfMax').value) || 0, showIp: $('sfShowIp').checked, showPl: $('sfShowPl').checked };
-  if (!data.name || !data.game || !data.ip) return false;
+  if (!data.name || !data.game || !data.ip) return;
   if (editSrvId) { Object.assign(S.servers.find(x => x.id === editSrvId), data); toast('✓ Сервер обновлён'); }
   else {
     S.servers.push({ id: Math.max(0, ...S.servers.map(s => s.id)) + 1, ...data, online: Math.random() > .3, players: 0, ping: 10 + Math.floor(Math.random() * 30) });
     toast('✓ Сервер добавлен — смотри раздел «Серверы»');
   }
   toggleSrvForm(true); renderAll();
-  return false;
 }
 function delSrv(id) { S.servers = S.servers.filter(x => x.id !== id); renderAll(); toast('Сервер удалён'); }
 
 /* пользователи */
 function delUser(id) {
   const u = S.users.find(x => x.id === id);
-  if (u?.me) { toast('Нельзя удалить собственную учётку', true); return; }
+  if (u && u.me) { toast('Нельзя удалить собственную учётку', true); return; }
   S.users = S.users.filter(x => x.id !== id);
   renderAll(); toast('Пользователь удалён');
 }
@@ -989,13 +981,13 @@ function pxTest(btn) {
     S.px.connected ? toast('✓ Связь установлена · нода: pve-node01 (PVE 8.2)') : toast('Не удалось подключиться: укажи хост', true);
   }, 900);
 }
-function pxSave(e) { e.preventDefault(); toast('✓ Подключение сохранено (секрет — шифрованным)'); return false; }
 function pxDiscover(btn) {
   const o = btn.textContent; btn.textContent = 'Сканирую…';
   setTimeout(() => { btn.textContent = o; toast('✓ Найдено гостей: ' + S.guests.length); renderPx(); }, 900);
 }
 function pxToggle(vmid, on) {
-  const g = S.guests.find(x => x.vmid === vmid); g.sel = on;
+  const g = S.guests.find(x => x.vmid === vmid); if (!g) return;
+  g.sel = on;
   renderMon(); renderOverview();
   toast(on ? '✓ ' + g.name + ' добавлен в мониторинг' : g.name + ' убран из мониторинга');
 }
@@ -1012,11 +1004,9 @@ function saveSettings(e) {
   S.settings.monPub = $('stMonPub').checked;
   renderAll(); renderSettingsForm();
   toast('✓ Настройки применены' + (S.settings.chat ? '' : ' · чат выключен'));
-  return false;
 }
 
 /* аналитика */
-function cleanupAnalytics(btn) { confirm2(btn, () => toast('✓ Удалено записей: page_views 12 480 · status_log 8 913')); }
 const AN = {
   visits: [72, 85, 64, 91, 118, 132, 97, 104, 141, 126, 152, 168, 149, 173],
   pages: [['/', 512], ['/servers', 341], ['/community', 187], ['/news', 156], ['/monitoring', 89]],
@@ -1025,14 +1015,16 @@ const AN = {
 function chartCtx(id) {
   const c = $(id); const dpr = window.devicePixelRatio || 1;
   const w = c.clientWidth, h = +c.getAttribute('height');
+  if (!w) return null;
   c.width = w * dpr; c.height = h * dpr; c.style.height = h + 'px';
   const x = c.getContext('2d'); x.scale(dpr, dpr);
   return { x, w, h };
 }
 function drawCharts() {
   const cyan = cssVar('--cyan'), violet = cssVar('--violet'), line = cssVar('--line-2'), txt = cssVar('--muted');
-  { // визиты — линия с заливкой
-    const { x, w, h } = chartCtx('chVisits');
+  let ctx;
+  if ((ctx = chartCtx('chVisits'))) { // визиты — линия с заливкой
+    const { x, w, h } = ctx;
     const d = AN.visits, max = Math.max(...d) * 1.15, pad = 26, bw = (w - pad * 2) / (d.length - 1);
     x.strokeStyle = line; x.lineWidth = 1;
     for (let i = 0; i <= 3; i++) { const y = pad / 2 + (h - pad * 1.5) * i / 3; x.beginPath(); x.moveTo(pad, y); x.lineTo(w - 6, y); x.stroke(); }
@@ -1049,8 +1041,8 @@ function drawCharts() {
     x.fillStyle = txt; x.font = '10px ui-monospace,monospace';
     x.fillText('0', 8, h - pad + 3); x.fillText(String(Math.round(max)), 2, pad / 2 + 8);
   }
-  { // страницы — горизонтальные бары
-    const { x, w, h } = chartCtx('chPages');
+  if ((ctx = chartCtx('chPages'))) { // страницы — горизонтальные бары
+    const { x, w, h } = ctx;
     const max = Math.max(...AN.pages.map(p => p[1])), rowH = (h - 16) / AN.pages.length;
     AN.pages.forEach((p, i) => {
       const y = 10 + i * rowH, bw2 = (w - 130) * p[1] / max;
@@ -1062,8 +1054,8 @@ function drawCharts() {
       x.fillText(String(p[1]), 96 + (w - 130) + 6, y + 9);
     });
   }
-  { // часы — вертикальные бары
-    const { x, w, h } = chartCtx('chHours');
+  if ((ctx = chartCtx('chHours'))) { // часы — вертикальные бары
+    const { x, w, h } = ctx;
     const d = AN.hours, max = Math.max(...d), pad = 18, bw = (w - pad * 2) / d.length;
     d.forEach((v, i) => {
       const bh = (h - pad * 2.2) * v / max, xx = pad + i * bw;
@@ -1074,11 +1066,51 @@ function drawCharts() {
     [0, 6, 12, 18, 23].forEach(hh => x.fillText(String(hh).padStart(2, '0'), pad + hh * bw, h - 4));
   }
 }
+
+/* ═══════════ ДЕЛЕГИРОВАНИЕ СОБЫТИЙ (работает под строгим CSP) ═══════════ */
+document.addEventListener('click', function (e) {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const d = el.dataset;
+  switch (d.act) {
+    case 'go':          go(d.view); break;
+    case 'theme':       setTheme(d.theme); break;
+    case 'copy':        copyAddr(el); break;
+    case 'open-news':   openNews(+d.id); break;
+    case 'close-modal': closeM(); break;
+    case 'send-chat':   sendChat(); break;
+    case 'guest':       ctlGuest(+d.vmid, d.cmd); break;
+    case 'refresh':     refreshStatuses(); break;
+    case 'news-form':   toggleNewsForm(d.close === '1'); break;
+    case 'news-edit':   editNews(+d.id); break;
+    case 'news-pin':    togglePin(+d.id); break;
+    case 'news-del':    confirm2(el, () => delNews(+d.id)); break;
+    case 'srv-form':    toggleSrvForm(d.close === '1'); break;
+    case 'srv-edit':    editSrv(+d.id); break;
+    case 'srv-del':     confirm2(el, () => delSrv(+d.id)); break;
+    case 'user-del':    confirm2(el, () => delUser(+d.id)); break;
+    case 'px-test':     pxTest(el); break;
+    case 'px-discover': pxDiscover(el); break;
+    case 'an-clean':    confirm2(el, () => toast('✓ Удалено записей: page_views 12 480 · status_log 8 913')); break;
+  }
+});
+document.addEventListener('change', function (e) {
+  const el = e.target.closest('[data-chg]');
+  if (!el) return;
+  if (el.dataset.chg === 'px-sel') pxToggle(+el.dataset.vmid, el.checked);
+});
+$('newsForm').addEventListener('submit', saveNews);
+$('srvForm').addEventListener('submit', saveSrv);
+$('pxForm').addEventListener('submit', function (e) { e.preventDefault(); toast('✓ Подключение сохранено (секрет — шифрованным)'); });
+$('setForm').addEventListener('submit', saveSettings);
+$('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
+$('mback').addEventListener('click', e => { if (e.target === $('mback')) closeM(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeM(); });
 window.addEventListener('resize', () => { if ($('v-adm-analytics').classList.contains('on')) drawCharts(); });
 
 /* ═══════════ ЖИВОСТЬ ═══════════ */
 setInterval(() => { $('tkTime').textContent = 'MSK ' + new Date().toLocaleTimeString('ru-RU'); }, 1000);
-setInterval(() => { // дрейф метрик
+setInterval(() => {
   S.guests.forEach(g => { if (g.run) {
     g.cpu = Math.min(96, Math.max(1, g.cpu + Math.round((Math.random() - .5) * 10)));
     g.ram = Math.min(g.maxram, Math.max(.2, +(g.ram + (Math.random() - .5) * .4).toFixed(1)));
