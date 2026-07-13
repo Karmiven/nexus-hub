@@ -43,10 +43,10 @@
           </div>
 
           <div class="form-actions" style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap;">
-            <button type="button" class="btn btn-sm btn-outline" id="testBtn" onclick="testConnection()">
+            <button type="button" class="btn btn-sm btn-outline" id="testBtn">
               <i data-lucide="wifi" style="width:14px;height:14px;"></i> <span data-i18n="pve_test">Тест подключения</span>
             </button>
-            <button type="button" class="btn btn-sm btn-primary" id="saveBtn" onclick="saveSettings()">
+            <button type="button" class="btn btn-sm btn-primary" id="saveBtn">
               <i data-lucide="save" style="width:14px;height:14px;"></i> <span data-i18n="save">Сохранить</span>
             </button>
             <span id="connResult" style="font-size:0.85rem;"></span>
@@ -64,10 +64,10 @@
         </p>
 
         <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:1rem;">
-          <button type="button" class="btn btn-sm btn-outline" id="discoverBtn" onclick="discoverGuests()">
+          <button type="button" class="btn btn-sm btn-outline" id="discoverBtn">
             <i data-lucide="search" style="width:14px;height:14px;"></i> <span data-i18n="pve_discover">Обнаружить</span>
           </button>
-          <button type="button" class="btn btn-sm btn-primary" id="saveGuestsBtn" onclick="saveGuests()">
+          <button type="button" class="btn btn-sm btn-primary" id="saveGuestsBtn">
             <i data-lucide="save" style="width:14px;height:14px;"></i> <span data-i18n="pve_save_selection">Сохранить выбор</span>
           </button>
           <span id="guestResult" style="font-size:0.85rem;"></span>
@@ -87,7 +87,7 @@
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th style="width:40px;"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>
+                  <th style="width:40px;"><input type="checkbox" id="checkAll"></th>
                   <th>VMID</th>
                   <th data-i18n="pve_th_name">Имя</th>
                   <th data-i18n="pve_th_type">Тип</th>
@@ -224,7 +224,7 @@
   }
 </style>
 
-<script>
+<script nonce="<%= cspNonce %>">
   var _csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
 
   // Update CSRF token from response header after each POST (token rotates on use)
@@ -374,7 +374,7 @@
 
       var table = document.getElementById('guestsTable');
       var html = '<table class="admin-table"><thead><tr>' +
-        '<th style="width:40px;"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>' +
+        '<th style="width:40px;"><input type="checkbox" id="checkAll"></th>' +
         '<th>VMID</th><th>' + escHtml(thName) + '</th><th>' + escHtml(thType) + '</th><th>' + escHtml(thStatus) + '</th>' +
         '</tr></thead><tbody>';
 
@@ -457,6 +457,15 @@
     d.textContent = s;
     return d.innerHTML;
   }
+// ── CSP-safe listeners (replace inline handlers) ──
+document.getElementById('testBtn').addEventListener('click', testConnection);
+document.getElementById('saveBtn').addEventListener('click', saveSettings);
+document.getElementById('discoverBtn').addEventListener('click', discoverGuests);
+document.getElementById('saveGuestsBtn').addEventListener('click', saveGuests);
+// #checkAll is re-created when the guests table is rebuilt — delegate
+document.addEventListener('change', function (e) {
+  if (e.target && e.target.id === 'checkAll') toggleAll(e.target);
+});
 </script>
 
 <%- include('../partials/footer') %>

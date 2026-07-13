@@ -34,7 +34,7 @@
 
   <div style="text-align:right; margin-top:1rem; font-size:0.75rem; color:var(--text-muted);">
     <span data-i18n="mon_updated">Updated</span>: <span id="lastUpdate">--</span> &nbsp;|&nbsp;
-    <button class="btn btn-xs btn-outline" onclick="fetchData()" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> <span data-i18n="mon_refresh">Refresh</span></button>
+    <button class="btn btn-xs btn-outline" id="refreshBtn"><i data-lucide="refresh-cw" style="width:14px;height:14px;"></i> <span data-i18n="mon_refresh">Refresh</span></button>
   </div>
 
   <% } %>
@@ -83,7 +83,7 @@
 @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
-<script>
+<script nonce="<%= cspNonce %>">
 <% if (proxmoxConfigured && hasSelectedGuests) { %>
 var refreshInterval;
 var _cachedGuests = null;
@@ -154,7 +154,7 @@ function renderGuests(guests) {
     var html = '<div class="resource-header">' +
       '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> <span class="guest-name">' + escHtml(label) + '</span>';
     if (_isAdmin) {
-      html += ' <button class="rename-btn" onclick="renameGuest(' + g.vmid + ',this)" title="Rename"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button>';
+      html += ' <button class="rename-btn" data-vmid="' + g.vmid + '" title="Rename"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button>';
     }
     html += '</h3>' +
       '<span class="resource-status ' + (isRunning ? 'status-online' : 'status-offline') + '">' +
@@ -208,15 +208,15 @@ function renderGuests(guests) {
 
     if (_isAdmin) {
       html += '<div class="guest-controls">' +
-        '<button class="btn-control btn-start" data-vmid="' + g.vmid + '" data-action="start" onclick="controlGuest(this)" ' +
+        '<button class="btn-control btn-start" data-vmid="' + g.vmid + '" data-action="start" ' +
           (isRunning ? 'disabled' : '') + '>' +
           '<i data-lucide="play" style="width:12px;height:12px;"></i> ' + _t('mon_start') +
         '</button>' +
-        '<button class="btn-control btn-restart" data-vmid="' + g.vmid + '" data-action="reboot" onclick="controlGuest(this)" ' +
+        '<button class="btn-control btn-restart" data-vmid="' + g.vmid + '" data-action="reboot" ' +
           (!isRunning ? 'disabled' : '') + '>' +
           '<i data-lucide="refresh-cw" style="width:12px;height:12px;"></i> ' + _t('mon_restart') +
         '</button>' +
-        '<button class="btn-control btn-stop" data-vmid="' + g.vmid + '" data-action="shutdown" onclick="controlGuest(this)" ' +
+        '<button class="btn-control btn-stop" data-vmid="' + g.vmid + '" data-action="shutdown" ' +
           (!isRunning ? 'disabled' : '') + '>' +
           '<i data-lucide="square" style="width:12px;height:12px;"></i> ' + _t('mon_shutdown') +
         '</button>' +
@@ -337,6 +337,20 @@ window.addEventListener('languageChanged', function() {
   }
 });
 <% } %>
+// ── CSP-safe listeners (replace inline handlers) ──
+// This page is reachable via SPA navigation: guard against re-registering
+// document-level delegates when the inline script re-executes.
+var rb = document.getElementById('refreshBtn');
+if (rb) rb.addEventListener('click', function () { fetchData(); });
+if (!window.__monDelegated) {
+  window.__monDelegated = true;
+  document.addEventListener('click', function (e) {
+    var c = e.target.closest('.btn-control');
+    if (c) { if (typeof controlGuest === 'function') controlGuest(c); return; }
+    var r = e.target.closest('.rename-btn');
+    if (r && typeof renameGuest === 'function') renameGuest(parseInt(r.dataset.vmid), r);
+  });
+}
 </script>
 
 <%- include('../partials/footer') %>

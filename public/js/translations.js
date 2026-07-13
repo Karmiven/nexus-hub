@@ -36,6 +36,7 @@ function loadLanguageFile(code) {
     if (_i18nLanguages[code]) return resolve();
 
     var script = document.createElement('script');
+    if (window.__cspNonce) script.nonce = window.__cspNonce;
     script.src = '/js/lang/' + code + '.js?v=' + (window.__version || Date.now());
 
     window.__loadLang = function(data) {

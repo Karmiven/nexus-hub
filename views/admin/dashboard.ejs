@@ -59,20 +59,20 @@
         <span class="stat-label" data-i18n="admin_stat_chat_msgs">Сообщения</span>
       </div>
     </div>
-    <div class="stat-card stat-card-analytics-link" onclick="location.href='/admin/analytics'">
+    <a class="stat-card stat-card-analytics-link" href="/admin/analytics">
       <div class="stat-icon"><i data-lucide="bar-chart-3"></i></div>
       <div class="stat-info">
         <span class="stat-number" style="font-size:1rem;">&rarr;</span>
         <span class="stat-label" data-i18n="admin_tab_analytics">Аналитика</span>
       </div>
-    </div>
+    </a>
   </div>
 
   <!-- Server Status Table -->
   <div class="admin-table-wrapper">
     <div class="admin-section-header">
       <h2 data-i18n="admin_server_monitor">Монитор статуса серверов</h2>
-      <button type="button" id="refreshAllBtn" class="btn btn-sm btn-outline" onclick="refreshAllServers()"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
+      <button type="button" id="refreshAllBtn" class="btn btn-sm btn-outline"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
     </div>
     <div class="table-responsive">
       <table class="data-table table-dashboard">
@@ -105,7 +105,8 @@
   </div>
 </section>
 
-<script>
+<script nonce="<%= cspNonce %>">
+document.getElementById('refreshAllBtn').addEventListener('click', refreshAllServers);
 async function refreshAllServers() {
   var btn = document.getElementById('refreshAllBtn');
   var token = document.querySelector('meta[name="csrf-token"]');

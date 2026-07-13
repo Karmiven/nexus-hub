@@ -20,7 +20,7 @@
         <div class="srv-body">
           <div class="srv-row1">
             <div class="srv-ico">
-              <% if (srv.image) { %><img src="<%= srv.image %>" alt="" loading="lazy" onerror="this.remove()"><% } else { %><i data-lucide="gamepad-2"></i><% } %>
+              <% if (srv.image) { %><img src="<%= srv.image %>" alt="" loading="lazy" class="srv-img"><% } else { %><i data-lucide="gamepad-2"></i><% } %>
             </div>
             <div>
               <div class="srv-name"><%= srv.name %></div>
@@ -31,7 +31,7 @@
           <% if (srv.show_ip_address) { %>
             <div class="addr">
               <code><%= srv.ip %>:<%= srv.port %></code>
-              <button type="button" onclick="copyAddr(this)" data-i18n="copy">copy</button>
+              <button type="button" class="addr-copy" data-i18n="copy">copy</button>
             </div>
           <% } %>
           <% if (srv.show_player_count) { %>
@@ -54,15 +54,20 @@
     <% }); %>
   </div>
 
-  <script>
-    function copyAddr(btn) {
-      var code = btn.parentElement.querySelector('code');
-      if (!code) return;
-      if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
-      var original = btn.textContent;
-      btn.textContent = 'ok ✓';
-      setTimeout(function () { btn.textContent = original; }, 1400);
-    }
+  <script nonce="<%= cspNonce %>">
+    document.querySelectorAll('.srv-img').forEach(function (img) {
+      img.addEventListener('error', function () { img.remove(); });
+    });
+    document.querySelectorAll('.addr-copy').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var code = btn.parentElement.querySelector('code');
+        if (!code) return;
+        if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
+        var original = btn.textContent;
+        btn.textContent = 'ok ✓';
+        setTimeout(function () { btn.textContent = original; }, 1400);
+      });
+    });
   </script>
 <% } %>
 

@@ -52,7 +52,7 @@
   <div class="admin-table-wrapper" style="margin-top: 2rem;">
     <div class="admin-section-header">
       <h2 data-i18n="admin_system_log">Action log</h2>
-      <form action="/admin/system/cleanup" method="POST" onsubmit="return confirm(t('admin_system_cleanup_confirm'))">
+      <form action="/admin/system/cleanup" method="POST" data-confirm="admin_system_cleanup_confirm">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <button type="submit" class="btn btn-sm btn-outline"><i data-lucide="trash-2"></i> <span data-i18n="admin_system_cleanup">Clean analytics (90d+)</span></button>
       </form>

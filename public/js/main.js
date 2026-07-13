@@ -1,5 +1,8 @@
 // ── NexusHub Client-Side JavaScript ──
 
+// CSP nonce of this document (scripts re-created during SPA swaps inherit it)
+var CSP_NONCE = (document.currentScript && document.currentScript.nonce) || window.__cspNonce || '';
+
 /**
  * Reveal the page once theme CSS is fully loaded.
  * Uses visibility:hidden → visible (no layout shift, no flash).
@@ -231,6 +234,7 @@ function loadExternalScripts(scriptElements) {
     return chain.then(function () {
       return new Promise(function (resolve) {
         var s = document.createElement('script');
+        if (CSP_NONCE) s.nonce = CSP_NONCE;
         s.src = oldScript.getAttribute('src');
         if (oldScript.getAttribute('crossorigin')) s.crossOrigin = oldScript.getAttribute('crossorigin');
         s.onload = resolve;
@@ -248,6 +252,7 @@ function executeInlineScripts(scriptElements) {
   scriptElements.forEach(function (oldScript) {
     if (oldScript.src) return; // external scripts handled separately
     var s = document.createElement('script');
+    if (CSP_NONCE) s.nonce = CSP_NONCE;
     s.textContent = oldScript.textContent;
     document.body.appendChild(s);
     s.remove();
@@ -257,6 +262,28 @@ function executeInlineScripts(scriptElements) {
 /**
  * Set up SPA navigation: intercept clicks + handle back/forward
  */
+// ── Global delegated handlers (replace inline on* attributes, CSP-safe) ──
+
+// Forms with data-confirm ask before submitting (capture phase so the
+// SPA fade-out handler sees defaultPrevented)
+document.addEventListener('submit', function (e) {
+  var form = e.target;
+  if (!form.matches || !form.matches('form[data-confirm]')) return;
+  var key = form.getAttribute('data-confirm');
+  var msg = (window.t ? window.t(key) : key) + (form.dataset.confirmArg ? ' ' + form.dataset.confirmArg : '');
+  if (!confirm(msg)) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
+
+// Selects with .autosubmit submit their form on change
+document.addEventListener('change', function (e) {
+  if (e.target.matches && e.target.matches('select.autosubmit')) {
+    e.target.form && e.target.form.submit();
+  }
+});
+
 function initSpaNavigation() {
   // ── Intercept link clicks ──
   document.addEventListener('click', function (e) {

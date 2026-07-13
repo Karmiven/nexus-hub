@@ -1,6 +1,6 @@
 <%- include('../partials/header') %>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script nonce="<%= cspNonce %>" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <section class="admin-header">
   <div class="container">
@@ -115,19 +115,19 @@
   <div class="modal-content" style="max-width:600px;">
     <div class="modal-header">
       <h2><i data-lucide="crop"></i> <span data-i18n="admin_crop_banner_title">Обрезка баннера (16:5)</span></h2>
-      <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
+      <button type="button" class="modal-close" data-act="closeCropModal">&times;</button>
     </div>
     <div style="max-height:400px;overflow:hidden;">
       <img id="cropperImage" style="max-width:100%;">
     </div>
     <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end;">
-      <button type="button" class="btn btn-secondary" onclick="closeCropModal()" data-i18n="cancel">Отмена</button>
-      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> <span data-i18n="admin_btn_apply">Применить</span></button>
+      <button type="button" class="btn btn-secondary" data-act="closeCropModal" data-i18n="cancel">Отмена</button>
+      <button type="button" class="btn btn-primary" data-act="applyCrop"><i data-lucide="check"></i> <span data-i18n="admin_btn_apply">Применить</span></button>
     </div>
   </div>
 </div>
 
-<script>
+<script nonce="<%= cspNonce %>">
   // Redirect toggle
   var toggle = document.getElementById('redirectToggle');
   var urlGroup = document.getElementById('redirectUrlGroup');
@@ -233,6 +233,13 @@
     // Clear file input so form doesn't send raw file
     imageFile.value = '';
   }
+// ── CSP-safe event delegation ──
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]');
+  if (!b) return;
+  if (b.dataset.act === 'closeCropModal') closeCropModal();
+  else if (b.dataset.act === 'applyCrop') applyCrop();
+});
 </script>
 
 <%- include('../partials/footer') %>

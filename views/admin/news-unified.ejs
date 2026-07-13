@@ -3,7 +3,7 @@
 <!-- Cropper.js CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <!-- Cropper.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script nonce="<%= cspNonce %>" src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
 <section class="admin-header">
   <div class="container">
@@ -15,13 +15,13 @@
 <section class="section container">
   <% if (news.length === 0) { %>
     <div class="empty-state">
-      <p><span data-i18n="admin_no_news">Новостей пока нет.</span> <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()" data-i18n="create">Создать</button></p>
+      <p><span data-i18n="admin_no_news">Новостей пока нет.</span> <button type="button" class="btn btn-primary btn-sm" data-act="openCreateModal" data-i18n="create">Создать</button></p>
     </div>
   <% } else { %>
     <div class="admin-table-wrapper">
       <div class="admin-section-header">
         <h2 data-i18n="admin_all_articles">Все статьи</h2>
-        <button type="button" class="btn btn-primary btn-sm" onclick="openCreateModal()">+ <span data-i18n="admin_create_news">Создать новость</span></button>
+        <button type="button" class="btn btn-primary btn-sm" data-act="openCreateModal">+ <span data-i18n="admin_create_news">Создать новость</span></button>
       </div>
       <div class="table-responsive">
         <table class="data-table table-news">
@@ -42,8 +42,8 @@
                 <td><span class="badge <% if (item.pinned) { %>badge-success<% } else { %>badge-default<% } %>"><% if (item.pinned) { %><span data-i18n="admin_pinned_yes">Да</span><% } else { %><span data-i18n="admin_pinned_no">—</span><% } %></span></td>
                 <td><span class="local-time" data-timestamp="<%= item.created_at %>" data-format="date"></span></td>
                 <td class="actions-cell">
-                  <button type="button" class="btn btn-xs btn-outline" onclick="loadArticle(<%= item.id %>)" data-i18n="admin_edit_short">Ред.</button>
-                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(t('admin_confirm_delete_article'))">
+                  <button type="button" class="btn btn-xs btn-outline" data-act="loadArticle" data-id="<%= item.id %>" data-i18n="admin_edit_short">Ред.</button>
+                  <form action="/admin/news/<%= item.id %>/delete" method="POST" style="display:inline;" data-confirm="admin_confirm_delete_article">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                   </form>
@@ -62,7 +62,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 id="modalTitle"><i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">Создать новость</span></h2>
-      <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
+      <button type="button" class="modal-close" data-act="closeModal">&times;</button>
     </div>
 
     <form id="newsForm" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; overflow: hidden;">
@@ -133,8 +133,8 @@
           <div id="finalImagePreview" style="display: none;">
             <img id="finalImage" class="image-preview" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: var(--radius-sm); border: 1px solid var(--border);">
             <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" onclick="recropImage()"><i data-lucide="crop"></i> <span data-i18n="admin_news_recrop">Обрезать</span></button>
-              <button type="button" class="btn btn-xs btn-outline" onclick="replaceImage()"><i data-lucide="image-plus"></i> <span data-i18n="admin_news_replace">Заменить</span></button>
+              <button type="button" class="btn btn-xs btn-outline" data-act="recropImage"><i data-lucide="crop"></i> <span data-i18n="admin_news_recrop">Обрезать</span></button>
+              <button type="button" class="btn btn-xs btn-outline" data-act="replaceImage"><i data-lucide="image-plus"></i> <span data-i18n="admin_news_replace">Заменить</span></button>
             </div>
           </div>
         </div>
@@ -150,8 +150,8 @@
     </div>
 
     <div class="form-actions">
-      <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-      <button type="button" class="btn btn-outline" onclick="openPreviewModal()"><i data-lucide="eye"></i> <span data-i18n="admin_news_preview">Предпросмотр</span></button>
+      <button type="button" class="btn btn-secondary" data-act="closeModal" data-i18n="cancel">Cancel</button>
+      <button type="button" class="btn btn-outline" data-act="openPreviewModal"><i data-lucide="eye"></i> <span data-i18n="admin_news_preview">Предпросмотр</span></button>
       <button type="submit" class="btn btn-primary" id="submitBtn"><i data-lucide="sparkles"></i> <span data-i18n="create">Создать</span></button>
     </div>
   </form>
@@ -162,11 +162,11 @@
   <div class="modal-content" style="max-width: 900px;">
     <div class="modal-header">
       <h2><i data-lucide="eye"></i> <span data-i18n="admin_news_preview_title">Предпросмотр статьи</span></h2>
-      <button type="button" class="modal-close" onclick="closePreviewModal()">&times;</button>
+      <button type="button" class="modal-close" data-act="closePreviewModal">&times;</button>
     </div>
     <div class="preview-tabs">
-      <button type="button" class="preview-tab active" data-tab="mini" onclick="switchPreviewTab('mini')"><i data-lucide="home"></i> <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
-      <button type="button" class="preview-tab" data-tab="full" onclick="switchPreviewTab('full')"><i data-lucide="file-text"></i> <span data-i18n="admin_news_preview_full">Полная статья</span></button>
+      <button type="button" class="preview-tab active" data-tab="mini" data-act="switchPreviewTab"><i data-lucide="home"></i> <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
+      <button type="button" class="preview-tab" data-tab="full" data-act="switchPreviewTab"><i data-lucide="file-text"></i> <span data-i18n="admin_news_preview_full">Полная статья</span></button>
     </div>
     <div id="previewMini" class="preview-pane active">
       <div class="preview-label" data-i18n="admin_news_preview_mini_desc">Как выглядит на главной:</div>
@@ -184,14 +184,14 @@
   <div class="modal-content" style="max-width: 600px;">
     <div class="modal-header">
       <h2><i data-lucide="crop"></i> <span data-i18n="admin_news_crop_title">Обрезка изображения (16:9)</span></h2>
-      <button type="button" class="modal-close" onclick="closeCropModal()">&times;</button>
+      <button type="button" class="modal-close" data-act="closeCropModal">&times;</button>
     </div>
     <div class="crop-container">
       <img id="cropperImage" style="max-width: 100%;">
     </div>
     <div class="crop-controls" style="display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end;">
-      <button type="button" class="btn btn-secondary" onclick="closeCropModal()" data-i18n="cancel">Отмена</button>
-      <button type="button" class="btn btn-primary" onclick="applyCrop()"><i data-lucide="check"></i> <span data-i18n="admin_news_crop_apply">Применить</span></button>
+      <button type="button" class="btn btn-secondary" data-act="closeCropModal" data-i18n="cancel">Отмена</button>
+      <button type="button" class="btn btn-primary" data-act="applyCrop"><i data-lucide="check"></i> <span data-i18n="admin_news_crop_apply">Применить</span></button>
     </div>
   </div>
 </div>
@@ -591,7 +591,7 @@
   }
 </style>
 
-<script>
+<script nonce="<%= cspNonce %>">
   const modal = document.getElementById('newsModal');
   const cropModal = document.getElementById('cropModal');
   const form = document.getElementById('newsForm');
@@ -788,8 +788,8 @@
 
     const langSwitcher = `
       <div class="preview-lang-switch">
-        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" onclick="setPreviewLang('en')">EN English</button>
-        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" onclick="setPreviewLang('ru')">RU Русский</button>
+        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" data-act="setPreviewLang" data-lang="en">EN English</button>
+        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" data-act="setPreviewLang" data-lang="ru">RU Русский</button>
       </div>
     `;
 
@@ -959,6 +959,24 @@
       alert(t('admin_news_error_save') + ' ' + err.message);
     }
   });
+// ── CSP-safe event delegation (replaces inline onclick attributes) ──
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]');
+  if (!b) return;
+  switch (b.dataset.act) {
+    case 'openCreateModal': openCreateModal(); break;
+    case 'loadArticle': loadArticle(parseInt(b.dataset.id)); break;
+    case 'closeModal': closeModal(); break;
+    case 'recropImage': recropImage(); break;
+    case 'replaceImage': replaceImage(); break;
+    case 'openPreviewModal': openPreviewModal(); break;
+    case 'closePreviewModal': closePreviewModal(); break;
+    case 'switchPreviewTab': switchPreviewTab(b.dataset.tab); break;
+    case 'closeCropModal': closeCropModal(); break;
+    case 'applyCrop': applyCrop(); break;
+    case 'setPreviewLang': setPreviewLang(b.dataset.lang); break;
+  }
+});
 </script>
 
 <%- include('../partials/footer') %>

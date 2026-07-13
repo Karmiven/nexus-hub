@@ -99,7 +99,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="<%= cspNonce %>">
 // Overview infrastructure mini-widget: best-effort, hidden unless data is available
 (function () {
   fetch('/monitoring/resources', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })

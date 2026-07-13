@@ -772,3 +772,6 @@ body::before {
   .tick-dot.ok { animation: none; }
   .side { transition: none; }
 }
+
+/* Analytics shortcut card is a link since the CSP cleanup */
+a.stat-card { text-decoration: none; color: inherit; }

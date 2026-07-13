@@ -59,9 +59,9 @@
   </div>
 </div>
 
-<script>document.body.classList.add('page-ready');</script>
-<script src="/socket.io/socket.io.js"></script>
-<script>
+<script nonce="<%= cspNonce %>">document.body.classList.add('page-ready');</script>
+<script nonce="<%= cspNonce %>" src="/socket.io/socket.io.js"></script>
+<script nonce="<%= cspNonce %>">
   const socket = io();
   const IS_STAFF = <%= isStaff ? 'true' : 'false' %>;
   let username = '';

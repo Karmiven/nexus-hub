@@ -34,12 +34,24 @@ const io = new Server(server);
 app.set('trust proxy', 1);
 
 // ── Security ──
+// Per-request CSP nonce — every <script> tag in the views carries it.
+// 'strict-dynamic' lets nonce-approved scripts create further scripts
+// (SPA swaps, Turnstile); the host allowlist stays as a CSP2 fallback.
+app.use((req, res, next) => {
+  res.locals.cspNonce = require('crypto').randomBytes(16).toString('base64');
+  next();
+});
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com"],
-      scriptSrcAttr: ["'unsafe-inline'"],
+      scriptSrc: [
+        (req, res) => `'nonce-${res.locals.cspNonce}'`,
+        "'strict-dynamic'",
+        "'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com"
+      ],
+      scriptSrcAttr: ["'none'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],

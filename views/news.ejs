@@ -74,7 +74,7 @@
     </div>
   </div>
 
-  <script>
+  <script nonce="<%= cspNonce %>">
     function decodeAttr(element, key) {
       var raw = element.getAttribute('data-' + key) || '';
       try { return decodeURIComponent(raw); } catch (e) { return raw; }

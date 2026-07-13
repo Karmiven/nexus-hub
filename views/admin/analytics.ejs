@@ -17,7 +17,7 @@
         <option value="14" selected data-i18n="admin_period_14d">14 дней</option>
         <option value="30" data-i18n="admin_period_30d">30 дней</option>
       </select>
-      <button type="button" id="refreshChartsBtn" class="btn btn-sm btn-outline" onclick="loadAllCharts()">
+      <button type="button" id="refreshChartsBtn" class="btn btn-sm btn-outline">
         <i data-lucide="refresh-cw"></i> <span data-i18n="refresh">Обновить</span>
       </button>
     </div>
@@ -190,8 +190,8 @@
 .visitor-pages-toggle:hover { text-decoration: underline; }
 </style>
 
-<script src="https://unpkg.com/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-<script>
+<script nonce="<%= cspNonce %>" src="https://unpkg.com/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script nonce="<%= cspNonce %>">
 (function() {
   // ── Retry Chart.js loading if CDN fails ──
   function waitForChart(attempt) {
@@ -588,7 +588,7 @@
         var tMore = t('admin_visitor_more');
         var tCollapse = t('admin_visitor_collapse');
         html += '<span id="' + uid + '" style="display:none">' + hiddenHtml + '</span>';
-        html += '<button class="visitor-pages-toggle" onclick="var el=document.getElementById(\'' + uid + '\');if(el.style.display===\'none\'){el.style.display=\'\';this.textContent=\'▲ ' + tCollapse + '\';}else{el.style.display=\'none\';this.textContent=\'+ ' + hidden.length + ' ' + tMore + '\';}">+ ' + hidden.length + ' ' + tMore + '</button>';
+        html += '<button class="visitor-pages-toggle" data-target="' + uid + '" data-more="+ ' + hidden.length + ' ' + tMore + '" data-collapse="▲ ' + tCollapse + '">+ ' + hidden.length + ' ' + tMore + '</button>';
       }
       return html;
     }
@@ -713,6 +713,17 @@
     start();
   }
 })();
+// ── CSP-safe listeners (replace inline onclick attributes) ──
+document.getElementById('refreshChartsBtn').addEventListener('click', function () { loadAllCharts(); });
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('.visitor-pages-toggle');
+  if (!b) return;
+  var el = document.getElementById(b.dataset.target);
+  if (!el) return;
+  var hiddenNow = el.style.display === 'none';
+  el.style.display = hiddenNow ? '' : 'none';
+  b.textContent = hiddenNow ? b.dataset.collapse : b.dataset.more;
+});
 </script>
 
 <%- include('../partials/footer') %>

@@ -27,8 +27,8 @@
 </section>
 
 <% if (turnstileSiteKey) { %>
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=_initTurnstile"></script>
-<script>
+<script nonce="<%= cspNonce %>" src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=_initTurnstile"></script>
+<script nonce="<%= cspNonce %>">
   function _initTurnstile() {
     var container = document.getElementById('turnstile-container');
     var btn = document.getElementById('loginBtn');

@@ -40,7 +40,7 @@
                 <% } else { %>
                   <form action="/admin/users/<%= u.id %>/role" method="POST" class="role-form">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                    <select name="role" class="theme-selector role-select" onchange="this.form.submit()" aria-label="Role">
+                    <select name="role" class="theme-selector role-select autosubmit" aria-label="Role">
                       <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
                       <option value="gm" <%= u.role === 'gm' ? 'selected' : '' %>>gm</option>
                       <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
@@ -52,7 +52,7 @@
               <td class="mono"><%= u.last_ip || '-' %></td>
               <td><span class="local-time" data-timestamp="<%= u.created_at %>" data-format="date"></span></td>
               <td class="actions-cell">
-                <form action="/admin/users/<%= u.id %>/delete" method="POST" style="display:inline;" onsubmit="return confirm(t('admin_confirm_delete_user') + ' <%= u.username %>?')">
+                <form action="/admin/users/<%= u.id %>/delete" method="POST" style="display:inline;" data-confirm="admin_confirm_delete_user" data-confirm-arg="<%= u.username %>?">
                   <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                   <button type="submit" class="btn btn-xs btn-danger" data-i18n="delete">Удалить</button>
                 </form>

@@ -17,9 +17,11 @@
   <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#04060c">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300e5ff'%3E%3Cpath d='M13 2 3 14h7l-1 8 10-12h-7l1-8z'/%3E%3C/svg%3E">
-  <script>
+  <script nonce="<%= cspNonce %>">
     // Apply saved theme IMMEDIATELY — before any CSS loads — to prevent white flash
     (function(){
+      // Expose the CSP nonce for scripts created at runtime (i18n loader, SPA)
+      if (document.currentScript) window.__cspNonce = document.currentScript.nonce || '';
       var t = localStorage.getItem('theme') || 'dark';
       var lang = localStorage.getItem('language') || 'en';
       document.documentElement.setAttribute('data-theme', t);
@@ -46,7 +48,7 @@
   <link rel="stylesheet" href="/css/layout.css?v=<%= v %>">
   <link rel="stylesheet" href="/css/mobile.css?v=<%= v %>">
   <link rel="stylesheet" href="/css/desktop.css?v=<%= v %>">
-  <script>
+  <script nonce="<%= cspNonce %>">
     // Update theme stylesheet href ASAP (after <link> exists)
     (function(){
       var t = window.__savedTheme || 'dark';
@@ -54,12 +56,12 @@
       if (link) link.href = '/css/themes/' + t + '.css?v=<%= v %>';
     })();
   </script>
-  <script src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
+  <script nonce="<%= cspNonce %>" src="https://unpkg.com/lucide@0.454.0/dist/umd/lucide.min.js" crossorigin="anonymous"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&family=UnifrakturCook:wght@700&family=VT323&display=swap" rel="stylesheet">
-  <script src="/js/translations.js?v=<%= v %>"></script>
-  <script src="/js/theme-effects.js?v=<%= v %>"></script>
-  <script>
+  <script nonce="<%= cspNonce %>" src="/js/translations.js?v=<%= v %>"></script>
+  <script nonce="<%= cspNonce %>" src="/js/theme-effects.js?v=<%= v %>"></script>
+  <script nonce="<%= cspNonce %>">
     window.SITE_TIMEZONE = '<%= typeof siteTimezone !== "undefined" ? siteTimezone : "Europe/Moscow" %>';
   </script>
   <style>
@@ -193,7 +195,7 @@
     <% } %>
   </aside>
 
-  <script>
+  <script nonce="<%= cspNonce %>">
     // Pre-set selectors SYNCHRONOUSLY before paint
     (function(){
       var ts = document.getElementById('themeSwitcher');
