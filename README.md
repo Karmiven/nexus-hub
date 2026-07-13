@@ -19,11 +19,16 @@ Self-hosted gaming server hub for managing, monitoring, and showcasing game serv
 - **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats, grouped by node
 - **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with unique visual effects
 - **i18n** — Dynamic language system with auto-discovery (EN/RU/RO out of the box), instant switching without page reload
-- **Admin Panel** — News/servers/users/settings CRUD, hero animation styles (7 options), games showcase editor, analytics dashboard with charts
+- **Admin Panel** — News/servers/users/settings CRUD, analytics dashboard with charts, audit log of admin actions, one-click DB backups
 - **Analytics** — Buffered page-view tracking with GeoIP, charts and time-series breakdown
-- **User Registration** — Self-service registration (admin-toggleable) with Cloudflare Turnstile bot verification, profile page with notification settings
+- **User Registration** — Self-service registration (admin-toggleable) with optional Cloudflare Turnstile, profile with avatar upload
+- **2FA (TOTP)** — Zero-dependency RFC 6238 one-time codes: enable in the profile, verified as a second login step
+- **Discord Notifications** — Webhook alerts when a server goes up/down or a news article is published
+- **Chat Moderation** — Admin/GM can delete messages and mute users right from the chat
+- **Server History** — Canvas uptime/players chart (24h/7d) on every server page, built from the status log
+- **RSS & SEO** — /rss.xml, /sitemap.xml, per-article permalinks with OpenGraph tags, PWA manifest
 - **Bot Protection** — Scanner/bot blocking middleware with IP strike system
-- **Security** — Helmet CSP, CSRF protection, bcrypt auth, encrypted secrets, rate limiting, session-based auth
+- **Security** — Nonce-based CSP (no unsafe-inline), CSRF protection, bcrypt auth, 2FA, encrypted secrets, rate limiting, audit log
 
 ---
 
@@ -38,9 +43,11 @@ NexusHub implements defence-in-depth:
 | **Authentication** | bcryptjs (cost factor 12), session-based auth with `httpOnly` + `sameSite: strict` cookies |
 | **Secrets Encryption** | Proxmox API tokens encrypted at rest with AES-256-GCM (key derived from `SESSION_SECRET` or `ENCRYPTION_KEY` env var) |
 | **Session Persistence** | Auto-generated session secret persisted to `data/.session-secret` (survives restarts) |
-| **HTTP Headers** | Helmet with strict CSP (`default-src 'self'`), `X-Frame-Options`, `X-Content-Type-Options` |
+| **HTTP Headers** | Helmet with nonce-based CSP (`'strict-dynamic'`, no `unsafe-inline` scripts, `script-src-attr 'none'`), `X-Frame-Options`, `X-Content-Type-Options` |
 | **Rate Limiting** | `express-rate-limit` on `/api`, `/auth`, `/setup`, and registration (5 attempts/hour) |
 | **Access Control** | Roles `user` / `gm` / `admin`; admin routes return 404 for non-admins, monitoring visible to staff (admin/GM) or public by setting, server IPs hidden unless enabled |
+| **2FA** | Optional TOTP second factor (RFC 6238, `node:crypto` only), rate-limited verification |
+| **Audit & Backups** | All admin/moderation actions recorded in `admin_log`; daily SQLite backups (last 7 kept) + 90-day analytics retention |
 | **Input Validation** | Server IP/hostname validation, news content size limits (50KB/field), image upload size limits (5MB) |
 
 ---
@@ -284,12 +291,19 @@ server {
 - [x] Session secret persistence across restarts
 - [x] Health check endpoint (`/health`)
 - [ ] Telegram bot notifications for server status changes
-- [ ] Discord webhook integration
+- [x] Two-factor authentication (TOTP)
+- [x] Chat moderation (delete/mute) for admin/GM
+- [x] User avatars
+- [x] Server uptime/players history charts
+- [x] News search, pagination, permalinks, RSS, sitemap, OpenGraph
+- [x] Admin audit log
+- [x] PWA manifest
+- [x] Discord webhook integration (server up/down + news publications)
 - [x] Server-side i18n (flash messages, API responses)
 - [x] Dynamic language system with auto-discovery (drop a new file in `public/js/lang/`)
 - [x] Dashboard charts and analytics (Chart.js)
 - [x] Docker support with docker-compose
-- [ ] Automated database backups
+- [x] Automated database backups (daily, last 7 kept, downloadable from /admin/system)
 - [x] Proxmox VM/CT control (start/stop/restart)
 - [ ] HTTPS / Let's Encrypt automation
 - [ ] Email verification for registration
