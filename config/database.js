@@ -56,6 +56,8 @@ async function initDatabase() {
     const userCols = db.pragma("table_info(users)").map(c => c.name);
     if (!userCols.includes('last_login')) db.exec("ALTER TABLE users ADD COLUMN last_login DATETIME");
     if (!userCols.includes('last_ip'))    db.exec("ALTER TABLE users ADD COLUMN last_ip TEXT");
+    if (!userCols.includes('avatar'))     db.exec("ALTER TABLE users ADD COLUMN avatar TEXT DEFAULT ''");
+    if (!userCols.includes('totp_secret')) db.exec("ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT ''");
   } catch (e) { /* columns already exist */ }
 
   db.exec(`

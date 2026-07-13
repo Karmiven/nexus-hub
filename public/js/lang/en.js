@@ -470,4 +470,11 @@ window.__loadLang({
   srv_history_uptime: 'uptime',
   srv_history_players: 'players',
   chat_mute_prompt: 'Mute for how many minutes?',
+  profile_avatar: 'Avatar',
+  avatar_upload: 'Upload',
+  avatar_delete: 'Remove',
+  avatar_hint: 'JPEG, PNG, GIF or WebP, up to 5 MB. Shown in chat and the sidebar.',
+  flash_avatar_updated: 'Avatar updated.',
+  flash_avatar_removed: 'Avatar removed.',
+  flash_avatar_invalid: 'Invalid image. Use JPEG, PNG, GIF or WebP up to 5 MB.',
 });

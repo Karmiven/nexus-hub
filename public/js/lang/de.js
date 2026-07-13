@@ -470,4 +470,11 @@ window.__loadLang({
   srv_history_uptime: 'Uptime',
   srv_history_players: 'Spieler',
   chat_mute_prompt: 'Für wie viele Minuten stummschalten?',
+  profile_avatar: 'Avatar',
+  avatar_upload: 'Hochladen',
+  avatar_delete: 'Entfernen',
+  avatar_hint: 'JPEG, PNG, GIF oder WebP, bis 5 MB. Wird im Chat und in der Seitenleiste angezeigt.',
+  flash_avatar_updated: 'Avatar aktualisiert.',
+  flash_avatar_removed: 'Avatar entfernt.',
+  flash_avatar_invalid: 'Ungültiges Bild. Verwende JPEG, PNG, GIF oder WebP bis 5 MB.',
 });

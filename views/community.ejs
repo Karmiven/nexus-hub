@@ -25,6 +25,11 @@
       <% messages.forEach(function(msg) { %>
         <div class="cmsg" data-id="<%= msg.id %>">
           <div class="h">
+            <% if (msg.avatar) { %>
+              <img src="<%= msg.avatar %>" alt="" class="cav">
+            <% } else { %>
+              <span class="cav cav-letter"><%= String(msg.username).charAt(0) %></span>
+            <% } %>
             <span class="u <%= msg.role === 'admin' ? 'adm' : (msg.role === 'gm' ? 'gm' : '') %>"><%= msg.username %></span>
             <% if (msg.role === 'admin' || msg.role === 'gm') { %><span class="role-badge role-<%= msg.role %>"><%= msg.role %></span><% } %>
             <span class="tm local-time" data-timestamp="<%= msg.created_at %>" data-format="time"></span>
@@ -138,6 +143,18 @@
 
     const head = document.createElement('div');
     head.className = 'h';
+    if (msg.avatar && /^\/uploads\/avatars\//.test(msg.avatar)) {
+      const av = document.createElement('img');
+      av.className = 'cav';
+      av.alt = '';
+      av.src = msg.avatar;
+      head.appendChild(av);
+    } else {
+      const av = document.createElement('span');
+      av.className = 'cav cav-letter';
+      av.textContent = (msg.username || '?').charAt(0);
+      head.appendChild(av);
+    }
     const userSpan = document.createElement('span');
     userSpan.className = 'u' + (msg.role === 'admin' ? ' adm' : (msg.role === 'gm' ? ' gm' : ''));
     userSpan.textContent = msg.username || '';

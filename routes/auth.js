@@ -1,10 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 const db = require('../config/database');
 const { isGuest, isAuthenticated } = require('../middleware/auth');
+const { createUploader, resolveImage } = require('../utils/imageUpload');
 const catchAsync = require('../utils/catchAsync');
 const rateLimit = require('express-rate-limit');
+
+const uploadAvatar = createUploader('avatars');
 
 const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
 const TURNSTILE_SITE_KEY = process.env.TURNSTILE_SITE_KEY;
@@ -100,7 +105,8 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
     id: user.id,
     username: user.username,
     email: user.email,
-    role: user.role
+    role: user.role,
+    avatar: user.avatar || ''
   };
   const redirectTo = user.role === 'admin' ? '/admin' : '/';
 
@@ -206,12 +212,51 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
 
 // Profile page
 router.get('/profile', isAuthenticated, (req, res) => {
-  const profile = db.get('SELECT id, username, email, role, created_at FROM users WHERE id = ?', [req.session.user.id]);
+  const profile = db.get('SELECT id, username, email, role, avatar, totp_secret, created_at FROM users WHERE id = ?', [req.session.user.id]);
   if (!profile) {
     req.flash('error', 'flash_user_not_found');
     return res.redirect('/');
   }
   res.render('auth/profile', { title: 'Profile', profile });
+});
+
+// ── Avatar upload / removal ──
+function deleteAvatarFile(avatarPath) {
+  if (!avatarPath || !avatarPath.startsWith('/uploads/avatars/')) return;
+  const p = path.join(__dirname, '..', 'uploads', 'avatars', path.basename(avatarPath));
+  try { fs.unlinkSync(p); } catch (e) { /* best effort */ }
+}
+
+router.post('/profile/avatar', isAuthenticated, (req, res) => {
+  // Run multer manually so its errors (size/type) become a flash, not a 500
+  uploadAvatar.single('avatar')(req, res, (err) => {
+    if (err || !req.file) {
+      req.flash('error', 'flash_avatar_invalid');
+      return res.redirect('/auth/profile');
+    }
+    const current = db.get('SELECT avatar FROM users WHERE id = ?', [req.session.user.id]);
+    const oldAvatar = current ? current.avatar : '';
+    const newAvatar = resolveImage(null, req.file, 'avatars', 'avatar', oldAvatar);
+    if (newAvatar === oldAvatar) {
+      // magic-byte validation rejected the file
+      req.flash('error', 'flash_avatar_invalid');
+      return res.redirect('/auth/profile');
+    }
+    deleteAvatarFile(oldAvatar);
+    db.run('UPDATE users SET avatar = ? WHERE id = ?', [newAvatar, req.session.user.id]);
+    req.session.user.avatar = newAvatar;
+    req.flash('success', 'flash_avatar_updated');
+    res.redirect('/auth/profile');
+  });
+});
+
+router.post('/profile/avatar/delete', isAuthenticated, (req, res) => {
+  const current = db.get('SELECT avatar FROM users WHERE id = ?', [req.session.user.id]);
+  deleteAvatarFile(current ? current.avatar : '');
+  db.run("UPDATE users SET avatar = '' WHERE id = ?", [req.session.user.id]);
+  req.session.user.avatar = '';
+  req.flash('success', 'flash_avatar_removed');
+  res.redirect('/auth/profile');
 });
 
 // Logout handler (POST to prevent CSRF via img/link prefetch)

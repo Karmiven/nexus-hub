@@ -461,6 +461,49 @@ body::before {
 .news-search { display: flex; gap: 8px; align-items: center; }
 .news-search .form-input { width: 220px; margin: 0; }
 
+/* ── Chat avatars ── */
+.cav {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cav-letter {
+  display: inline-grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--primary) 18%, var(--surface));
+  color: var(--primary);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.side-user-img { object-fit: cover; }
+
+/* ── Profile avatar card ── */
+.avatar-row { display: flex; gap: 16px; align-items: flex-start; }
+.avatar-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.avatar-letter {
+  display: inline-grid;
+  place-items: center;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface));
+  text-transform: uppercase;
+}
+.avatar-forms { display: grid; gap: 8px; justify-items: start; }
+.avatar-upload-form { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.avatar-upload-form input[type="file"] { font-size: 0.78rem; color: var(--text-secondary); max-width: 240px; }
+
 /* ── Chat moderation (admin / GM) ── */
 .cmsg .modact { margin-left: auto; display: inline-flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
 .cmsg:hover .modact { opacity: 1; }

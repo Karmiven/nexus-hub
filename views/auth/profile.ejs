@@ -9,6 +9,30 @@
 <section class="section container">
   <div class="profile-grid">
     <div class="profile-card">
+      <h2 data-i18n="profile_avatar">Avatar</h2>
+      <div class="avatar-row">
+        <% if (profile.avatar) { %>
+          <img src="<%= profile.avatar %>" alt="" class="avatar-preview">
+        <% } else { %>
+          <span class="avatar-preview avatar-letter"><%= profile.username.charAt(0) %></span>
+        <% } %>
+        <div class="avatar-forms">
+          <form action="/auth/profile/avatar?_csrf=<%= csrfToken %>" method="POST" enctype="multipart/form-data" class="avatar-upload-form">
+            <input type="file" name="avatar" id="avatarFile" accept="image/jpeg,image/png,image/gif,image/webp" required>
+            <button type="submit" class="btn btn-sm btn-primary" data-i18n="avatar_upload">Upload</button>
+          </form>
+          <% if (profile.avatar) { %>
+            <form action="/auth/profile/avatar/delete" method="POST">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit" class="btn btn-sm btn-outline" data-i18n="avatar_delete">Remove</button>
+            </form>
+          <% } %>
+          <small class="form-hint" data-i18n="avatar_hint">JPEG, PNG, GIF or WebP, up to 5 MB. Shown in chat and the sidebar.</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-card">
       <h2 data-i18n="account_info">Account Info</h2>
       <div class="detail-grid">
         <div class="detail-item">

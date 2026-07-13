@@ -470,4 +470,11 @@ window.__loadLang({
   srv_history_uptime: 'uptime',
   srv_history_players: 'jucători',
   chat_mute_prompt: 'Pe câte minute să fie mut?',
+  profile_avatar: 'Avatar',
+  avatar_upload: 'Încarcă',
+  avatar_delete: 'Șterge',
+  avatar_hint: 'JPEG, PNG, GIF sau WebP, până la 5 MB. Apare în chat și în bara laterală.',
+  flash_avatar_updated: 'Avatar actualizat.',
+  flash_avatar_removed: 'Avatar șters.',
+  flash_avatar_invalid: 'Imagine invalidă. Folosește JPEG, PNG, GIF sau WebP până la 5 MB.',
 });

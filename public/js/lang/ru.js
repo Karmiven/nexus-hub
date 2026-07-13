@@ -470,4 +470,11 @@ window.__loadLang({
   srv_history_uptime: 'аптайм',
   srv_history_players: 'игроки',
   chat_mute_prompt: 'На сколько минут замьютить?',
+  profile_avatar: 'Аватар',
+  avatar_upload: 'Загрузить',
+  avatar_delete: 'Удалить',
+  avatar_hint: 'JPEG, PNG, GIF или WebP, до 5 МБ. Показывается в чате и сайдбаре.',
+  flash_avatar_updated: 'Аватар обновлён.',
+  flash_avatar_removed: 'Аватар удалён.',
+  flash_avatar_invalid: 'Некорректное изображение. Используйте JPEG, PNG, GIF или WebP до 5 МБ.',
 });

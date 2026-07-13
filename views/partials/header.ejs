@@ -172,7 +172,11 @@
 
     <% if (user) { %>
       <div class="side-user">
-        <span class="side-user-av"><%= user.username.charAt(0) %></span>
+        <% if (user.avatar) { %>
+          <img src="<%= user.avatar %>" alt="" class="side-user-av side-user-img">
+        <% } else { %>
+          <span class="side-user-av"><%= user.username.charAt(0) %></span>
+        <% } %>
         <span class="side-user-info">
           <b><%= user.username %></b>
           <span><%= role %></span>
