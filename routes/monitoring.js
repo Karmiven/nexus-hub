@@ -40,13 +40,14 @@ function getSelectedGuests() {
   return [];
 }
 
-// ── Guard: public if monitoring_public=1, otherwise auth+admin ──
+// ── Guard: public if monitoring_public=1, otherwise auth + staff (admin/gm) ──
 function monitoringAccess(req, res, next) {
   const s = db.getCachedSettings('monitoring_public');
   const isPublic = String(s.monitoring_public) === '1';
   if (isPublic) return next();
-  // Not public — require authenticated admin
-  if (req.session?.user?.role === 'admin') return next();
+  // Not public — require an authenticated staff member (GM sees the safe
+  // public projection; full data and controls remain admin-only below)
+  if (['admin', 'gm'].includes(req.session?.user?.role)) return next();
   if (req.session?.user) {
     return res.status(404).render('errors/404', { title: 'Page Not Found' });
   }

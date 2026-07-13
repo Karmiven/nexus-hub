@@ -1,0 +1,107 @@
+<%- include('partials/header') %>
+
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="news_eyebrow">intel feed</span></div>
+    <h1 class="scr-title" data-i18n="latest_news">Latest News</h1>
+    <p class="scr-sub" data-i18n="news_sub">Pinned articles first. Click to read the full story.</p>
+  </div>
+</div>
+
+<% if (news.length === 0) { %>
+  <div class="empty-state">
+    <p data-i18n="no_news">No news yet. Check back soon!</p>
+  </div>
+<% } else { %>
+  <div class="news-list">
+    <% news.forEach(function(article) { %>
+      <article class="panel news-item2" onclick="openNewsModal(this)"
+        data-title-en="<%- encodeURIComponent(article.title_en) %>"
+        data-title-ru="<%- encodeURIComponent(article.title_ru) %>"
+        data-content-short-en="<%- encodeURIComponent(article.content_short_en) %>"
+        data-content-short-ru="<%- encodeURIComponent(article.content_short_ru) %>"
+        data-content-full-en="<%- encodeURIComponent(article.content_full_en) %>"
+        data-content-full-ru="<%- encodeURIComponent(article.content_full_ru) %>"
+        data-author="<%- encodeURIComponent(article.author) %>"
+        data-date="<%= article.created_at %>">
+        <div class="news-thumb<%= article.image ? ' has-img' : '' %>"<% if (article.image) { %> style="background-image:url('<%= article.image %>')"<% } %>></div>
+        <div class="news-cont">
+          <div class="m">
+            <% if (article.pinned) { %><span class="pin">◆ <span data-i18n="pinned">Pinned</span> · </span><% } %>
+            <span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span> · <%= article.author %>
+          </div>
+          <h3><%= currentLang === 'ru' ? article.title_ru : article.title_en %></h3>
+          <p><%= (currentLang === 'ru' ? article.content_short_ru : article.content_short_en) %></p>
+        </div>
+      </article>
+    <% }); %>
+  </div>
+
+  <!-- News Modal -->
+  <div id="newsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle"></h2>
+        <button class="modal-close" onclick="closeNewsModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-meta">
+          <span id="modalAuthor"></span>
+          <span id="modalDate"></span>
+        </div>
+        <div id="modalContent" class="modal-content-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function decodeAttr(element, key) {
+      var raw = element.getAttribute('data-' + key) || '';
+      try { return decodeURIComponent(raw); } catch (e) { return raw; }
+    }
+
+    function openNewsModal(element) {
+      var lang = (window.i18n && window.i18n.getCurrentLanguage()) || 'en';
+      var title = decodeAttr(element, 'title-' + lang) || decodeAttr(element, 'title-en');
+      var contentFull = decodeAttr(element, 'content-full-' + lang) || decodeAttr(element, 'content-full-en');
+
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + decodeAttr(element, 'author');
+      document.getElementById('modalDate').textContent = window.formatTimestamp ? window.formatTimestamp(element.dataset.date, 'date') : new Date(element.dataset.date).toLocaleDateString();
+      // Safe: textContent per line prevents XSS
+      var modalContent = document.getElementById('modalContent');
+      modalContent.textContent = '';
+      contentFull.split('\n').forEach(function (line, i) {
+        if (i > 0) modalContent.appendChild(document.createElement('br'));
+        modalContent.appendChild(document.createTextNode(line));
+      });
+      document.getElementById('newsModal').style.display = 'flex';
+    }
+
+    function closeNewsModal() {
+      document.getElementById('newsModal').style.display = 'none';
+    }
+
+    document.getElementById('newsModal').addEventListener('click', function (e) {
+      if (e.target === this) closeNewsModal();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeNewsModal();
+    });
+
+    // Re-render titles/excerpts when language switches
+    if (typeof window.i18nReady === 'function') {
+      window.i18nReady(function () {
+        var lang = window.i18n.getCurrentLanguage();
+        document.querySelectorAll('.news-item2').forEach(function (card) {
+          var titleEl = card.querySelector('h3');
+          var excerptEl = card.querySelector('.news-cont p');
+          if (titleEl) titleEl.textContent = decodeAttr(card, 'title-' + lang) || decodeAttr(card, 'title-en');
+          if (excerptEl) excerptEl.textContent = decodeAttr(card, 'content-short-' + lang) || decodeAttr(card, 'content-short-en');
+        });
+      });
+    }
+  </script>
+<% } %>
+
+<%- include('partials/footer') %>

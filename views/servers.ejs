@@ -1,70 +1,69 @@
 <%- include('partials/header') %>
 
-<section class="page-header">
-  <div class="container">
-    <h1 class="page-title"><i data-lucide="gamepad-2"></i> <span data-i18n="game_servers">Game Servers</span></h1>
-    <p class="page-desc" data-i18n="servers_desc">Browse all our hosted game servers. Click on any server for more details.</p>
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="srv_eyebrow">game servers</span></div>
+    <h1 class="scr-title" data-i18n="game_servers">Game Servers</h1>
+    <p class="scr-sub" data-i18n="servers_desc">Browse all our hosted game servers. Click on any server for more details.</p>
   </div>
-</section>
+</div>
 
-<section class="section container">
-  <% if (servers.length === 0) { %>
-    <div class="empty-state">
-      <p data-i18n="no_servers">No servers configured yet. Check back soon!</p>
-    </div>
-  <% } else { %>
-    <div class="server-grid">
-      <% servers.forEach(function(srv) { %>
-        <div class="server-card">
-          <% if (srv.image) { %>
-            <div class="server-card-banner">
-              <img src="<%= srv.image %>" alt="" loading="lazy" onerror="this.parentElement.classList.add('no-image');this.replaceWith(Object.assign(document.createElement('i'),{className:'banner-icon','data-lucide':'gamepad-2'}));if(typeof lucide!=='undefined')lucide.createIcons();">
+<% if (servers.length === 0) { %>
+  <div class="empty-state">
+    <p data-i18n="no_servers">No servers configured yet. Check back soon!</p>
+  </div>
+<% } else { %>
+  <div class="srv-grid">
+    <% servers.forEach(function(srv) { %>
+      <div class="panel server-card">
+        <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+        <div class="srv-body">
+          <div class="srv-row1">
+            <div class="srv-ico">
+              <% if (srv.image) { %><img src="<%= srv.image %>" alt="" loading="lazy" onerror="this.remove()"><% } else { %><i data-lucide="gamepad-2"></i><% } %>
             </div>
-          <% } else { %>
-            <div class="server-card-banner no-image">
-              <i data-lucide="gamepad-2" class="banner-icon"></i>
+            <div>
+              <div class="srv-name"><%= srv.name %></div>
+              <div class="srv-game"><%= srv.game %></div>
+            </div>
+            <span class="mbadge status-badge <%= srv.status === 'online' ? 'ok badge-online' : 'bad badge-offline' %>" data-i18n="<%= srv.status === 'online' ? 'online' : 'offline' %>"><%= srv.status === 'online' ? 'Online' : 'Offline' %></span>
+          </div>
+          <% if (srv.show_ip_address) { %>
+            <div class="addr">
+              <code><%= srv.ip %>:<%= srv.port %></code>
+              <button type="button" onclick="copyAddr(this)" data-i18n="copy">copy</button>
             </div>
           <% } %>
-          <div class="server-status-indicator status-<%= srv.status %>"></div>
-          <div class="server-card-header">
-            <h3 class="server-name"><%= srv.name %></h3>
-            <span class="status-badge badge-<%= srv.status %>" data-i18n="<%= srv.status === 'online' ? 'online' : 'offline' %>">
-              <%= srv.status === 'online' ? 'Online' : 'Offline' %>
-            </span>
-          </div>
-          <div class="server-info">
-            <div class="info-row">
-              <span class="info-label" data-i18n="game">Game</span>
-              <span class="info-value"><%= srv.game %></span>
+          <% if (srv.show_player_count) { %>
+            <div class="pbar">
+              <span><% if (srv.status === 'online') { %><%= srv.player_count %>/<%= srv.max_players %><% } else { %>—<% } %></span>
+              <div class="bar"><div class="fill" style="width:<%= (srv.status === 'online' && srv.max_players > 0) ? Math.round(srv.player_count / srv.max_players * 100) : 0 %>%"></div></div>
             </div>
-            <% if (srv.show_ip_address) { %>
-            <div class="info-row">
-              <span class="info-label" data-i18n="address">Address</span>
-              <span class="info-value mono"><%= srv.ip %>:<%= srv.port %></span>
-            </div>
-            <% } %>
-            <% if (srv.show_player_count && srv.status === 'online') { %>
-              <div class="info-row">
-                <span class="info-label" data-i18n="players">Players</span>
-                <span class="info-value"><%= srv.player_count %>/<%= srv.max_players %></span>
-              </div>
-            <% } %>
-            <% if (srv.description) { %>
-              <p class="server-desc"><%= srv.description.substring(0, 120) %></p>
-            <% } %>
-          </div>
-          <div class="server-card-footer">
-            <% if (srv.redirect_enabled && srv.redirect_url) { %>
-              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-primary"><span data-i18n="launch">Launch</span> <i data-lucide="arrow-right"></i></a>
-            <% } else { %>
-              <a href="/servers/<%= srv.id %>" class="btn btn-sm btn-outline"><span data-i18n="details">Details</span> <i data-lucide="arrow-right"></i></a>
-            <% } %>
-            <span class="last-checked"><span data-i18n="last_checked">Checked</span>: <span class="local-time" data-timestamp="<%= srv.last_checked %>" data-format="time"></span></span>
-          </div>
+          <% } %>
+          <% if (srv.description) { %>
+            <p class="scr-sub" style="margin:0;"><%= srv.description.substring(0, 120) %></p>
+          <% } %>
         </div>
-      <% }); %>
-    </div>
-  <% } %>
-</section>
+        <div class="srv-foot">
+          <span><span data-i18n="last_checked">Checked</span>: <span class="local-time" data-timestamp="<%= srv.last_checked %>" data-format="time"></span></span>
+          <a href="/servers/<%= srv.id %>" class="btn-c">
+            <span data-i18n="<%= (srv.redirect_enabled && srv.redirect_url) ? 'launch' : 'details' %>"><%= (srv.redirect_enabled && srv.redirect_url) ? 'Launch' : 'Details' %></span> <i data-lucide="arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    <% }); %>
+  </div>
+
+  <script>
+    function copyAddr(btn) {
+      var code = btn.parentElement.querySelector('code');
+      if (!code) return;
+      if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
+      var original = btn.textContent;
+      btn.textContent = 'ok ✓';
+      setTimeout(function () { btn.textContent = original; }, 1400);
+    }
+  </script>
+<% } %>
 
 <%- include('partials/footer') %>

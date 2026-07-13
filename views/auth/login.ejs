@@ -16,12 +16,17 @@
         <label for="password" data-i18n="password">Password</label>
         <input type="password" id="password" name="password" class="form-input" required>
       </div>
-      <div id="turnstile-container"></div>
-      <button type="submit" class="btn btn-primary btn-block" id="loginBtn" disabled data-i18n="log_in">Log In</button>
+      <% if (turnstileSiteKey) { %>
+        <div id="turnstile-container"></div>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn" disabled data-i18n="log_in">Log In</button>
+      <% } else { %>
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn" data-i18n="log_in">Log In</button>
+      <% } %>
     </form>
   </div>
 </section>
 
+<% if (turnstileSiteKey) { %>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=_initTurnstile"></script>
 <script>
   function _initTurnstile() {
@@ -44,5 +49,6 @@
 
   if (typeof turnstile !== 'undefined') { setTimeout(_initTurnstile, 0); }
 </script>
+<% } %>
 
 <%- include('../partials/footer') %>

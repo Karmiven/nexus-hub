@@ -1,168 +1,140 @@
 <%- include('partials/header') %>
 
-<section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-content container">
-    <h1 class="hero-title <% if (heroStyle === 'glitch') { %>glitch<% } %> hero-style-<%= heroStyle %>"<% if (heroStyle === 'glitch') { %> data-text="<%= heroTitle %>"<% } %>><%= heroTitle %></h1>
-    <p class="hero-subtitle"><%= heroSubtitle %></p>
-    <div class="hero-stats">
-      <div class="stat-box">
-        <span class="stat-number"><%= stats.onlineServers %></span>
-        <span class="stat-label" data-i18n="stat_online">Online</span>
-      </div>
-      <div class="stat-box">
-        <span class="stat-number"><%= stats.totalServers %></span>
-        <span class="stat-label" data-i18n="stat_servers">Servers</span>
-      </div>
-    </div>
-    <div class="hero-actions">
-      <a href="/servers" class="btn btn-primary btn-glow" data-i18n="hero_browse_servers">Browse Servers</a>
-      <a href="/community" class="btn btn-outline" data-i18n="hero_join_community">Join Community</a>
-    </div>
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="ov_eyebrow">main screen</span></div>
+    <h1 class="scr-title" data-i18n="ov_title">Overview</h1>
+    <p class="scr-sub"><%= heroSubtitle || '' %><% if (!heroSubtitle) { %><span data-i18n="ov_sub">Summary of every section. Details are one click away in the sidebar.</span><% } %></p>
   </div>
-</section>
+</div>
 
-<section class="section container">
-  <h2 class="section-title"><span class="accent"><i data-lucide="newspaper"></i></span> <span data-i18n="latest_news">Latest News</span></h2>
+<div class="ov-grid">
+  <div class="ov-stat hl">
+    <div class="k" data-i18n="ov_players_now">Players now</div>
+    <div class="v"><%= siteStats.players || 0 %></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="ov_servers_online">Servers online</div>
+    <div class="v"><%= siteStats.serversOnline || 0 %><em>/<%= siteStats.serversTotal || 0 %></em></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="ov_uptime">Uptime 30d</div>
+    <div class="v"><% if (siteStats.uptimePct !== null && siteStats.uptimePct !== undefined) { %><%= siteStats.uptimePct %><em>%</em><% } else { %>—<% } %></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="ov_users">Users</div>
+    <div class="v"><%= userCount %></div>
+  </div>
+</div>
 
-  <% if (news.length === 0) { %>
-    <div class="empty-state">
-      <p data-i18n="no_news">No news yet. Check back soon!</p>
-    </div>
-  <% } else { %>
-    <div class="news-grid">
-      <% news.forEach(function(article) { %>
-        <% 
-          // Get content based on current language
-          const title = currentLang === 'ru' ? article.title_ru : article.title_en;
-          const contentShort = currentLang === 'ru' ? article.content_short_ru : article.content_short_en;
-          const contentFull = currentLang === 'ru' ? article.content_full_ru : article.content_full_en;
-        %>
-        <article class="news-card<%= article.pinned ? ' pinned' : '' %>" onclick="openNewsModal(this)" style="cursor:pointer;"
-          data-id="<%= article.id %>"
-          data-title-en="<%- encodeURIComponent(article.title_en) %>"
-          data-title-ru="<%- encodeURIComponent(article.title_ru) %>"
-          data-content-short-en="<%- encodeURIComponent(article.content_short_en) %>"
-          data-content-short-ru="<%- encodeURIComponent(article.content_short_ru) %>"
-          data-content-full-en="<%- encodeURIComponent(article.content_full_en) %>"
-          data-content-full-ru="<%- encodeURIComponent(article.content_full_ru) %>"
-          data-author="<%- encodeURIComponent(article.author) %>"
-          data-date="<%= article.created_at %>"
-          data-image="<%= article.image || '' %>">
-          <% if (article.pinned) { %>
-            <span class="pin-badge"><i data-lucide="pin"></i> <span data-i18n="pinned">Pinned</span></span>
-          <% } %>
-          <% if (article.image) { %>
-            <div class="news-image" style="background-image: url('<%= article.image %>')"></div>
-          <% } else { %>
-            <div class="news-image news-image-default"></div>
-          <% } %>
-          <div class="news-body">
-            <h3 class="news-title"><%= title %></h3>
-            <p class="news-excerpt"><%= contentShort %></p>
-            <div class="news-meta">
-              <span class="news-author"><%= article.author %></span>
-              <span class="news-date"><span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span></span>
+<div class="ov-main">
+  <div class="ov-col">
+    <!-- Servers widget -->
+    <div class="panel">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="panel-head"><span data-i18n="nav_servers">Servers</span> <span class="right">live</span></div>
+      <% if (servers.length === 0) { %>
+        <div class="mini-chat"><span class="mc-line" data-i18n="no_servers">No servers configured yet. Check back soon!</span></div>
+      <% } else { %>
+        <% servers.forEach(function(srv) { %>
+          <div class="mini-srv">
+            <div class="nm"><%= srv.name %>
+              <span><% if (srv.show_ip_address) { %><%= srv.ip %>:<%= srv.port %><% } else { %><%= srv.game %><% } %></span>
             </div>
+            <span class="pl"><% if (srv.status === 'online' && srv.show_player_count) { %><%= srv.player_count %>/<%= srv.max_players %><% } else { %>—<% } %></span>
+            <span class="mbadge <%= srv.status === 'online' ? 'ok' : 'bad' %>" data-i18n="<%= srv.status === 'online' ? 'online' : 'offline' %>"><%= srv.status === 'online' ? 'Online' : 'Offline' %></span>
           </div>
-        </article>
-      <% }); %>
+        <% }); %>
+      <% } %>
+      <div class="panel-foot"><a href="/servers" class="link-m"><span data-i18n="ov_all_servers">All servers</span> →</a></div>
     </div>
 
-    <!-- News Modal -->
-    <div id="newsModal" class="modal" style="display:none;">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2 id="modalTitle"></h2>
-          <button class="modal-close" onclick="closeNewsModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div class="modal-meta">
-            <span id="modalAuthor"></span>
-            <span id="modalDate"></span>
-          </div>
-          <div id="modalContent" class="modal-content-text"></div>
-        </div>
+    <!-- Chat widget -->
+    <% if (communityEnabled) { %>
+    <div class="panel">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="panel-head"><span data-i18n="ov_chat_head">Chat — #general</span></div>
+      <div class="mini-chat">
+        <% if (chatPreview.length === 0) { %>
+          <span class="mc-line" data-i18n="ov_chat_empty">No messages yet — be the first!</span>
+        <% } else { %>
+          <% chatPreview.forEach(function(m) { %>
+            <div class="mc-line">
+              <span class="tm local-time" data-timestamp="<%= m.created_at %>" data-format="time"></span>
+              <b class="<%= m.role === 'admin' ? 'adm' : (m.role === 'gm' ? 'gm' : '') %>"><%= m.username %></b> — <%= m.message %>
+            </div>
+          <% }); %>
+        <% } %>
       </div>
+      <div class="panel-foot"><a href="/community" class="link-m"><span data-i18n="ov_open_chat">Open chat</span> →</a></div>
+    </div>
+    <% } %>
+  </div>
+
+  <div class="ov-col">
+    <!-- News widget -->
+    <div class="panel">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="panel-head"><span data-i18n="nav_news">News</span></div>
+      <% if (news.length === 0) { %>
+        <div class="mini-chat"><span class="mc-line" data-i18n="no_news">No news yet. Check back soon!</span></div>
+      <% } else { %>
+        <% news.forEach(function(article) { %>
+          <a class="mini-news" href="/news">
+            <div class="t"><% if (article.pinned) { %><span class="pin">◆</span><% } %><%= currentLang === 'ru' ? article.title_ru : article.title_en %></div>
+            <div class="m"><span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span><% if (article.pinned) { %> · <span data-i18n="pinned">Pinned</span><% } %></div>
+          </a>
+        <% }); %>
+      <% } %>
+      <div class="panel-foot"><a href="/news" class="link-m"><span data-i18n="ov_all_news">All news</span> →</a></div>
     </div>
 
-    <script>
-      function getNewsLang() {
-        return (window.i18n && window.i18n.getCurrentLanguage()) || 'en';
-      }
-
-      function decodeAttr(element, key) {
-        var raw = element.getAttribute('data-' + key) || '';
-        try { return decodeURIComponent(raw); } catch(e) { return raw; }
-      }
-
-      function openNewsModal(element) {
-        const lang = getNewsLang();
-        const title = decodeAttr(element, 'title-' + lang) || decodeAttr(element, 'title-en');
-        const contentFull = decodeAttr(element, 'content-full-' + lang) || decodeAttr(element, 'content-full-en');
-
-        document.getElementById('modalTitle').textContent = title;
-        document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + decodeAttr(element, 'author');
-        document.getElementById('modalDate').textContent = window.formatTimestamp ? window.formatTimestamp(element.dataset.date, 'date') : new Date(element.dataset.date).toLocaleDateString();
-        // Safe: use textContent per line to prevent XSS
-        const modalContent = document.getElementById('modalContent');
-        modalContent.textContent = '';
-        contentFull.split('\n').forEach(function(line, i) {
-          if (i > 0) modalContent.appendChild(document.createElement('br'));
-          modalContent.appendChild(document.createTextNode(line));
-        });
-        document.getElementById('newsModal').style.display = 'flex';
-      }
-      
-      function closeNewsModal() {
-        document.getElementById('newsModal').style.display = 'none';
-      }
-      
-      // Close modal when clicking outside
-      document.getElementById('newsModal').addEventListener('click', function(e) {
-        if (e.target === this) closeNewsModal();
-      });
-
-      // Apply correct language on initial load
-      if (typeof window.i18nReady === 'function') {
-        window.i18nReady(function() {
-          var lang = window.i18n.getCurrentLanguage();
-          var cards = document.querySelectorAll('.news-card');
-          cards.forEach(function(card) {
-            var body = card.querySelector('.news-body');
-            if (!body) return;
-            var titleEl = body.querySelector('.news-title');
-            var excerptEl = body.querySelector('.news-excerpt');
-            if (titleEl) titleEl.textContent = decodeAttr(card, 'title-' + lang) || decodeAttr(card, 'title-en');
-            if (excerptEl) excerptEl.textContent = decodeAttr(card, 'content-short-' + lang) || decodeAttr(card, 'content-short-en');
-          });
-        });
-      }
-    </script>
-  <% } %>
-</section>
-
-<% if (gamesList && gamesList.length > 0) { %>
-<section class="section section-dark" style="padding-top: 1.5rem; padding-bottom: 1.5rem;">
-  <div class="container">
-    <h2 class="section-title" style="margin-bottom: 1.5rem;"><span class="accent"><i data-lucide="gamepad-2"></i></span> <span data-i18n="hosted_games">Hosted Games</span></h2>
-    <div class="games-list-container" style="display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;">
-      <% gamesList.forEach(function(game) { %>
-        <div class="game-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; width: 160px; transition: transform var(--transition), border-color var(--transition); cursor: pointer;">
-          <img src="<%= game.icon %>" alt="<%= game.name %>" style="width: 64px; height: 64px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); background-color: transparent !important;">
-          <span style="font-weight: 600; text-align: center; font-size: 0.95rem; color: var(--text-primary);"><%= game.name %></span>
-        </div>
-      <% }); %>
+    <!-- Infrastructure widget (loads only when monitoring is reachable) -->
+    <div class="panel" id="ovMonPanel" hidden>
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="panel-head"><span data-i18n="ov_infra">Infrastructure</span></div>
+      <div class="mini-chat" id="ovMonBody" style="padding:14px 18px;"></div>
+      <div class="panel-foot"><a href="/monitoring/dashboard" class="link-m"><span data-i18n="nav_monitoring">Monitoring</span> →</a></div>
     </div>
   </div>
-</section>
-<style>
-  .game-card:hover {
-    transform: translateY(-5px);
-    border-color: var(--accent);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  }
-</style>
-<% } %>
+</div>
+
+<script>
+// Overview infrastructure mini-widget: best-effort, hidden unless data is available
+(function () {
+  fetch('/monitoring/resources', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data || !data.success || !data.guests || data.guests.length === 0) return;
+      var body = document.getElementById('ovMonBody');
+      var panel = document.getElementById('ovMonPanel');
+      if (!body || !panel) return;
+      body.textContent = '';
+      data.guests.slice(0, 3).forEach(function (g) {
+        var running = g.status === 'running';
+        var cpu = Math.min(100, Math.max(0, g.cpu || 0));
+        var meter = document.createElement('div');
+        meter.className = 'meter';
+        var mh = document.createElement('div');
+        mh.className = 'mh';
+        var name = document.createElement('span');
+        name.textContent = (g.displayName || g.name) + ' · CPU';
+        var val = document.createElement('b');
+        val.textContent = running ? cpu.toFixed(0) + '%' : 'off';
+        mh.appendChild(name); mh.appendChild(val);
+        var mb = document.createElement('div');
+        mb.className = 'mb';
+        var mf = document.createElement('div');
+        mf.className = 'mf' + (cpu > 75 ? ' hot' : '');
+        mf.style.width = (running ? cpu : 0) + '%';
+        mb.appendChild(mf);
+        meter.appendChild(mh); meter.appendChild(mb);
+        body.appendChild(meter);
+      });
+      panel.hidden = false;
+    })
+    .catch(function () { /* monitoring unavailable — keep hidden */ });
+})();
+</script>
 
 <%- include('partials/footer') %>

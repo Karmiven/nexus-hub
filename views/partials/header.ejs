@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
   <title><%= title %> | <%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300e5ff'%3E%3Cpath d='M13 2 3 14h7l-1 8 10-12h-7l1-8z'/%3E%3C/svg%3E">
   <script>
     // Apply saved theme IMMEDIATELY — before any CSS loads — to prevent white flash
     (function(){
@@ -13,20 +14,17 @@
       document.documentElement.setAttribute('data-theme', t);
       window.__savedTheme = t;
       window.__savedLang = lang;
-      // Set bg color directly on <html> so browser never shows white during CSS load.
-      // Cleared after theme CSS loads so theme variables take over normally.
       var bgMap = {
-        'dark':                '#0c0e14',
+        'dark':                '#04060c',
         'light':               '#f6f5f1',
         'cyberpunk-purple':    '#08010f',
         'matrix-green':        '#000000',
         'retro-90s-vaporwave': '#150a28',
         'vampire':             '#140e0c'
       };
-      var bg = bgMap[t] || '#0c0e14';
+      var bg = bgMap[t] || '#04060c';
       document.documentElement.style.backgroundColor = bg;
       document.documentElement.style.colorScheme = (t === 'light') ? 'light' : 'dark';
-      // Remove inline override once theme CSS is loaded (so CSS variables take full control)
       window.__clearBgOverride = function() {
         document.documentElement.style.backgroundColor = '';
       };
@@ -34,6 +32,7 @@
   </script>
   <link rel="stylesheet" href="/css/style.css?v=<%= v %>">
   <link rel="stylesheet" id="theme-stylesheet" href="/css/themes/dark.css?v=<%= v %>">
+  <link rel="stylesheet" href="/css/layout.css?v=<%= v %>">
   <link rel="stylesheet" href="/css/mobile.css?v=<%= v %>">
   <link rel="stylesheet" href="/css/desktop.css?v=<%= v %>">
   <script>
@@ -54,119 +53,156 @@
   </script>
   <style>
     /* ========== Anti-FOUC: hide page until theme CSS is loaded ========== */
-    /* Body is invisible initially; JS reveals it once everything is ready */
-    body {
-      visibility: hidden;
-    }
-    body.page-rendered {
-      visibility: visible;
-    }
-
-    /* Suppress all transitions during SPA content swap to prevent white flash */
-    body.spa-swapping * {
-      transition: none !important;
-    }
-
-    /* Content area fades in for SPA-like feel; navbar stays solid */
-    .main-content {
-      opacity: 0;
-      transform: translateY(6px);
-    }
+    body { visibility: hidden; }
+    body.page-rendered { visibility: visible; }
+    body.spa-swapping * { transition: none !important; }
+    .main-content { opacity: 0; transform: translateY(6px); }
     .main-content.content-ready {
       opacity: 1;
       transform: translateY(0);
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
-    .footer {
-      opacity: 0;
-    }
-    .footer.content-ready {
-      opacity: 1;
-      transition: opacity 0.3s ease 0.05s;
-    }
-
-    /* Fix logo icon size — prevent layout shift when lucide replaces <i> with <svg> */
-    .logo-icon {
-      width: 1.3rem;
-      height: 1.3rem;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-    .logo-icon i[data-lucide] {
-      width: 1.3rem;
-      height: 1.3rem;
-      display: block;
-    }
+    .footer { opacity: 0; }
+    .footer.content-ready { opacity: 1; transition: opacity 0.3s ease 0.05s; }
   </style>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="nav-container">
-      <a href="/" class="nav-logo">
-        <span class="logo-icon"><i data-lucide="zap"></i></span>
-        <span class="logo-text"><%= typeof navbarTitle !== 'undefined' ? navbarTitle : 'NexusHub' %></span>
+<%
+  // ── Sidebar helpers ──
+  const cp = typeof currentPath === 'string' ? currentPath : '/';
+  const isActive = (p, exact) => exact ? cp === p : (cp === p || cp.startsWith(p + '/'));
+  const role = user ? user.role : null;
+  const isAdminUser = role === 'admin';
+  const canSeeMonitoring = monitoringPublic || role === 'admin' || role === 'gm';
+  const st = typeof siteStats !== 'undefined' && siteStats ? siteStats : {};
+%>
+  <header class="mobile-topbar">
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <a href="/" class="side-brand">
+      <span class="side-brand-mark"><i data-lucide="zap"></i></span>
+      <span class="side-brand-name"><%= navbarTitle %></span>
+    </a>
+  </header>
+  <div class="side-overlay" id="sideOverlay"></div>
+
+  <aside class="side" id="sideNav">
+    <a href="/" class="side-brand">
+      <span class="side-brand-mark"><i data-lucide="zap"></i></span>
+      <span>
+        <span class="side-brand-name"><%= navbarTitle %></span>
+        <span class="side-brand-sub">game ops console</span>
+      </span>
+    </a>
+
+    <div class="side-label" data-i18n="side_sections">Sections</div>
+    <a href="/" class="side-item<%= isActive('/', true) ? ' on' : '' %>" data-path="/" data-exact="1">
+      <i data-lucide="layout-dashboard"></i> <span data-i18n="nav_overview">Overview</span>
+    </a>
+    <a href="/servers" class="side-item<%= isActive('/servers') ? ' on' : '' %>" data-path="/servers">
+      <i data-lucide="gamepad-2"></i> <span data-i18n="nav_servers">Servers</span>
+      <span class="cnt"><%= st.serversOnline || 0 %>/<%= st.serversTotal || 0 %></span>
+    </a>
+    <a href="/news" class="side-item<%= isActive('/news') ? ' on' : '' %>" data-path="/news">
+      <i data-lucide="newspaper"></i> <span data-i18n="nav_news">News</span>
+      <span class="cnt"><%= st.newsCount || 0 %></span>
+    </a>
+    <a href="/community" class="side-item<%= isActive('/community') ? ' on' : '' %>" data-path="/community">
+      <i data-lucide="message-circle"></i> <span data-i18n="nav_community">Community</span>
+    </a>
+    <% if (canSeeMonitoring) { %>
+    <a href="/monitoring/dashboard" class="side-item<%= isActive('/monitoring') ? ' on' : '' %>" data-path="/monitoring">
+      <i data-lucide="activity"></i> <span data-i18n="nav_monitoring">Monitoring</span>
+    </a>
+    <% } %>
+
+    <% if (isAdminUser) { %>
+      <div class="side-label adm" data-i18n="side_admin">Admin panel</div>
+      <a href="/admin" class="side-item adm-item<%= (cp === '/admin') ? ' on adm-on' : '' %>" data-path="/admin" data-exact="1">
+        <i data-lucide="layout-grid"></i> <span data-i18n="adm_dashboard">Dashboard</span>
       </a>
-      <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="navLinks">
-        <li class="nav-item nav-item-home"><a href="/" class="nav-link" data-i18n="nav_home">Home</a></li>
-        <li class="nav-item nav-item-servers"><a href="/servers" class="nav-link" data-i18n="nav_servers">Servers</a></li>
-        <li class="nav-item nav-item-community"><a href="/community" class="nav-link" data-i18n="nav_community">Community</a></li>
-        <% if (monitoringPublic || (user && user.role === 'admin')) { %>
-        <li class="nav-item nav-item-monitoring"><a href="/monitoring/dashboard" class="nav-link" data-i18n="nav_monitoring">Monitoring</a></li>
-        <% } %>
+      <a href="/admin/news" class="side-item adm-item<%= isActive('/admin/news') ? ' on adm-on' : '' %>" data-path="/admin/news">
+        <i data-lucide="pen-line"></i> <span data-i18n="adm_news">News</span>
+      </a>
+      <a href="/admin/servers" class="side-item adm-item<%= isActive('/admin/servers') ? ' on adm-on' : '' %>" data-path="/admin/servers">
+        <i data-lucide="settings-2"></i> <span data-i18n="adm_servers">Servers</span>
+      </a>
+      <a href="/admin/users" class="side-item adm-item<%= isActive('/admin/users') ? ' on adm-on' : '' %>" data-path="/admin/users">
+        <i data-lucide="users"></i> <span data-i18n="adm_users">Users</span>
+      </a>
+      <a href="/admin/analytics" class="side-item adm-item<%= isActive('/admin/analytics') ? ' on adm-on' : '' %>" data-path="/admin/analytics">
+        <i data-lucide="bar-chart-3"></i> <span data-i18n="adm_analytics">Analytics</span>
+      </a>
+      <a href="/admin/proxmox" class="side-item adm-item<%= isActive('/admin/proxmox') ? ' on adm-on' : '' %>" data-path="/admin/proxmox">
+        <i data-lucide="server-cog"></i> <span data-i18n="adm_proxmox">Proxmox</span>
+      </a>
+      <a href="/admin/settings" class="side-item adm-item<%= isActive('/admin/settings') ? ' on adm-on' : '' %>" data-path="/admin/settings">
+        <i data-lucide="sliders-horizontal"></i> <span data-i18n="adm_settings">Settings</span>
+      </a>
+    <% } %>
 
-        <li class="nav-item nav-item-admin <%= (user && user.role === 'admin') ? '' : 'nav-item-placeholder' %>">
-          <% if (user && user.role === 'admin') { %>
-            <a href="/admin" class="nav-link nav-admin" data-i18n="nav_admin">Admin</a>
-          <% } %>
-        </li>
+    <span class="side-sp"></span>
 
-        <li class="nav-item nav-item-auth">
-          <% if (user) { %>
-            <form action="/auth/logout" method="POST" style="display:inline;margin:0;padding:0;">
-              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-              <button type="submit" class="nav-link btn-nav-logout" data-i18n="nav_logout">Logout</button>
-            </form>
-          <% } else { %>
-            <a href="/auth/login" class="nav-link btn-nav-outline" data-i18n="nav_login">Login</a>
-          <% } %>
-        </li>
-
-        <li class="nav-item nav-item-theme-lang">
-          <select class="theme-selector" id="themeSwitcher" aria-label="Select theme">
-            <option value="dark">Dark</option>
-            <option value="light">Light</option>
-            <option value="cyberpunk-purple">Cyberpunk</option>
-            <option value="matrix-green">Matrix</option>
-            <option value="retro-90s-vaporwave">Retro 90s</option>
-            <option value="vampire">Vampire</option>
-          </select>
-
-          <select class="language-selector" id="languageSelector" aria-label="Select language">
-            <!-- populated dynamically by translations.js -->
-          </select>
-        </li>
-      </ul>
+    <div class="side-selects nav-item-theme-lang">
+      <select class="theme-selector" id="themeSwitcher" aria-label="Select theme">
+        <option value="dark">Dark</option>
+        <option value="light">Light</option>
+        <option value="cyberpunk-purple">Cyberpunk</option>
+        <option value="matrix-green">Matrix</option>
+        <option value="retro-90s-vaporwave">Retro 90s</option>
+        <option value="vampire">Vampire</option>
+      </select>
+      <select class="language-selector" id="languageSelector" aria-label="Select language">
+        <!-- populated dynamically by translations.js -->
+      </select>
     </div>
-  </nav>
+
+    <% if (user) { %>
+      <div class="side-user">
+        <span class="side-user-av"><%= user.username.charAt(0) %></span>
+        <span class="side-user-info">
+          <b><%= user.username %></b>
+          <span><%= role %></span>
+        </span>
+        <form action="/auth/logout" method="POST">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="side-logout" title="Logout" aria-label="Logout"><i data-lucide="log-out"></i></button>
+        </form>
+      </div>
+    <% } else { %>
+      <a href="/auth/login" class="side-login"><i data-lucide="log-in"></i> <span data-i18n="nav_login">Login</span></a>
+    <% } %>
+  </aside>
+
   <script>
     // Pre-set selectors SYNCHRONOUSLY before paint
     (function(){
       var ts = document.getElementById('themeSwitcher');
       if (ts && window.__savedTheme) ts.value = window.__savedTheme;
-      // Language selector is populated dynamically by translations.js after i18n loads
     })();
   </script>
 
-  <% if (success && success.length > 0) { %>
-    <div class="flash flash-success" data-i18n="<%= success[0] %>"><%= success[0] %></div>
-  <% } %>
-  <% if (error && error.length > 0) { %>
-    <div class="flash flash-error" data-i18n="<%= error[0] %>"><%= error[0] %></div>
-  <% } %>
+  <div class="screen">
+    <div class="ticker" id="statusTicker">
+      <span class="tick">
+        <span class="tick-dot <%= (st.serversOnline || 0) > 0 ? 'ok' : 'bad' %>"></span>
+        <b><%= st.serversOnline || 0 %>/<%= st.serversTotal || 0 %></b>&nbsp;<span data-i18n="tick_servers_online">servers online</span>
+      </span>
+      <span class="tick"><b><%= st.players || 0 %></b>&nbsp;<span data-i18n="tick_players">players</span></span>
+      <% if (st.uptimePct !== null && st.uptimePct !== undefined) { %>
+        <span class="tick"><span data-i18n="tick_uptime">uptime 30d</span>:&nbsp;<b><%= st.uptimePct %>%</b></span>
+      <% } %>
+      <span class="tick tick-time" id="tickerClock"></span>
+    </div>
 
-  <main class="main-content">
+    <div id="flashDock">
+      <% if (success && success.length > 0) { %>
+        <div class="flash flash-success" data-i18n="<%= success[0] %>"><%= success[0] %></div>
+      <% } %>
+      <% if (error && error.length > 0) { %>
+        <div class="flash flash-error" data-i18n="<%= error[0] %>"><%= error[0] %></div>
+      <% } %>
+    </div>
+
+    <main class="main-content">

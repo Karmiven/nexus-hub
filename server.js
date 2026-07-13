@@ -108,6 +108,14 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error');
   res.locals.user = req.session.user || null;
   res.locals.v = ASSET_VERSION;
+  res.locals.currentPath = req.path;
+
+  // Cached site stats for the sidebar counters and status ticker
+  try {
+    res.locals.siteStats = db.getSiteStats();
+  } catch (e) {
+    res.locals.siteStats = { serversTotal: 0, serversOnline: 0, players: 0, newsCount: 0, uptimePct: null };
+  }
 
   // Use cached settings to avoid DB hit on every request
   try {

@@ -1,81 +1,59 @@
 <%- include('partials/header') %>
 
-<section class="page-header">
-  <div class="container">
-    <a href="/servers" class="back-link"><i data-lucide="arrow-left"></i> <span data-i18n="back_to_servers">Back to Servers</span></a>
-    <h1 class="page-title"><%= server.name %></h1>
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <a href="/servers" class="link-m" data-i18n="back_to_servers">Back to Servers</a></div>
+    <h1 class="scr-title"><%= server.name %></h1>
+    <p class="scr-sub"><%= server.game %></p>
   </div>
-</section>
+  <span class="mbadge <%= server.status === 'online' ? 'ok' : 'bad' %>" data-i18n="<%= server.status === 'online' ? 'online' : 'offline' %>"><%= server.status === 'online' ? 'Online' : 'Offline' %></span>
+</div>
 
-<section class="section container">
-  <div class="detail-card">
-    <% if (server.image) { %>
-      <div class="detail-card-image">
-        <img src="<%= server.image %>" alt="" loading="lazy" onerror="this.parentElement.style.display='none'">
+<div class="panel" style="max-width:760px;">
+  <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+  <% if (server.image) { %>
+    <div class="news-thumb has-img" style="min-height:220px; background-image:url('<%= server.image %>'); border-bottom:1px solid var(--border);"></div>
+  <% } %>
+  <div class="srv-body" style="padding:18px 20px;">
+    <% if (server.show_ip_address) { %>
+      <div class="addr">
+        <code><%= server.ip %>:<%= server.port %></code>
+        <% if (user && user.role === 'admin') { %>
+          <button type="button" onclick="copyAddr(this)" data-i18n="copy">copy</button>
+        <% } %>
       </div>
     <% } %>
-    <div class="detail-header">
-      <div class="detail-status">
-        <span class="status-dot status-dot-<%= server.status %>"></span>
-        <span class="status-badge badge-<%= server.status %>" data-i18n="<%= server.status === 'online' ? 'online' : 'offline' %>">
-          <%= server.status === 'online' ? 'Online' : 'Offline' %>
-        </span>
+    <% if (server.show_player_count && server.status === 'online') { %>
+      <div class="pbar">
+        <span><%= server.player_count %>/<%= server.max_players %></span>
+        <div class="bar"><div class="fill" style="width:<%= server.max_players > 0 ? Math.round(server.player_count / server.max_players * 100) : 0 %>%"></div></div>
       </div>
-    </div>
-
-    <div class="detail-grid">
-      <div class="detail-item">
-        <span class="detail-label" data-i18n="game">Game</span>
-        <span class="detail-value"><%= server.game %></span>
-      </div>
-      <% if (server.show_ip_address) { %>
-      <div class="detail-item">
-        <span class="detail-label" data-i18n="server_address">Server Address</span>
-        <span class="detail-value mono"><%= server.ip %>:<%= server.port %></span>
-      </div>
-      <% } %>
-      <% if (server.show_player_count && server.status === 'online') { %>
-        <div class="detail-item">
-          <span class="detail-label" data-i18n="players_online">Players Online</span>
-          <span class="detail-value"><%= server.player_count %> / <%= server.max_players %></span>
-        </div>
-      <% } %>
-      <div class="detail-item">
-        <span class="detail-label" data-i18n="last_checked">Last Checked</span>
-        <span class="detail-value"><span class="local-time" data-timestamp="<%= server.last_checked %>" data-format="datetime"></span></span>
-      </div>
-    </div>
-
+    <% } %>
     <% if (server.description) { %>
-      <div class="detail-description">
-        <h3 data-i18n="about_server">About this Server</h3>
-        <p><%= server.description %></p>
+      <div>
+        <div class="scr-eyebrow" data-i18n="about_server">About this Server</div>
+        <p class="scr-sub" style="margin:0; max-width:none;"><%= server.description %></p>
       </div>
     <% } %>
-
-    <div class="detail-actions">
-      <% if (server.show_ip_address && (user && user.role === 'admin')) { %>
-      <button class="btn btn-primary" data-i18n="copy_address" onclick="copyToClipboard('<%= server.ip %>:<%= server.port %>')">
-        Copy Address
-      </button>
-      <% } %>
-      <% if (server.redirect_enabled && server.redirect_url) { %>
-        <a href="<%= server.redirect_url %>" target="_blank" class="btn btn-accent" data-i18n="open_launcher">
-          Open Launcher <i data-lucide="external-link"></i>
-        </a>
-      <% } %>
-    </div>
   </div>
-</section>
+  <div class="srv-foot">
+    <span><span data-i18n="last_checked">Checked</span>: <span class="local-time" data-timestamp="<%= server.last_checked %>" data-format="datetime"></span></span>
+    <% if (server.redirect_enabled && server.redirect_url) { %>
+      <a href="<%= server.redirect_url %>" target="_blank" rel="noopener" class="btn-c">
+        <span data-i18n="open_launcher">Open Launcher</span> <i data-lucide="external-link"></i>
+      </a>
+    <% } %>
+  </div>
+</div>
 
 <script>
-function copyToClipboard(text) {
-  navigator.clipboard.writeText(text).then(() => {
-    const btn = event.target;
-    const original = btn.textContent;
-    btn.textContent = window.i18n ? window.i18n.t('copied') : 'Copied!';
-    setTimeout(() => { btn.textContent = window.i18n ? window.i18n.t('copy_address') : original; }, 2000);
-  });
+function copyAddr(btn) {
+  var code = btn.parentElement.querySelector('code');
+  if (!code) return;
+  if (navigator.clipboard) navigator.clipboard.writeText(code.textContent).catch(function () {});
+  var original = btn.textContent;
+  btn.textContent = 'ok ✓';
+  setTimeout(function () { btn.textContent = original; }, 1400);
 }
 </script>
 

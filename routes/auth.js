@@ -52,11 +52,15 @@ router.get('/login', isGuest, (req, res) => {
 // Login handler
 router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   let { username, password } = req.body;
-  const turnstileToken = req.body['cf-turnstile-response'];
 
-  if (!turnstileToken || !(await verifyTurnstile(turnstileToken, req.ip))) {
-    req.flash('error', 'flash_bot_failed');
-    return res.redirect('/auth/login');
+  // Verify Turnstile only when it is configured — otherwise self-hosted
+  // installs without Cloudflare keys would be locked out entirely
+  if (TURNSTILE_SECRET) {
+    const turnstileToken = req.body['cf-turnstile-response'];
+    if (!turnstileToken || !(await verifyTurnstile(turnstileToken, req.ip))) {
+      req.flash('error', 'flash_bot_failed');
+      return res.redirect('/auth/login');
+    }
   }
 
   if (!username || !password || password.length > MAX_PASSWORD_LENGTH) {

@@ -33,9 +33,12 @@ module.exports = function(io) {
       return;
     }
 
-    // Send recent messages on connect
+    // Send recent messages on connect (role joined for staff badges)
     const messages = db.all(
-      "SELECT * FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT 50"
+      `SELECT m.id, m.username, m.message, m.channel, m.created_at, u.role
+       FROM chat_messages m
+       LEFT JOIN users u ON u.username = m.username COLLATE NOCASE
+       WHERE m.channel = 'general' ORDER BY m.created_at DESC LIMIT 50`
     ).reverse();
     socket.emit('chat:history', messages);
 
@@ -61,15 +64,18 @@ module.exports = function(io) {
 
       // Registered usernames are reserved: only the logged-in owner may use them
       // (prevents impersonation of real accounts, e.g. the admin)
+      let userRole = null;
       try {
-        const registered = db.get('SELECT username FROM users WHERE username = ? COLLATE NOCASE', [sanitizedUsername]);
+        const registered = db.get('SELECT username, role FROM users WHERE username = ? COLLATE NOCASE', [sanitizedUsername]);
         if (registered) {
           const sessionUser = socket.request?.session?.user;
           if (!sessionUser || sessionUser.username.toLowerCase() !== lowerUsername) {
             return callback({ success: false, error: 'This nickname belongs to a registered user. Please log in to use it.' });
           }
+          userRole = registered.role;
         }
       } catch (e) { /* DB unavailable — fall through, nickname collision still enforced above */ }
+      socket.data.role = userRole;
       
       // Register user
       activeUsers.set(socket.id, sanitizedUsername);
@@ -124,6 +130,7 @@ module.exports = function(io) {
         username: registeredUsername,
         message,
         channel: 'general',
+        role: socket.data.role || null,
         created_at: new Date().toISOString()
       };
 

@@ -276,6 +276,32 @@ router.get('/users', (req, res) => {
   res.render('admin/users', { title: 'Manage Users', users });
 });
 
+// Change user role (user / gm / admin)
+const VALID_ROLES = ['user', 'gm', 'admin'];
+router.post('/users/:id/role', (req, res) => {
+  const targetId = parseInt(req.params.id);
+  const role = String(req.body.role || '');
+  if (!VALID_ROLES.includes(role)) {
+    req.flash('error', 'flash_invalid_role');
+    return res.redirect('/admin/users');
+  }
+  if (targetId === req.session.user.id) {
+    req.flash('error', 'flash_cannot_change_own_role');
+    return res.redirect('/admin/users');
+  }
+  const target = db.get('SELECT id FROM users WHERE id = ?', [targetId]);
+  if (!target) {
+    req.flash('error', 'flash_user_not_found');
+    return res.redirect('/admin/users');
+  }
+  db.run('UPDATE users SET role = ? WHERE id = ?', [role, targetId]);
+  // Re-check the setup guard in case the last other admin was demoted
+  const resetCache = req.app.get('resetInstalledCache');
+  if (resetCache) resetCache();
+  req.flash('success', 'flash_role_updated');
+  res.redirect('/admin/users');
+});
+
 router.post('/users/:id/delete', (req, res) => {
   if (parseInt(req.params.id) === req.session.user.id) {
     req.flash('error', 'flash_cannot_delete_self');

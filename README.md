@@ -40,7 +40,7 @@ NexusHub implements defence-in-depth:
 | **Session Persistence** | Auto-generated session secret persisted to `data/.session-secret` (survives restarts) |
 | **HTTP Headers** | Helmet with strict CSP (`default-src 'self'`), `X-Frame-Options`, `X-Content-Type-Options` |
 | **Rate Limiting** | `express-rate-limit` on `/api`, `/auth`, `/setup`, and registration (5 attempts/hour) |
-| **Access Control** | Admin routes return 404 for non-admins, monitoring requires authentication, server IPs hidden from non-admin users |
+| **Access Control** | Roles `user` / `gm` / `admin`; admin routes return 404 for non-admins, monitoring visible to staff (admin/GM) or public by setting, server IPs hidden unless enabled |
 | **Input Validation** | Server IP/hostname validation, news content size limits (50KB/field), image upload size limits (5MB) |
 
 ---
@@ -142,7 +142,8 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/` | Homepage with hero, news, and stats |
+| `GET` | `/` | Overview screen (stats, server/news/chat widgets) |
+| `GET` | `/news` | News feed |
 | `GET` | `/servers` | Server browser |
 | `GET` | `/servers/:id` | Server detail page |
 | `GET` | `/community` | Community chat page |
@@ -183,7 +184,7 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 | `GET` | `/admin/dashboard` | Admin dashboard |
 | `GET/POST` | `/admin/servers/*` | Server CRUD |
 | `GET/POST` | `/admin/news/*` | News CRUD (bilingual) |
-| `GET/POST` | `/admin/users/*` | User management |
+| `GET/POST` | `/admin/users/*` | User management (delete, role change: user / gm / admin) |
 | `GET/POST` | `/admin/settings` | Site settings |
 | `GET/POST` | `/admin/proxmox/*` | Proxmox connection & guest management |
 | `GET` | `/admin/analytics` | Analytics dashboard (charts, time-series) |

@@ -1,78 +1,51 @@
 <%- include('partials/header') %>
 
-<section class="page-header">
-  <div class="container">
-    <h1 class="page-title"><i data-lucide="message-circle"></i> <span data-i18n="community_chat">Community Chat</span></h1>
-    <p class="page-desc" data-i18n="community_desc">Chat with other players in real-time. Be respectful!</p>
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="chat_eyebrow">comms</span></div>
+    <h1 class="scr-title" data-i18n="community_chat">Community Chat</h1>
+    <p class="scr-sub" data-i18n="community_desc">Chat with other players in real-time. Be respectful!</p>
   </div>
-</section>
+</div>
 
-<section class="section container">
-  <div class="chat-layout" style="display: grid; grid-template-columns: 1fr 250px; gap: 1.5rem; align-items: start;">
-    <div class="chat-container" style="margin: 0;">
-      <div class="chat-nickname-bar" id="nicknameBar">
-        <label for="nicknameInput" class="nickname-label" data-i18n="your_nickname">Your nickname:</label>
-        <input type="text" id="nicknameInput" class="chat-input" data-i18n-placeholder="enter_nickname" placeholder="Enter nickname..." maxlength="30" autocomplete="off"
-          value="<%= user ? user.username : '' %>">
-        <button type="button" id="nicknameBtn" class="btn btn-primary btn-sm" data-i18n="join_chat">Join Chat</button>
-      </div>
+<div class="chat-wrap2">
+  <div class="panel">
+    <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+    <div class="panel-head">#general <span class="right"><span class="tick-dot ok"></span> live</span></div>
 
-      <div class="chat-messages" id="chatMessages">
-        <% messages.forEach(function(msg) { %>
-          <div class="chat-msg">
-            <span class="chat-user"><%= msg.username %></span>
-            <span class="chat-time"><span class="local-time" data-timestamp="<%= msg.created_at %>" data-format="time"></span></span>
-            <p class="chat-text"><%= msg.message %></p>
+    <div class="nick-bar" id="nicknameBar">
+      <label for="nicknameInput" data-i18n="your_nickname">Your nickname:</label>
+      <input type="text" id="nicknameInput" data-i18n-placeholder="enter_nickname" placeholder="Enter nickname..." maxlength="30" autocomplete="off"
+        value="<%= user ? user.username : '' %>">
+      <button type="button" id="nicknameBtn" class="btn-c" data-i18n="join_chat">Join Chat</button>
+    </div>
+
+    <div class="chat-msgs2" id="chatMessages">
+      <% messages.forEach(function(msg) { %>
+        <div class="cmsg">
+          <div class="h">
+            <span class="u <%= msg.role === 'admin' ? 'adm' : (msg.role === 'gm' ? 'gm' : '') %>"><%= msg.username %></span>
+            <% if (msg.role === 'admin' || msg.role === 'gm') { %><span class="role-badge role-<%= msg.role %>"><%= msg.role %></span><% } %>
+            <span class="tm local-time" data-timestamp="<%= msg.created_at %>" data-format="time"></span>
           </div>
-        <% }); %>
-      </div>
-
-      <div class="chat-typing" id="typingIndicator"></div>
-      <form class="chat-form" id="chatForm" style="display:none;">
-        <input type="text" id="chatInput" class="chat-input" data-i18n-placeholder="type_message" placeholder="Type a message..." maxlength="500" autocomplete="off">
-        <button type="submit" class="btn btn-primary btn-sm" data-i18n="send">Send</button>
-      </form>
+          <div class="tx"><%= msg.message %></div>
+        </div>
+      <% }); %>
     </div>
 
-    <div class="online-users-container" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem; height: 100%; max-height: 600px; display: flex; flex-direction: column;">
-      <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-        <span data-i18n="online_users">Online</span>
-        <span id="onlineCount" class="badge badge-success" style="font-size: 0.8rem;">0</span>
-      </h3>
-      <ul id="onlineUsersList" style="list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-        <!-- Users will be populated here -->
-      </ul>
-    </div>
+    <div class="chat-typing2" id="typingIndicator"></div>
+    <form class="chat-in2" id="chatForm" style="display:none;">
+      <input type="text" id="chatInput" data-i18n-placeholder="type_message" placeholder="Type a message..." maxlength="500" autocomplete="off">
+      <button type="submit" class="btn-c" data-i18n="send">Send</button>
+    </form>
   </div>
-</section>
 
-<style>
-  @media (max-width: 768px) {
-    .chat-layout {
-      grid-template-columns: 1fr !important;
-    }
-    .online-users-container {
-      max-height: 200px !important;
-    }
-  }
-  .online-user-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: var(--bg-surface);
-    border-radius: var(--radius-sm);
-    font-size: 0.9rem;
-  }
-  .online-user-item::before {
-    content: '';
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #22c55e;
-    border-radius: 50%;
-  }
-</style>
+  <div class="panel">
+    <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+    <div class="panel-head"><span data-i18n="online_users">Online</span> <span class="right" id="onlineCount">0</span></div>
+    <div class="on-list2" id="onlineUsersList"></div>
+  </div>
+</div>
 
 <script>document.body.classList.add('page-ready');</script>
 <script src="/socket.io/socket.io.js"></script>
@@ -89,9 +62,8 @@
   const onlineUsersList = document.getElementById('onlineUsersList');
   const onlineCount = document.getElementById('onlineCount');
 
-  // Check for saved nickname
   const savedNickname = localStorage.getItem('chat_nickname');
-  if (savedNickname) {
+  if (savedNickname && !nicknameInput.value) {
     nicknameInput.value = savedNickname;
   }
 
@@ -100,14 +72,13 @@
   }
   scrollToBottom();
 
-  // Join chat with nickname
   function joinChat() {
     const nick = nicknameInput.value.trim().replace(/[<>]/g, '');
     if (!nick) return;
-    
+
     nicknameBtn.disabled = true;
     nicknameBtn.textContent = '...';
-    
+
     socket.emit('chat:join', nick, (response) => {
       if (response.success) {
         username = response.username;
@@ -128,57 +99,77 @@
     if (e.key === 'Enter') joinChat();
   });
 
-  // Auto-join if nickname is saved
-  if (savedNickname) {
+  if (savedNickname || nicknameInput.value) {
     joinChat();
   }
 
-  // Update online users list
   socket.on('chat:online_users', (users) => {
     onlineCount.textContent = users.length;
     onlineUsersList.innerHTML = '';
-    
-    // Sort users alphabetically
     users.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    
     users.forEach(user => {
-      const li = document.createElement('li');
-      li.className = 'online-user-item';
-      li.textContent = user;
+      const row = document.createElement('div');
+      const dot = document.createElement('span');
+      dot.className = 'tick-dot ok';
+      const name = document.createElement('span');
+      name.textContent = user;
       if (user === username) {
-        li.style.fontWeight = 'bold';
-        li.style.color = 'var(--accent)';
+        name.style.fontWeight = '700';
+        name.style.color = 'var(--primary)';
       }
-      onlineUsersList.appendChild(li);
+      row.appendChild(dot);
+      row.appendChild(name);
+      onlineUsersList.appendChild(row);
     });
   });
 
-  // Receive message
-  socket.on('chat:message', (msg) => {
+  function appendMessage(msg) {
     const div = document.createElement('div');
-    div.className = 'chat-msg';
+    div.className = 'cmsg';
+
+    const head = document.createElement('div');
+    head.className = 'h';
     const userSpan = document.createElement('span');
-    userSpan.className = 'chat-user';
+    userSpan.className = 'u' + (msg.role === 'admin' ? ' adm' : (msg.role === 'gm' ? ' gm' : ''));
     userSpan.textContent = msg.username || '';
+    head.appendChild(userSpan);
+    if (msg.role === 'admin' || msg.role === 'gm') {
+      const badge = document.createElement('span');
+      badge.className = 'role-badge role-' + msg.role;
+      badge.textContent = msg.role;
+      head.appendChild(badge);
+    }
     const timeSpan = document.createElement('span');
-    timeSpan.className = 'chat-time';
-    const timeContent = document.createElement('span');
-    timeContent.className = 'local-time';
-    timeContent.setAttribute('data-timestamp', msg.created_at || '');
-    timeContent.setAttribute('data-format', 'time');
-    timeSpan.appendChild(timeContent);
-    const p = document.createElement('p');
-    p.className = 'chat-text';
-    p.textContent = msg.message || '';
-    div.appendChild(userSpan);
-    div.appendChild(timeSpan);
-    div.appendChild(p);
+    timeSpan.className = 'tm local-time';
+    timeSpan.setAttribute('data-timestamp', msg.created_at || '');
+    timeSpan.setAttribute('data-format', 'time');
+    head.appendChild(timeSpan);
+
+    const text = document.createElement('div');
+    text.className = 'tx';
+    text.textContent = msg.message || '';
+
+    div.appendChild(head);
+    div.appendChild(text);
     messagesDiv.appendChild(div);
     if (window.formatLocalTimes) window.formatLocalTimes();
     scrollToBottom();
+  }
+
+  socket.on('chat:message', appendMessage);
+
+  socket.on('chat:history', (messages) => {
+    // History is already rendered server-side on full page load;
+    // re-render only if the server list is empty (SPA navigation case)
+    if (messagesDiv.children.length === 0 && Array.isArray(messages)) {
+      messages.forEach(appendMessage);
+    }
   });
 
-  // Typing indicator
+  socket.on('chat:error', (msg) => {
+    typingIndicator.textContent = msg;
+  });
+
   let typingTimeout;
   socket.on('chat:typing', (data) => {
     typingIndicator.textContent = window.i18n ? window.i18n.t('is_typing', { user: data.username }) : data.username + ' is typing...';
@@ -192,7 +183,6 @@
     if (username) socket.emit('chat:typing', { username });
   });
 
-  // Send message
   chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const message = chatInput.value.trim();
@@ -201,23 +191,19 @@
     chatInput.value = '';
   });
 
-  // Handle disconnect/reconnect
   socket.on('disconnect', () => {
     onlineCount.textContent = '0';
-    onlineUsersList.innerHTML = '<li style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 1rem;">Disconnected</li>';
+    onlineUsersList.textContent = '';
   });
 
   socket.on('connect', () => {
     if (username) {
-      // Re-join with saved username
       socket.emit('chat:join', username, (response) => {
         if (!response.success) {
-          // If nickname was taken while disconnected, reset
           username = '';
           localStorage.removeItem('chat_nickname');
           nicknameBar.style.display = 'flex';
           chatForm.style.display = 'none';
-          alert('Your nickname was taken while you were disconnected. Please choose another one.');
         }
       });
     }

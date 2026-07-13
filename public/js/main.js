@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   initFlashMessages();
   initServerPolling();
+  initTickerClock();
   formatLocalTimes();
 });
 
@@ -139,6 +140,19 @@ async function spaNavigateTo(href, pushState) {
       return;
     }
 
+    // Collect page scripts BEFORE swapping content: innerHTML inserts inert
+    // <script> copies into the DOM, which would fool the "already loaded"
+    // check below and prevent externals (e.g. socket.io) from ever loading
+    var newPageScripts = doc.querySelectorAll('.main-content script, .footer script');
+    var externalScripts = doc.querySelectorAll('script[src]');
+    var pageLevelScripts = [];
+    externalScripts.forEach(function (s) {
+      var src = s.getAttribute('src');
+      if (src && !document.querySelector('script[src="' + src + '"]')) {
+        pageLevelScripts.push(s);
+      }
+    });
+
     // Wait for fade-out to finish (300ms transition)
     await new Promise(r => setTimeout(r, 280));
 
@@ -156,30 +170,17 @@ async function spaNavigateTo(href, pushState) {
       if (oldCsrf) oldCsrf.setAttribute('content', newCsrf.getAttribute('content'));
     }
 
-    // Insert flash messages
+    // Insert flash messages into the toast dock
     var existingFlashes = document.querySelectorAll('.flash');
     existingFlashes.forEach(f => f.remove());
-    if (newFlashes.length > 0) {
-      var navbar = document.querySelector('.navbar');
-      newFlashes.forEach(f => {
-        if (navbar && navbar.nextSibling) {
-          navbar.parentNode.insertBefore(f, navbar.nextSibling);
-        }
-      });
+    var flashDock = document.getElementById('flashDock');
+    if (flashDock && newFlashes.length > 0) {
+      newFlashes.forEach(f => flashDock.appendChild(f));
     }
 
-    // Collect and execute inline <script> tags from the new main content
-    var newPageScripts = doc.querySelectorAll('.main-content script, .footer script');
-    // Also check for page-specific scripts that load external resources (chart.js, socket.io, etc.)
-    var externalScripts = doc.querySelectorAll('script[src]');
-    var pageLevelScripts = [];
-    externalScripts.forEach(function(s) {
-      var src = s.getAttribute('src');
-      // Skip scripts that are already loaded in our page
-      if (src && !document.querySelector('script[src="' + src + '"]')) {
-        pageLevelScripts.push(s);
-      }
-    });
+    // Sync sidebar active item + live counters + ticker from the new page
+    updateSidebarActive(new URL(href, window.location.origin).pathname);
+    syncShellChrome(doc);
 
     // Push state
     if (pushState !== false) {
@@ -409,19 +410,76 @@ window.refreshIcons = function() {
 
 function initMobileNav() {
   const navToggle = document.getElementById('navToggle');
-  const navLinks = document.getElementById('navLinks');
-  if (!navToggle || !navLinks) return;
+  const side = document.getElementById('sideNav');
+  const overlay = document.getElementById('sideOverlay');
+  if (!navToggle || !side) return;
+
+  function setOpen(open) {
+    side.classList.toggle('open', open);
+    if (overlay) overlay.classList.toggle('open', open);
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
 
   navToggle.addEventListener('click', (e) => {
     e.preventDefault();
-    navLinks.classList.toggle('active');
+    setOpen(!side.classList.contains('open'));
   });
+  if (overlay) overlay.addEventListener('click', () => setOpen(false));
+  side.addEventListener('click', (e) => {
+    if (e.target.closest('.side-item') || e.target.closest('.side-brand')) setOpen(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setOpen(false);
+  });
+}
 
-  navLinks.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('active');
-    });
+/**
+ * Highlight the sidebar item matching the given path
+ */
+function updateSidebarActive(path) {
+  document.querySelectorAll('.side-item[data-path]').forEach(item => {
+    const p = item.getAttribute('data-path');
+    const exact = item.getAttribute('data-exact') === '1';
+    const on = exact ? path === p : (path === p || path.startsWith(p + '/'));
+    item.classList.toggle('on', on);
+    item.classList.toggle('adm-on', on && item.classList.contains('adm-item'));
   });
+}
+
+/**
+ * Refresh ticker + sidebar counters from a freshly fetched document (SPA nav)
+ */
+function syncShellChrome(doc) {
+  const newTicker = doc.getElementById('statusTicker');
+  const ticker = document.getElementById('statusTicker');
+  if (newTicker && ticker) {
+    ticker.innerHTML = newTicker.innerHTML;
+    initTickerClock();
+  }
+  doc.querySelectorAll('.side-item[data-path] .cnt').forEach(newCnt => {
+    const path = newCnt.closest('.side-item').getAttribute('data-path');
+    const cnt = document.querySelector('.side-item[data-path="' + path + '"] .cnt');
+    if (cnt) cnt.textContent = newCnt.textContent;
+  });
+}
+
+/**
+ * Live clock in the status ticker (site timezone)
+ */
+var _tickerClockInterval = null;
+function initTickerClock() {
+  const el = document.getElementById('tickerClock');
+  if (!el) return;
+  if (_tickerClockInterval) clearInterval(_tickerClockInterval);
+  function tick() {
+    try {
+      el.textContent = new Date().toLocaleTimeString('ru-RU', { timeZone: getSiteTimezone(), hour12: false });
+    } catch (e) {
+      el.textContent = new Date().toLocaleTimeString('ru-RU', { hour12: false });
+    }
+  }
+  tick();
+  _tickerClockInterval = setInterval(tick, 1000);
 }
 
 function initFlashMessages() {

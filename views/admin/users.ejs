@@ -34,7 +34,20 @@
               <td><%= u.id %></td>
               <td><strong><%= u.username %></strong></td>
               <td><%= u.email || '-' %></td>
-              <td><span class="role-badge role-<%= u.role %>"><%= u.role %></span></td>
+              <td>
+                <% if (u.id === user.id) { %>
+                  <span class="role-badge role-<%= u.role %>"><%= u.role %></span>
+                <% } else { %>
+                  <form action="/admin/users/<%= u.id %>/role" method="POST" class="role-form">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <select name="role" class="theme-selector role-select" onchange="this.form.submit()" aria-label="Role">
+                      <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>user</option>
+                      <option value="gm" <%= u.role === 'gm' ? 'selected' : '' %>>gm</option>
+                      <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>admin</option>
+                    </select>
+                  </form>
+                <% } %>
+              </td>
               <td><% if (u.last_login) { %><span class="local-time" data-timestamp="<%= u.last_login %>" data-format="datetime"></span><% } else { %><span data-i18n="admin_never">Никогда</span><% } %></td>
               <td class="mono"><%= u.last_ip || '-' %></td>
               <td><span class="local-time" data-timestamp="<%= u.created_at %>" data-format="date"></span></td>

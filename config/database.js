@@ -240,6 +240,46 @@ function invalidateSettingsCache() {
   _settingsCacheTime = 0;
 }
 
+// ── Site stats cache (ticker / sidebar counts — avoids per-request COUNTs) ──
+let _statsCache = null;
+let _statsCacheTime = 0;
+const STATS_CACHE_TTL = 15000; // 15 seconds
+
+function getSiteStats() {
+  const now = Date.now();
+  if (_statsCache && now - _statsCacheTime < STATS_CACHE_TTL) return _statsCache;
+  try {
+    const srv = get("SELECT COUNT(*) AS total, SUM(status = 'online') AS online, SUM(CASE WHEN status = 'online' THEN player_count ELSE 0 END) AS players FROM servers");
+    const news = get('SELECT COUNT(*) AS c FROM news');
+    _statsCache = {
+      serversTotal: srv?.total || 0,
+      serversOnline: srv?.online || 0,
+      players: srv?.players || 0,
+      newsCount: news?.c || 0,
+      uptimePct: _uptimeCache ?? null
+    };
+    _statsCacheTime = now;
+    refreshUptimeCache();
+  } catch (e) {
+    return { serversTotal: 0, serversOnline: 0, players: 0, newsCount: 0, uptimePct: null };
+  }
+  return _statsCache;
+}
+
+// 30-day uptime is a heavier aggregate — cached separately for 10 minutes
+let _uptimeCache = null;
+let _uptimeCacheTime = 0;
+function refreshUptimeCache() {
+  const now = Date.now();
+  if (now - _uptimeCacheTime < 600000) return;
+  _uptimeCacheTime = now;
+  try {
+    const row = get("SELECT SUM(status = 'online') AS ok, COUNT(*) AS total FROM server_status_log WHERE created_at >= datetime('now', '-30 days')");
+    _uptimeCache = row && row.total > 0 ? Math.round((row.ok / row.total) * 1000) / 10 : null;
+    if (_statsCache) _statsCache.uptimePct = _uptimeCache;
+  } catch (e) { /* keep previous value */ }
+}
+
 function stopAutoSave() {
   if (db) {
     db.close();
@@ -248,4 +288,4 @@ function stopAutoSave() {
 
 function getInstance() { return db; }
 
-module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave, getCachedSettings, invalidateSettingsCache, getInstance };
+module.exports = { initDatabase, all, get, run, exec, transaction, stopAutoSave, getCachedSettings, invalidateSettingsCache, getSiteStats, getInstance };

@@ -13,7 +13,10 @@ router.get('/', (req, res) => {
   const maxMessages = Math.min(Math.max(parseInt(s.max_chat_messages) || 200, 10), 1000);
 
   const messages = db.all(
-    'SELECT * FROM chat_messages WHERE channel = ? ORDER BY created_at DESC LIMIT ?',
+    `SELECT m.id, m.username, m.message, m.created_at, u.role
+     FROM chat_messages m
+     LEFT JOIN users u ON u.username = m.username COLLATE NOCASE
+     WHERE m.channel = ? ORDER BY m.created_at DESC LIMIT ?`,
     ['general', maxMessages]
   ).reverse();
 
