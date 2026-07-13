@@ -1,6 +1,6 @@
 // ── Theme Visual Effects Engine ──
 // Each theme gets a unique canvas-based background effect.
-// Speed is controllable via a slider (saved per-theme in localStorage).
+// Runs at a fixed calm speed; respects prefers-reduced-motion.
 
 (function () {
   'use strict';
@@ -10,69 +10,10 @@
   let effectCtx = null;
   let effectRAF = null;
   let _effectResizeHandler = null;
-  let currentSpeed = 1.0;
 
-  // ═══════════════════════════════════════════════════════════
-  //  SPEED CONTROL
-  // ═══════════════════════════════════════════════════════════
-
-  function getSpeedKey(theme) {
-    return 'themeEffectSpeed_' + theme;
-  }
-
-  function getSavedSpeed(theme) {
-    const val = localStorage.getItem(getSpeedKey(theme));
-    return val !== null ? parseFloat(val) : 1.0;
-  }
-
-  function saveSpeed(theme, speed) {
-    localStorage.setItem(getSpeedKey(theme), speed.toString());
-  }
-
-  function buildSpeedSlider(theme) {
-    let container = document.getElementById('effectSpeedContainer');
-    if (container) container.remove();
-
-    container = document.createElement('div');
-    container.id = 'effectSpeedContainer';
-    container.className = 'effect-speed-container';
-
-    const label = document.createElement('span');
-    label.className = 'effect-speed-label';
-    label.textContent = '⚡';
-    label.title = 'Effect speed';
-
-    const slider = document.createElement('input');
-    slider.type = 'range';
-    slider.min = '0.1';
-    slider.max = '3';
-    slider.step = '0.1';
-    slider.value = getSavedSpeed(theme).toString();
-    slider.className = 'effect-speed-slider';
-    slider.title = 'Effect speed';
-
-    slider.addEventListener('input', () => {
-      const v = parseFloat(slider.value);
-      currentSpeed = v;
-      saveSpeed(theme, v);
-    });
-
-    container.appendChild(label);
-    container.appendChild(slider);
-
-    // Insert next to the theme switcher
-    const themeLangItem = document.querySelector('.nav-item-theme-lang');
-    if (themeLangItem) {
-      themeLangItem.appendChild(container);
-    } else {
-      document.body.appendChild(container);
-    }
-  }
-
-  function removeSpeedSlider() {
-    const c = document.getElementById('effectSpeedContainer');
-    if (c) c.remove();
-  }
+  // Fixed comfortable pace — subtle motion that doesn't distract from content
+  const DEFAULT_SPEED = 0.7;
+  let currentSpeed = DEFAULT_SPEED;
 
   // ═══════════════════════════════════════════════════════════
   //  CANVAS SETUP / TEARDOWN
@@ -1181,15 +1122,14 @@
 
   function switchEffect(theme) {
     destroyEffect();
-    removeSpeedSlider();
 
-    currentSpeed = getSavedSpeed(theme);
+    // Honor the OS "reduce motion" preference — skip animated backgrounds
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    currentSpeed = DEFAULT_SPEED;
 
     const fn = EFFECTS[theme];
-    if (fn) {
-      fn();
-      buildSpeedSlider(theme);
-    }
+    if (fn) fn();
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -1198,7 +1138,7 @@
 
   window.themeEffects = {
     switch: switchEffect,
-    destroy: () => { destroyEffect(); removeSpeedSlider(); },
+    destroy: () => { destroyEffect(); },
     getSpeed: () => currentSpeed,
     setSpeed: (v) => { currentSpeed = v; }
   };

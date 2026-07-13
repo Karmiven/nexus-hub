@@ -1,6 +1,6 @@
 // Romanian translations
 window.__loadLang({
-  _label: 'ROM',
+  _label: 'Română',
 
   nav_home: 'Acasă',
   nav_servers: 'Servere',

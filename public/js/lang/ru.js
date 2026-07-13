@@ -1,6 +1,6 @@
 // Русский translations
 window.__loadLang({
-  _label: 'RUS',
+  _label: 'Русский',
 
   nav_home: 'Главная',
   nav_servers: 'Сервера',

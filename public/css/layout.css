@@ -132,18 +132,19 @@ body::before {
 
 .side-sp { flex: 1; min-height: 12px; }
 
-/* Theme / language selectors row */
+/* Theme / language selectors — stacked so full names stay readable */
 .side-selects {
   display: flex;
+  flex-direction: column;
   gap: 6px;
   padding: 4px 2px 8px;
 }
 .side-selects .theme-selector,
-.side-selects .language-selector { flex: 1; min-width: 0; }
-
-/* Effect speed slider (moved into sidebar) */
-.side .effect-speed-container { padding: 0 4px 8px; }
-.side .effect-speed-slider { flex: 1; width: auto; }
+.side-selects .language-selector {
+  width: 100%;
+  min-width: 0;
+  text-overflow: ellipsis;
+}
 
 /* User card */
 .side-user {

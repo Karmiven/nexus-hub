@@ -1,6 +1,6 @@
 // German translations
 window.__loadLang({
-  _label: 'DEU',
+  _label: 'Deutsch',
 
   nav_home: 'Startseite',
   nav_servers: 'Server',

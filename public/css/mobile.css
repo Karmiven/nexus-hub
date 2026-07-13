@@ -74,11 +74,6 @@
     padding: 0.3rem 0.5rem;
   }
 
-  .nav-item-theme-lang .effect-speed-slider {
-    width: 45px;
-    flex-shrink: 1;
-    min-width: 30px;
-  }
 
   /* Layout */
   .news-grid { grid-template-columns: 1fr; }
