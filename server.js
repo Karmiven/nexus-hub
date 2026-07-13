@@ -119,18 +119,16 @@ app.use((req, res, next) => {
 
   // Use cached settings to avoid DB hit on every request
   try {
-    const s = db.getCachedSettings('navbar_title', 'monitoring_public', 'site_timezone', 'footer_title', 'footer_tagline', 'footer_copyright');
+    const s = db.getCachedSettings('navbar_title', 'monitoring_public', 'site_timezone', 'footer_tagline', 'footer_copyright');
     res.locals.navbarTitle = s.navbar_title || 'NexusHub';
     res.locals.monitoringPublic = String(s.monitoring_public) === '1';
     res.locals.siteTimezone = s.site_timezone || 'Europe/Moscow';
-    res.locals.footerTitle = s.footer_title || '';
     res.locals.footerTagline = s.footer_tagline || '';
     res.locals.footerCopyright = s.footer_copyright || '';
   } catch (e) {
     res.locals.navbarTitle = 'NexusHub';
     res.locals.monitoringPublic = false;
     res.locals.siteTimezone = 'Europe/Moscow';
-    res.locals.footerTitle = '';
     res.locals.footerTagline = '';
     res.locals.footerCopyright = '';
   }

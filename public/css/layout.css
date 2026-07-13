@@ -548,6 +548,21 @@ body::before {
 #flashDock .flash-error { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); box-shadow: 0 0 20px color-mix(in srgb, var(--danger) 25%, transparent); background: var(--surface); }
 @keyframes toastIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ═══════════ ERROR PAGES ═══════════ */
+
+.error-page { display: grid; place-items: center; min-height: 55vh; text-align: center; }
+.error-code {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(64px, 14vw, 120px);
+  line-height: 1;
+  color: var(--primary);
+  text-shadow: var(--glow-soft);
+  margin-bottom: 8px;
+}
+.error-message { font-family: var(--font-display); font-weight: 700; font-size: 1.2rem; margin-bottom: 6px; }
+.error-content p { color: var(--text-secondary); margin-bottom: 18px; }
+
 /* ═══════════ MOBILE ═══════════ */
 
 .mobile-topbar { display: none; }

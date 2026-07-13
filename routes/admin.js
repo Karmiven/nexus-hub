@@ -247,9 +247,9 @@ router.post('/settings', (req, res) => {
     'site_name', 'site_description', 'navbar_title',
     'status_check_interval', 'max_chat_messages', 'community_enabled',
     'registration_enabled', 'monitoring_public',
-    'hero_title', 'hero_subtitle', 'hero_style', 'games_list',
+    'hero_subtitle', // shown as the Overview subtitle
     'site_timezone',
-    'footer_title', 'footer_tagline', 'footer_copyright'
+    'footer_tagline', 'footer_copyright'
   ];
 
   for (const key of keys) {

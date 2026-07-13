@@ -160,6 +160,11 @@ async function initDatabase() {
     insertSetting.run(key, value);
   }
 
+  // Migration: drop settings orphaned by the redesign (hero constructor, games showcase)
+  try {
+    db.prepare("DELETE FROM settings WHERE key IN ('hero_title', 'hero_style', 'games_list', 'footer_title')").run();
+  } catch (e) { /* already removed */ }
+
   console.log('✅ Database initialized');
 }
 

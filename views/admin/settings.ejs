@@ -16,7 +16,7 @@
         <fieldset class="form-fieldset">
           <legend><i data-lucide="globe"></i> <span data-i18n="admin_settings_site">Site & Appearance</span></legend>
 
-          <h3 class="settings-subheading"><i data-lucide="panel-top"></i> <span data-i18n="admin_settings_section_top">Top header</span></h3>
+          <h3 class="settings-subheading"><i data-lucide="panel-top"></i> <span data-i18n="admin_settings_section_top">Branding</span></h3>
           <div class="form-group">
             <label for="site_name" data-i18n="admin_settings_site_name">Site Name</label>
             <input type="text" id="site_name" name="site_name" class="form-input" value="<%= settings.site_name || 'NexusHub' %>">
@@ -28,57 +28,15 @@
           <div class="form-group">
             <label for="navbar_title" data-i18n="admin_settings_nav_title">Navigation Title</label>
             <input type="text" id="navbar_title" name="navbar_title" class="form-input" value="<%= settings.navbar_title || 'NexusHub' %>" maxlength="30">
-            <small class="form-hint" data-i18n="admin_settings_nav_hint">Brand name in the navigation bar and browser tab.</small>
+            <small class="form-hint" data-i18n="admin_settings_nav_hint">Brand name in the sidebar and browser tab.</small>
+          </div>
+          <div class="form-group">
+            <label for="hero_subtitle" data-i18n="admin_settings_overview_subtitle">Overview subtitle</label>
+            <input type="text" id="hero_subtitle" name="hero_subtitle" class="form-input" value="<%= settings.hero_subtitle || '' %>" maxlength="120">
+            <small class="form-hint" data-i18n="admin_settings_overview_subtitle_hint">Short line under the Overview title on the home screen.</small>
           </div>
 
-          <h3 class="settings-subheading"><i data-lucide="layout"></i> <span data-i18n="admin_settings_section_middle">Middle (Hero)</span></h3>
-          <div class="form-group">
-            <label for="hero_title" data-i18n="admin_settings_hero_title">Hero Title</label>
-            <input type="text" id="hero_title" name="hero_title" class="form-input" value="<%= settings.hero_title || 'NexusHub' %>" maxlength="40">
-          </div>
-          <div class="form-group">
-            <label for="hero_subtitle" data-i18n="admin_settings_hero_subtitle">Hero Subtitle</label>
-            <input type="text" id="hero_subtitle" name="hero_subtitle" class="form-input" value="<%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %>" maxlength="80">
-          </div>
-          <div class="form-group">
-            <label data-i18n="admin_settings_hero_style">Title Style</label>
-            <div class="style-options">
-              <% const currentStyle = settings.hero_style || 'glitch'; %>
-              <% const styles = [
-                { id: 'glitch', name: 'Glitch', desc: 'Neon glitch effect' },
-                { id: 'gradient', name: 'Gradient', desc: 'Smooth gradient flow' },
-                { id: 'neon-pulse', name: 'Neon Pulse', desc: 'Pulsating neon glow' },
-                { id: 'typewriter', name: 'Typewriter', desc: 'Typing animation' },
-                { id: 'chrome', name: 'Chrome', desc: 'Metallic chrome shine' },
-                { id: 'retro', name: 'Retro Arcade', desc: 'Pixelated retro style' },
-                { id: 'hologram', name: 'Hologram', desc: '3D holographic scan' }
-              ]; %>
-              <% styles.forEach(s => { %>
-                <label class="style-option <%= currentStyle === s.id ? 'active' : '' %>" data-style="<%= s.id %>">
-                  <input type="radio" name="hero_style" value="<%= s.id %>" <%= currentStyle === s.id ? 'checked' : '' %> hidden>
-                  <span class="style-name"><%= s.name %></span>
-                  <span class="style-desc"><%= s.desc %></span>
-                </label>
-              <% }); %>
-            </div>
-          </div>
-          <div class="form-group">
-            <label data-i18n="admin_settings_preview">Preview</label>
-            <div class="hero-preview" id="heroPreview">
-              <div class="hero-preview-bg"></div>
-              <div class="hero-preview-content">
-                <h1 id="previewTitle" class="hero-title glitch" data-text="<%= settings.hero_title || 'NexusHub' %>"><%= settings.hero_title || 'NexusHub' %></h1>
-                <p id="previewSubtitle" class="hero-subtitle"><%= settings.hero_subtitle || 'Your Ultimate Gaming Server Hub' %></p>
-              </div>
-            </div>
-          </div>
-
-          <h3 class="settings-subheading"><i data-lucide="panel-bottom"></i> <span data-i18n="admin_settings_section_bottom">Bottom (Footer)</span></h3>
-          <div class="form-group">
-            <label for="footer_title" data-i18n="admin_settings_footer_title">Footer Title</label>
-            <input type="text" id="footer_title" name="footer_title" class="form-input" value="<%= settings.footer_title || '' %>" maxlength="40" placeholder="<%= settings.navbar_title || 'NexusHub' %>">
-            <small class="form-hint" data-i18n="admin_settings_footer_title_hint">If empty, navigation title is used.</small>
-          </div>
+          <h3 class="settings-subheading"><i data-lucide="panel-bottom"></i> <span data-i18n="admin_settings_section_bottom">Footer</span></h3>
           <div class="form-group">
             <label for="footer_tagline" data-i18n="admin_settings_footer_tagline">Tagline</label>
             <input type="text" id="footer_tagline" name="footer_tagline" class="form-input" value="<%= settings.footer_tagline || '' %>" maxlength="120" placeholder="Your ultimate gaming server hub.">
@@ -214,33 +172,7 @@
               <input type="checkbox" name="monitoring_public" value="1" <%= String(settings.monitoring_public) === '1' ? 'checked' : '' %>>
               <span data-i18n="admin_settings_monitoring_enable">Public monitoring page</span>
             </label>
-            <small class="form-hint" data-i18n="admin_settings_monitoring_hint">If disabled, the monitoring page is only accessible to administrators.</small>
-          </div>
-        </fieldset>
-
-        <fieldset class="form-fieldset" style="margin-top: 1.5rem;">
-          <legend><i data-lucide="gamepad-2"></i> <span data-i18n="admin_settings_games">Games List on Homepage</span></legend>
-          <div class="form-group">
-            <p class="form-hint" style="margin-bottom: 1rem;" data-i18n="admin_settings_games_hint">Add games that will be displayed on the homepage. Icons are automatically resized to 64x64px.</p>
-
-            <div id="gamesListContainer" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1rem;">
-              <!-- Games will be rendered here -->
-            </div>
-
-            <div style="display: flex; gap: 0.5rem; align-items: flex-end; background: var(--bg-surface); padding: 1rem; border-radius: var(--radius-sm); border: 1px dashed var(--border);">
-              <div style="flex-grow: 1;">
-                <label class="form-label" style="font-size: 0.8rem;" data-i18n="admin_settings_game_name">Game name</label>
-                <input type="text" id="newGameName" class="form-input form-input-sm" data-i18n-placeholder="admin_settings_game_name_placeholder" placeholder="e.g. Minecraft">
-              </div>
-              <div>
-                <label class="form-label" style="font-size: 0.8rem;" data-i18n="admin_settings_game_icon">Icon</label>
-                <input type="file" id="newGameIcon" accept="image/*" style="display: none;">
-                <button type="button" class="btn btn-sm btn-outline" onclick="document.getElementById('newGameIcon').click()" id="newGameIconBtn"><i data-lucide="folder-open"></i> <span data-i18n="admin_settings_game_choose">Choose</span></button>
-              </div>
-              <button type="button" class="btn btn-sm btn-primary" onclick="addGame()">+ <span data-i18n="admin_settings_game_add">Add</span></button>
-            </div>
-            
-            <input type="hidden" id="games_list" name="games_list" value="<%= settings.games_list || '[]' %>">
+            <small class="form-hint" data-i18n="admin_settings_monitoring_hint">If disabled, the monitoring page is only accessible to staff (admin / GM).</small>
           </div>
         </fieldset>
       </div>
@@ -255,13 +187,8 @@
 <%- include('../partials/footer') %>
 
 <style>
-  .settings-container {
-    max-width: 1400px;
-  }
-
-  .settings-card {
-    max-width: 100%;
-  }
+  .settings-container { max-width: 1400px; }
+  .settings-card { max-width: 100%; }
 
   .settings-grid {
     display: grid;
@@ -295,337 +222,12 @@
     padding-bottom: 0.5rem;
     border-bottom: 1px solid var(--border);
   }
-  .settings-subheading:first-of-type {
-    margin-top: 0.25rem;
-  }
-  .settings-subheading i {
-    width: 1em;
-    height: 1em;
-  }
+  .settings-subheading:first-of-type { margin-top: 0.25rem; }
+  .settings-subheading i { width: 1em; height: 1em; }
 
-  .settings-full-width {
-    grid-column: 1 / -1;
-  }
+  .settings-full-width { grid-column: 1 / -1; }
 
   @media (max-width: 768px) {
-    .settings-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .style-options {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .style-option {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-    background: var(--bg-surface);
-    border: 2px solid var(--border);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition);
-    text-align: center;
-  }
-
-  .style-option:hover {
-    border-color: var(--accent);
-    background: rgba(6, 182, 212, 0.05);
-  }
-
-  .style-option.active {
-    border-color: var(--accent);
-    background: rgba(6, 182, 212, 0.1);
-    box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
-  }
-
-  .style-name {
-    font-weight: 700;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-  }
-
-  .style-desc {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-  }
-
-  .hero-preview {
-    position: relative;
-    background: #0B0F19;
-    border-radius: var(--radius-sm);
-    padding: 3rem 2rem;
-    text-align: center;
-    overflow: hidden;
-    border: 1px solid var(--border);
-  }
-
-  .hero-preview-bg {
-    position: absolute;
-    inset: 0;
-    background:
-      radial-gradient(ellipse at 20% 50%, rgba(37, 99, 235, 0.2) 0%, transparent 50%),
-      radial-gradient(ellipse at 80% 50%, rgba(29, 78, 216, 0.15) 0%, transparent 50%),
-      radial-gradient(ellipse at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 60%);
-    z-index: 0;
-  }
-
-  .hero-preview-content {
-    position: relative;
-    z-index: 1;
-  }
-
-  .hero-preview .hero-title {
-    font-family: var(--font-display);
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-  }
-
-  .hero-preview .hero-subtitle {
-    font-size: 1rem;
-    color: #94A3B8;
-    margin-bottom: 0;
-  }
-
-  /* ── Title styles for preview ── */
-  .hero-preview .hero-title.style-glitch {
-    background: linear-gradient(135deg, #fff, #22D3EE, #06B6D4);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .hero-preview .hero-title.style-gradient {
-    background: linear-gradient(90deg, #06B6D4, #3B82F6, #818CF8, #06B6D4);
-    background-size: 300% 100%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: gradient-flow 4s ease infinite;
-  }
-
-  @keyframes gradient-flow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  .hero-preview .hero-title.style-neon-pulse {
-    color: #fff;
-    -webkit-text-fill-color: #fff;
-    text-shadow: 0 0 10px #06B6D4, 0 0 20px #06B6D4, 0 0 40px #0891B2, 0 0 80px #0E7490;
-    animation: neon-pulse 2s ease-in-out infinite;
-  }
-
-  @keyframes neon-pulse {
-    0%, 100% { text-shadow: 0 0 10px #06B6D4, 0 0 20px #06B6D4, 0 0 40px #0891B2, 0 0 80px #0E7490; }
-    50% { text-shadow: 0 0 5px #22D3EE, 0 0 10px #06B6D4, 0 0 20px #0891B2, 0 0 40px #164E63; }
-  }
-
-  .hero-preview .hero-title.style-typewriter {
-    color: #fff;
-    -webkit-text-fill-color: #fff;
-    border-right: 3px solid var(--accent);
-    overflow: hidden;
-    white-space: nowrap;
-    display: inline-block;
-    animation: typewriter-cursor 0.7s step-end infinite;
-  }
-
-  @keyframes typewriter-cursor {
-    0%, 100% { border-color: var(--accent); }
-    50% { border-color: transparent; }
-  }
-
-  .hero-preview .hero-title.style-chrome {
-    background: linear-gradient(180deg, #fff 0%, #aaa 30%, #fff 50%, #888 70%, #ddd 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-  }
-
-  .hero-preview .hero-title.style-retro {
-    color: #FFD740;
-    -webkit-text-fill-color: #FFD740;
-    text-shadow: 3px 3px 0 #FF5252, -1px -1px 0 #00E676;
-    letter-spacing: 0.1em;
-  }
-
-  .hero-preview .hero-title.style-hologram {
-    color: #00E5FF;
-    -webkit-text-fill-color: #00E5FF;
-    text-shadow: 0 0 10px #00E5FF, 0 0 20px #00B8D4, 0 0 40px #006064;
-    animation: hologram-flicker 3s ease-in-out infinite;
-    position: relative;
-  }
-
-  @keyframes hologram-flicker {
-    0%, 100% { opacity: 1; text-shadow: 0 0 10px #00E5FF, 0 0 20px #00B8D4, 0 0 40px #006064; }
-    25% { opacity: 0.95; text-shadow: 0 0 12px #00E5FF, 0 0 25px #00B8D4, 0 0 50px #006064; }
-    50% { opacity: 0.88; text-shadow: 0 0 8px #00E5FF, 0 0 15px #00B8D4, 0 0 30px #006064; transform: translateX(1px); }
-    75% { opacity: 1; text-shadow: 0 0 14px #00E5FF, 0 0 28px #00B8D4, 0 0 55px #006064; transform: translateX(-1px); }
+    .settings-grid { grid-template-columns: 1fr; }
   }
 </style>
-
-<script>
-  // Hero preview live updates
-  const titleInput = document.getElementById('hero_title');
-  const subtitleInput = document.getElementById('hero_subtitle');
-  const previewTitle = document.getElementById('previewTitle');
-  const previewSubtitle = document.getElementById('previewSubtitle');
-  const styleOptions = document.querySelectorAll('.style-option');
-
-  const allStyles = ['style-glitch', 'style-gradient', 'style-neon-pulse', 'style-typewriter', 'style-chrome', 'style-retro', 'style-hologram'];
-
-  function applyStyle(styleId) {
-    // Remove all style classes and glitch class
-    previewTitle.classList.remove('glitch', ...allStyles);
-    previewTitle.removeAttribute('data-text');
-
-    if (styleId === 'glitch') {
-      previewTitle.classList.add('glitch', 'style-glitch');
-      previewTitle.setAttribute('data-text', previewTitle.textContent);
-    } else {
-      previewTitle.classList.add('style-' + styleId);
-    }
-  }
-
-  if (titleInput) {
-    titleInput.addEventListener('input', () => {
-      previewTitle.textContent = titleInput.value || 'NexusHub';
-      if (previewTitle.classList.contains('glitch')) {
-        previewTitle.setAttribute('data-text', previewTitle.textContent);
-      }
-    });
-  }
-
-  if (subtitleInput) {
-    subtitleInput.addEventListener('input', () => {
-      previewSubtitle.textContent = subtitleInput.value || 'Your Ultimate Gaming Server Hub';
-    });
-  }
-
-  styleOptions.forEach(opt => {
-    opt.addEventListener('click', () => {
-      styleOptions.forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      opt.querySelector('input').checked = true;
-      applyStyle(opt.dataset.style);
-    });
-  });
-
-  // Apply initial style
-  const checkedStyle = document.querySelector('.style-option.active');
-  if (checkedStyle) {
-    applyStyle(checkedStyle.dataset.style);
-  }
-
-  // ── Games List Logic ──
-  const gamesListInput = document.getElementById('games_list');
-  const gamesListContainer = document.getElementById('gamesListContainer');
-  const newGameName = document.getElementById('newGameName');
-  const newGameIcon = document.getElementById('newGameIcon');
-  const newGameIconBtn = document.getElementById('newGameIconBtn');
-
-  let games = [];
-  try {
-    games = JSON.parse(gamesListInput.value || '[]');
-  } catch (e) {
-    games = [];
-  }
-
-  let currentIconBase64 = '';
-
-  newGameIcon.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      // Save the raw base64 string to preserve original transparency and quality
-      currentIconBase64 = event.target.result;
-      const _chosenText = t('admin_settings_game_chosen');
-      newGameIconBtn.innerHTML = '<i data-lucide="check"></i> ' + _chosenText;
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-      newGameIconBtn.classList.add('btn-success');
-      newGameIconBtn.classList.remove('btn-outline');
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function renderGames() {
-    gamesListContainer.innerHTML = '';
-    const removeLabel = (typeof t === 'function') ? t('admin_settings_game_remove') : 'Remove';
-    games.forEach((game, index) => {
-      const div = document.createElement('div');
-      div.style.display = 'flex';
-      div.style.alignItems = 'center';
-      div.style.gap = '1rem';
-      div.style.padding = '0.5rem';
-      div.style.background = 'var(--bg-surface)';
-      div.style.border = '1px solid var(--border)';
-      div.style.borderRadius = 'var(--radius-sm)';
-
-      const img = document.createElement('img');
-      img.src = game.icon;
-      img.alt = game.name;
-      img.style.cssText = 'width: 32px; height: 32px; object-fit: contain;';
-
-      const label = document.createElement('span');
-      label.style.cssText = 'flex-grow: 1; font-weight: 600;';
-      label.textContent = game.name;
-
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'btn btn-xs btn-danger';
-      btn.textContent = removeLabel;
-      btn.setAttribute('data-i18n', 'admin_settings_game_remove');
-      btn.addEventListener('click', () => removeGame(index));
-
-      div.appendChild(img);
-      div.appendChild(label);
-      div.appendChild(btn);
-      gamesListContainer.appendChild(div);
-    });
-    gamesListInput.value = JSON.stringify(games);
-  }
-
-  window.addGame = function() {
-    const name = newGameName.value.trim();
-    if (!name) return alert(t('admin_settings_game_name_required'));
-    if (!currentIconBase64) return alert(t('admin_settings_game_icon_required'));
-
-    games.push({ name, icon: currentIconBase64 });
-    renderGames();
-
-    // Reset form
-    newGameName.value = '';
-    newGameIcon.value = '';
-    currentIconBase64 = '';
-    const _chooseText = t('admin_settings_game_choose');
-    newGameIconBtn.innerHTML = '<i data-lucide="folder-open"></i> ' + _chooseText;
-    if (typeof lucide !== 'undefined') lucide.createIcons();
-    newGameIconBtn.classList.remove('btn-success');
-    newGameIconBtn.classList.add('btn-outline');
-  };
-
-  window.removeGame = function(index) {
-    games.splice(index, 1);
-    renderGames();
-  };
-
-  renderGames();
-
-  if (typeof window.i18nReady === 'function') {
-    window.i18nReady(renderGames);
-    window.addEventListener('languageChanged', renderGames);
-  }
-</script>
