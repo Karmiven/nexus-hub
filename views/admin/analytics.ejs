@@ -220,10 +220,10 @@
     var cs = getComputedStyle(document.documentElement);
     var chartColors = {
       accent: cs.getPropertyValue('--accent').trim() || '#a855f7',
-      success: '#22c55e',
-      danger: '#ef4444',
-      warning: '#f59e0b',
-      info: '#3b82f6',
+      success: cs.getPropertyValue('--success').trim() || '#22c55e',
+      danger: cs.getPropertyValue('--danger').trim() || '#ef4444',
+      warning: cs.getPropertyValue('--warning').trim() || '#f59e0b',
+      info: cs.getPropertyValue('--primary').trim() || '#3b82f6',
       muted: cs.getPropertyValue('--text-muted').trim() || '#6b7280',
       border: cs.getPropertyValue('--border').trim() || '#333',
       text: cs.getPropertyValue('--text').trim() || '#e0e0e0',

@@ -162,12 +162,12 @@
     text-transform: uppercase;
   }
   .badge-info {
-    background: rgba(6, 182, 212, 0.15);
-    color: var(--accent, #06b6d4);
+    background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: var(--accent);
   }
   .badge-warning {
-    background: rgba(245, 158, 11, 0.15);
-    color: #f59e0b;
+    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    color: var(--warning);
   }
   .pve-empty-msg {
     color: var(--text-muted);
@@ -175,24 +175,24 @@
     padding: 2rem 0;
   }
   .node-group-header td {
-    background: rgba(139, 92, 246, 0.08);
-    border-left: 3px solid var(--accent, #8b5cf6);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-left: 3px solid var(--accent);
     font-size: 0.85rem;
     letter-spacing: 0.02em;
     padding: 0.5rem 0.8rem !important;
     color: var(--text-secondary);
   }
   .badge-success {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    color: var(--success);
   }
   .badge-secondary {
-    background: rgba(148, 163, 184, 0.15);
-    color: #94a3b8;
+    background: color-mix(in srgb, var(--text-secondary) 15%, transparent);
+    color: var(--text-secondary);
   }
   .pve-perm-hint {
-    background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: color-mix(in srgb, var(--warning) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
     border-radius: 8px;
     padding: 1rem 1.2rem;
     font-size: 0.85rem;
@@ -209,8 +209,8 @@
     padding: 0.15rem 0;
   }
   .pve-perm-list code {
-    background: rgba(139, 92, 246, 0.12);
-    color: var(--accent, #8b5cf6);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
     font-size: 0.82rem;
