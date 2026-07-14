@@ -49,10 +49,10 @@ app.use(helmet({
       scriptSrc: [
         (req, res) => `'nonce-${res.locals.cspNonce}'`,
         "'strict-dynamic'",
-        "'self'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://challenges.cloudflare.com"
+        "'self'", "https://challenges.cloudflare.com"
       ],
       scriptSrcAttr: ["'none'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "blob:", "https:"],
       connectSrc: ["'self'", "ws:", "wss:", "https://challenges.cloudflare.com"],
