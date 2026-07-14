@@ -39,7 +39,8 @@
         data-content-full-ro="<%- encodeURIComponent(article.content_full_ro || '') %>"
         data-content-full-de="<%- encodeURIComponent(article.content_full_de || '') %>"
         data-author="<%- encodeURIComponent(article.author) %>"
-        data-date="<%= article.created_at %>">
+        data-date="<%= article.created_at %>"
+        data-image="<%= article.image || '' %>">
         <div class="news-thumb<%= article.image ? ' has-img' : '' %>"<% if (article.image) { %> style="background-image:url('<%= article.image %>')"<% } %>></div>
         <div class="news-cont">
           <div class="m">
@@ -65,20 +66,63 @@
 
   <!-- News Modal -->
   <div id="newsModal" class="modal" style="display:none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modalTitle"></h2>
-        <button class="modal-close" id="newsModalClose">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="modal-meta">
+    <div class="modal-content panel article-modal-panel">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <button class="modal-close article-modal-close" id="newsModalClose" aria-label="Close">&times;</button>
+      <div id="modalHero" class="article-hero-img" style="display:none;"></div>
+      <div class="article-body">
+        <div class="modal-meta" id="modalMeta">
           <span id="modalAuthor"></span>
           <span id="modalDate"></span>
         </div>
+        <h2 id="modalTitle" class="article-modal-title"></h2>
         <div id="modalContent" class="modal-content-text"></div>
       </div>
     </div>
   </div>
+
+  <style>
+    .article-modal-panel {
+      max-width: 720px;
+      width: 92vw;
+      max-height: 86vh;
+      overflow-y: auto;
+      padding: 0;
+      position: relative;
+    }
+    .article-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 5;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: color-mix(in srgb, var(--bg-primary) 55%, transparent);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 1.4rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s;
+    }
+    .article-modal-close:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--text-on-primary, #fff);
+    }
+    .article-modal-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0.2rem 0 0.9rem;
+    }
+  </style>
 
   <script nonce="<%= cspNonce %>">
     function decodeAttr(element, key) {
@@ -94,6 +138,16 @@
       document.getElementById('modalTitle').textContent = title;
       document.getElementById('modalAuthor').textContent = (window.i18n ? window.i18n.t('news_by') : 'By') + ' ' + decodeAttr(element, 'author');
       document.getElementById('modalDate').textContent = window.formatTimestamp ? window.formatTimestamp(element.dataset.date, 'date') : new Date(element.dataset.date).toLocaleDateString();
+
+      var hero = document.getElementById('modalHero');
+      var image = element.dataset.image || '';
+      if (image) {
+        hero.style.backgroundImage = "url('" + image.replace(/['"\\()]/g, '') + "')";
+        hero.style.display = 'block';
+      } else {
+        hero.style.display = 'none';
+      }
+
       // Safe: textContent per line prevents XSS
       var modalContent = document.getElementById('modalContent');
       modalContent.textContent = '';

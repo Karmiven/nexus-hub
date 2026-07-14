@@ -67,69 +67,27 @@
     <form id="newsForm" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; overflow: hidden;">
       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="modal-body-scroll">
-        <div class="bilingual-form-unified">
+        <div class="news-form-single">
 
-          <!-- English Column -->
-          <div class="language-column">
-        <div class="language-header">
-          <span class="language-flag">EN</span>
-          <span class="language-title">English</span>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label" for="title_en" data-i18n="admin_news_heading_en">Заголовок</label>
-          <input type="text" id="title_en" name="title_en" class="form-input" required>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label" for="content_short_en" data-i18n="admin_news_short_en">Краткое содержание (Главная)</label>
-          <textarea id="content_short_en" name="content_short_en" class="form-textarea" required></textarea>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label" for="content_full_en" data-i18n="admin_news_full_en">Полное содержание (Статья)</label>
-          <textarea id="content_full_en" name="content_full_en" class="form-textarea full-content" required></textarea>
-        </div>
-      </div>
-      
-      <!-- Russian Column -->
-      <div class="language-column">
-        <div class="language-header">
-          <span class="language-flag">RU</span>
-          <span class="language-title">Русский</span>
-          <button type="button" class="btn btn-xs btn-outline lang-translate-btn" data-act="translateNews" data-target="ru" title="">
-            <i data-lucide="languages"></i> <span data-i18n="admin_translate_from_en">Translate from EN</span>
-          </button>
-        </div>
-
-        <div id="ruAutoState" class="lang-auto-state">
-          <p class="lang-auto-note" style="margin-top:0;"><i data-lucide="sparkles"></i> <span data-i18n="admin_translate_auto_desc">Russian, Romanian &amp; German are generated automatically from English via DeepL when you save.</span></p>
-          <button type="button" class="btn btn-xs btn-outline" data-act="showManualRu">
-            <i data-lucide="pencil"></i> <span data-i18n="admin_translate_write_manually">Write manually</span>
-          </button>
-        </div>
-
-        <div id="ruManualFields" class="ru-manual-fields" style="display:none;">
           <div class="form-group">
-            <label class="form-label" for="title_ru" data-i18n="admin_news_heading_ru">Заголовок</label>
-            <input type="text" id="title_ru" name="title_ru" class="form-input">
+            <label class="form-label" for="title_en" data-i18n="admin_news_heading_en">Заголовок</label>
+            <input type="text" id="title_en" name="title_en" class="form-input" required>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="content_short_ru" data-i18n="admin_news_short_ru">Краткое содержание (Главная)</label>
-            <textarea id="content_short_ru" name="content_short_ru" class="form-textarea"></textarea>
+            <label class="form-label" for="content_short_en" data-i18n="admin_news_short_en">Краткое содержание (Главная)</label>
+            <textarea id="content_short_en" name="content_short_en" class="form-textarea" required></textarea>
           </div>
 
           <div class="form-group">
-            <label class="form-label" for="content_full_ru" data-i18n="admin_news_full_ru">Полное содержание (Статья)</label>
-            <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content"></textarea>
+            <label class="form-label" for="content_full_en" data-i18n="admin_news_full_en">Полное содержание (Статья)</label>
+            <textarea id="content_full_en" name="content_full_en" class="form-textarea full-content" required></textarea>
           </div>
-          <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
-        </div>
-      </div>
-      
+
+          <p class="lang-auto-note"><i data-lucide="sparkles"></i> <span data-i18n="admin_translate_auto_desc">Russian, Romanian &amp; German are generated automatically from English via DeepL when you save.</span></p>
+
       <!-- Common Fields -->
-      <div class="form-group" style="grid-column: 1 / -1;">
+      <div class="form-group">
         <label class="form-label" data-i18n="admin_news_image">Изображение (16:9 — высокое качество)</label>
         <div class="image-section">
           <input type="file" id="image" name="image" accept="image/*" style="display: none;">
@@ -152,7 +110,7 @@
         </div>
       </div>
       
-      <div class="form-group" style="grid-column: 1 / -1;">
+      <div class="form-group">
         <div class="checkbox-group">
           <input type="checkbox" id="pinned" name="pinned" class="checkbox-input">
           <label for="pinned" data-i18n="admin_news_pin">Закрепить на главной</label>
@@ -167,6 +125,8 @@
       <button type="submit" class="btn btn-primary" id="submitBtn"><i data-lucide="sparkles"></i> <span data-i18n="create">Создать</span></button>
     </div>
   </form>
+    <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+  </div>
 </div>
 
 <!-- Preview Modal -->
@@ -179,6 +139,12 @@
     <div class="preview-tabs">
       <button type="button" class="preview-tab active" data-tab="mini" data-act="switchPreviewTab"><i data-lucide="home"></i> <span data-i18n="admin_news_preview_mini">Мини-карточка (Главная)</span></button>
       <button type="button" class="preview-tab" data-tab="full" data-act="switchPreviewTab"><i data-lucide="file-text"></i> <span data-i18n="admin_news_preview_full">Полная статья</span></button>
+    </div>
+    <div class="preview-lang-tabs" id="previewLangTabs">
+      <button type="button" class="preview-lang-tab active" data-act="setPreviewLang" data-lang="en">EN</button>
+      <button type="button" class="preview-lang-tab" data-act="setPreviewLang" data-lang="ru">RU</button>
+      <button type="button" class="preview-lang-tab" data-act="setPreviewLang" data-lang="ro">RO</button>
+      <button type="button" class="preview-lang-tab" data-act="setPreviewLang" data-lang="de">DE</button>
     </div>
     <div id="previewMini" class="preview-pane active">
       <div class="preview-label" data-i18n="admin_news_preview_mini_desc">Как выглядит на главной:</div>
@@ -262,6 +228,16 @@
     font-style: italic;
   }
 
+  .preview-note {
+    font-size: 0.8rem;
+    color: var(--warning);
+    background: color-mix(in srgb, var(--warning) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+    border-radius: var(--radius-xs);
+    padding: 0.5rem 0.75rem;
+    margin: 0 0 1rem;
+  }
+
   .preview-home-bg {
     background: var(--bg-dark);
     border-radius: var(--radius-sm);
@@ -326,29 +302,6 @@
     white-space: pre-line;
   }
 
-  .preview-lang-switch {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .preview-lang-btn {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    padding: 0.4rem 1rem;
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: all var(--transition);
-  }
-
-  .preview-lang-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--text-on-primary, #fff);
-  }
-
   /* ── Modal ── */
   .modal {
     position: fixed;
@@ -365,25 +318,28 @@
   }
 
   .modal-content {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    max-width: 1200px;
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    max-width: 680px;
     width: 100%;
     max-height: 90vh;
     border: 1px solid var(--border);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
   }
+
+  #previewModal .modal-content { max-width: 900px; }
 
   .modal-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1.5rem 2rem;
+    padding: 12px 18px;
     border-bottom: 1px solid var(--border);
-    background: var(--bg-surface);
+    background: var(--surface-2);
     flex-shrink: 0;
   }
 
@@ -449,52 +405,24 @@
     background: color-mix(in srgb, var(--text-primary) 6%, transparent);
   }
 
-  /* ── Bilingual form ── */
-  .bilingual-form-unified {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    padding: 2rem;
+  /* ── News form (English-only input; RU/RO/DE generated via DeepL) ── */
+  .news-form-single {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 18px;
     padding-bottom: 0;
   }
 
-  .language-column {
-    background: var(--bg-surface);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    border: 1px solid var(--border);
+  .news-form-single .form-textarea {
+    resize: none;
+    min-height: 80px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  .language-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .language-flag {
-    font-size: 1.5rem;
-  }
-
-  .language-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-  }
-
-  .lang-translate-btn {
-    margin-left: auto;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    white-space: nowrap;
-  }
-
-  .lang-translate-btn i {
-    width: 14px;
-    height: 14px;
+  .news-form-single .form-textarea.full-content {
+    min-height: 140px;
   }
 
   .lang-auto-note {
@@ -523,26 +451,11 @@
     margin-right: 0.3rem;
   }
 
-  .bilingual-form-unified .form-textarea {
-    resize: none;
-    min-height: 80px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .bilingual-form-unified .form-textarea.full-content {
-    min-height: 120px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
   .form-actions {
     margin-top: 0;
-    padding: 1.5rem 2rem;
+    padding: 12px 18px;
     border-top: 1px solid var(--border);
-    background: var(--bg-surface);
-    border-bottom-left-radius: var(--radius);
-    border-bottom-right-radius: var(--radius);
+    background: var(--surface-2);
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
@@ -629,17 +542,35 @@
     color: var(--text-secondary);
   }
 
-  /* ── Responsive ── */
-  @media (max-width: 768px) {
-    .bilingual-form-unified {
-      grid-template-columns: 1fr;
-      gap: 1rem;
-    }
-
-    .modal-content {
-      padding: 1.5rem;
-    }
+  /* ── Preview language tabs ── */
+  .preview-lang-tabs {
+    display: flex;
+    gap: 6px;
+    margin: -0.5rem 0 1.25rem;
   }
+
+  .preview-lang-tab {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 0.3rem 0.75rem;
+    border-radius: var(--radius-xs);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    transition: all var(--transition);
+  }
+
+  .preview-lang-tab:hover { border-color: var(--border-hover); color: var(--text-primary); }
+
+  .preview-lang-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-primary, #fff);
+  }
+
+  .preview-lang-tab[disabled] { opacity: 0.5; cursor: wait; }
 </style>
 
 <script nonce="<%= cspNonce %>">
@@ -770,17 +701,16 @@
     closeCropModal();
   }
 
-  // ── Preview system ──
+  // ── Preview system (EN typed directly; RU/RO/DE fetched live from DeepL for preview only) ──
   let previewLang = 'en';
+  let previewCache = {};
+  let previewLoading = {};
 
   function getPreviewData() {
     return {
       title_en: document.getElementById('title_en').value || t('admin_news_no_title'),
-      title_ru: document.getElementById('title_ru').value || t('admin_news_no_title'),
       content_short_en: document.getElementById('content_short_en').value || t('admin_news_no_short'),
-      content_short_ru: document.getElementById('content_short_ru').value || t('admin_news_no_short'),
       content_full_en: document.getElementById('content_full_en').value || t('admin_news_no_full'),
-      content_full_ru: document.getElementById('content_full_ru').value || t('admin_news_no_full'),
       image: document.getElementById('finalImage')?.src || '',
       pinned: document.getElementById('pinned').checked,
       author: '<%= typeof user !== "undefined" && user ? user.username : "Admin" %>',
@@ -802,8 +732,45 @@
     return String(value || '').replace(/['"\\()]/g, '');
   }
 
+  async function fetchPreviewTranslation(lang) {
+    if (previewLoading[lang]) return;
+    const d = getPreviewData();
+    const texts = [d.title_en, d.content_short_en, d.content_full_en];
+    if (texts.every(function (x) { return !String(x).trim(); })) {
+      previewCache[lang] = { title: '', short: '', full: '' };
+      renderPreview();
+      return;
+    }
+    previewLoading[lang] = true;
+    renderPreview();
+    try {
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+              || document.querySelector('#newsForm [name="_csrf"]')?.value;
+      const resp = await fetch('/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ texts: texts, target: lang, source: 'en' }),
+        credentials: 'same-origin'
+      });
+      const newCsrf = resp.headers.get('X-CSRF-Token');
+      if (newCsrf) { const m = document.querySelector('meta[name="csrf-token"]'); if (m) m.setAttribute('content', newCsrf); }
+      const data = await resp.json();
+      if (!data.configured) previewCache[lang] = { unconfigured: true };
+      else if (data.success) previewCache[lang] = { title: data.translations[0] || '', short: data.translations[1] || '', full: data.translations[2] || '' };
+      else previewCache[lang] = { error: true };
+    } catch (e) {
+      previewCache[lang] = { error: true };
+    } finally {
+      previewLoading[lang] = false;
+      renderPreview();
+    }
+  }
+
   function openPreviewModal() {
     previewLang = 'en';
+    previewCache = {};
+    previewLoading = {};
+    document.querySelectorAll('.preview-lang-tab').forEach(function (btn) { btn.classList.toggle('active', btn.dataset.lang === 'en'); });
     renderPreview();
     document.getElementById('previewModal').style.display = 'flex';
   }
@@ -821,32 +788,48 @@
 
   function setPreviewLang(lang) {
     previewLang = lang;
+    document.querySelectorAll('.preview-lang-tab').forEach(function (btn) { btn.classList.toggle('active', btn.dataset.lang === lang); });
     renderPreview();
   }
 
   function renderPreview() {
     const d = getPreviewData();
     const lang = previewLang;
-    const title = escHtml(lang === 'ru' ? d.title_ru : d.title_en);
-    const shortContent = escPreviewText(lang === 'ru' ? d.content_short_ru : d.content_short_en);
-    const fullContent = escPreviewText(lang === 'ru' ? d.content_full_ru : d.content_full_en);
+    let titleRaw, shortRaw, fullRaw, note = '';
+
+    if (lang === 'en') {
+      titleRaw = d.title_en; shortRaw = d.content_short_en; fullRaw = d.content_full_en;
+    } else if (previewLoading[lang]) {
+      titleRaw = t('admin_translate_progress'); shortRaw = ''; fullRaw = '';
+    } else if (!previewCache[lang]) {
+      fetchPreviewTranslation(lang);
+      titleRaw = t('admin_translate_progress'); shortRaw = ''; fullRaw = '';
+    } else if (previewCache[lang].unconfigured) {
+      titleRaw = d.title_en; shortRaw = d.content_short_en; fullRaw = d.content_full_en;
+      note = t('admin_translate_unconfigured');
+    } else if (previewCache[lang].error) {
+      titleRaw = d.title_en; shortRaw = d.content_short_en; fullRaw = d.content_full_en;
+      note = t('admin_translate_failed');
+    } else {
+      titleRaw = previewCache[lang].title || d.title_en;
+      shortRaw = previewCache[lang].short || d.content_short_en;
+      fullRaw = previewCache[lang].full || d.content_full_en;
+    }
+
+    const title = escHtml(titleRaw);
+    const shortContent = escPreviewText(shortRaw);
+    const fullContent = escPreviewText(fullRaw);
     const author = escHtml(d.author);
     const date = escHtml(d.date);
+    const noteHtml = note ? `<p class="preview-note">${escHtml(note)}</p>` : '';
     const imageHtml = d.image && !d.image.endsWith('#')
       ? `<div class="news-image" style="background-image: url('${safeCssImageUrl(d.image)}')"></div>`
       : `<div class="news-image news-image-default"></div>`;
     const pinnedBadge = d.pinned ? `<span class="pin-badge"><i data-lucide="pin"></i> ${escHtml(t('admin_news_pinned_label'))}</span>` : '';
 
-    const langSwitcher = `
-      <div class="preview-lang-switch">
-        <button type="button" class="preview-lang-btn ${lang === 'en' ? 'active' : ''}" data-act="setPreviewLang" data-lang="en">EN English</button>
-        <button type="button" class="preview-lang-btn ${lang === 'ru' ? 'active' : ''}" data-act="setPreviewLang" data-lang="ru">RU Русский</button>
-      </div>
-    `;
-
     // Mini card (homepage)
     document.getElementById('previewMiniContent').innerHTML = `
-      ${langSwitcher}
+      ${noteHtml}
       <div class="news-grid" style="max-width: 380px;">
         <article class="news-card${d.pinned ? ' pinned' : ''}" style="cursor: default;">
           ${pinnedBadge}
@@ -865,7 +848,7 @@
 
     // Full article
     document.getElementById('previewFullContent').innerHTML = `
-      ${langSwitcher}
+      ${noteHtml}
       <div class="preview-full-article">
         <h1 class="pfa-title">${title}</h1>
         <div class="pfa-meta">
@@ -875,7 +858,7 @@
         <div class="pfa-content">${fullContent}</div>
       </div>
     `;
-    
+
     // Refresh Lucide icons in preview
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
@@ -894,8 +877,6 @@
     document.getElementById('croppedImageData').value = '';
     document.getElementById('finalImagePreview').style.display = 'none';
     document.getElementById('imageUpload').style.display = 'flex';
-    document.getElementById('ruAutoState').style.display = 'block';
-    document.getElementById('ruManualFields').style.display = 'none';
     modalTitle.innerHTML = '<i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">' + (t('admin_news_modal_create')) + '</span>';
     submitBtn.innerHTML = '<i data-lucide="sparkles"></i> <span data-i18n="create">' + (t('create')) + '</span>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -936,15 +917,10 @@
       })
       .then(data => {
         document.getElementById('title_en').value = data.title_en || '';
-        document.getElementById('title_ru').value = data.title_ru || '';
         document.getElementById('content_short_en').value = data.content_short_en || '';
-        document.getElementById('content_short_ru').value = data.content_short_ru || '';
         document.getElementById('content_full_en').value = data.content_full_en || '';
-        document.getElementById('content_full_ru').value = data.content_full_ru || '';
         document.getElementById('pinned').checked = !!data.pinned;
-        document.getElementById('ruAutoState').style.display = 'none';
-        document.getElementById('ruManualFields').style.display = 'block';
-        
+
         // Clear file input
         imageInput.value = '';
         originalImageData = null;
@@ -1014,58 +990,6 @@
       alert(t('admin_news_error_save') + ' ' + err.message);
     }
   });
-  // ── Reveal the manual RU fields (either explicit toggle or when translating) ──
-  function showManualRu() {
-    document.getElementById('ruAutoState').style.display = 'none';
-    document.getElementById('ruManualFields').style.display = 'block';
-  }
-
-  // ── Auto-translate the Russian column from English (DeepL) ──
-  async function translateNews(btn) {
-    var target = btn.dataset.target || 'ru';
-    if (target === 'ru') showManualRu();
-    var map = {
-      title_en: 'title_' + target,
-      content_short_en: 'content_short_' + target,
-      content_full_en: 'content_full_' + target
-    };
-    var sources = Object.keys(map);
-    var texts = sources.map(function (id) { return document.getElementById(id).value || ''; });
-    if (texts.every(function (t) { return !t.trim(); })) {
-      alert(t('admin_translate_empty'));
-      return;
-    }
-    var original = btn.innerHTML;
-    btn.disabled = true;
-    btn.textContent = t('admin_translate_progress');
-    try {
-      var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
-              || document.querySelector('#newsForm [name="_csrf"]')?.value;
-      var resp = await fetch('/admin/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf, 'X-Requested-With': 'XMLHttpRequest' },
-        body: JSON.stringify({ texts: texts, target: target, source: 'en' }),
-        credentials: 'same-origin'
-      });
-      var newCsrf = resp.headers.get('X-CSRF-Token');
-      if (newCsrf) { var m = document.querySelector('meta[name="csrf-token"]'); if (m) m.setAttribute('content', newCsrf); }
-      var data = await resp.json();
-      if (!data.configured) { alert(t('admin_translate_unconfigured')); return; }
-      if (!data.success) { alert(t('admin_translate_failed')); return; }
-      sources.forEach(function (id, i) {
-        var out = data.translations[i];
-        if (out != null) document.getElementById(map[id]).value = out;
-      });
-    } catch (err) {
-      console.error('translate error:', err);
-      alert(t('admin_translate_failed'));
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = original;
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    }
-  }
-
 // ── CSP-safe event delegation (replaces inline onclick attributes) ──
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-act]');
@@ -1082,8 +1006,6 @@ document.addEventListener('click', function (e) {
     case 'closeCropModal': closeCropModal(); break;
     case 'applyCrop': applyCrop(); break;
     case 'setPreviewLang': setPreviewLang(b.dataset.lang); break;
-    case 'translateNews': translateNews(b); break;
-    case 'showManualRu': showManualRu(); break;
   }
 });
 </script>
