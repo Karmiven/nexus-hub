@@ -417,7 +417,6 @@ window.__loadLang({
   ov_players_now: 'Jucători acum',
   ov_servers_online: 'Servere online',
   ov_uptime: 'Uptime 30z',
-  ov_users: 'Utilizatori',
   ov_all_servers: 'Toate serverele',
   ov_chat_head: 'Chat — #general',
   ov_chat_empty: 'Niciun mesaj încă — fii primul!',
@@ -494,4 +493,5 @@ window.__loadLang({
   flash_2fa_invalid_code: 'Cod invalid. Încearcă din nou.',
   flash_2fa_expired: 'Sesiunea a expirat. Autentifică-te din nou.',
   flash_2fa_disable_failed: 'Parolă sau cod greșit.',
+  ov_peak_24h: 'Vârf online 24h',
 });

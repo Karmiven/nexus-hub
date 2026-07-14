@@ -190,7 +190,7 @@
 .visitor-pages-toggle:hover { text-decoration: underline; }
 </style>
 
-<script nonce="<%= cspNonce %>" src="https://unpkg.com/chart.js@4.4.7/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+<script nonce="<%= cspNonce %>" src="/js/vendor/chart.umd.min.js?v=<%= v %>"></script>
 <script nonce="<%= cspNonce %>">
 (function() {
   // ── Retry Chart.js loading if CDN fails ──
@@ -209,7 +209,7 @@
     }
     // retry loading
     var s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js';
+    s.src = '/js/vendor/chart.umd.min.js';
     s.onload = function() { waitForChart(attempt + 1); };
     s.onerror = function() { setTimeout(function() { waitForChart(attempt + 1); }, 500); };
     document.head.appendChild(s);

@@ -8,7 +8,17 @@ router.get('/', (req, res) => {
 
   const servers = db.all('SELECT id, name, game, ip, port, status, player_count, max_players, show_ip_address, show_player_count FROM servers ORDER BY sort_order ASC LIMIT 6');
   const news = db.all('SELECT * FROM news ORDER BY pinned DESC, created_at DESC LIMIT 3');
-  const userCount = db.get('SELECT COUNT(*) as count FROM users');
+
+  // Peak concurrent players across all servers in the last 24h
+  let peak24h = 0;
+  try {
+    const peak = db.get(`SELECT MAX(total) AS peak FROM (
+      SELECT SUM(player_count) AS total FROM server_status_log
+      WHERE created_at >= datetime('now', '-1 day')
+      GROUP BY strftime('%Y-%m-%d %H:%M', created_at)
+    )`);
+    peak24h = peak && peak.peak ? peak.peak : 0;
+  } catch (e) { /* table may be empty on fresh installs */ }
 
   // Last chat messages (with role for badges), only if chat is enabled
   let chatPreview = [];
@@ -31,7 +41,7 @@ router.get('/', (req, res) => {
     chatPreview,
     communityEnabled,
     currentLang: req.session.language || 'en',
-    userCount: userCount?.count || 0
+    peak24h
   });
 });
 

@@ -417,7 +417,6 @@ window.__loadLang({
   ov_players_now: 'Spieler jetzt',
   ov_servers_online: 'Server online',
   ov_uptime: 'Uptime 30T',
-  ov_users: 'Benutzer',
   ov_all_servers: 'Alle Server',
   ov_chat_head: 'Chat — #general',
   ov_chat_empty: 'Noch keine Nachrichten — sei der Erste!',
@@ -494,4 +493,5 @@ window.__loadLang({
   flash_2fa_invalid_code: 'Ungültiger Code. Versuche es erneut.',
   flash_2fa_expired: 'Sitzung abgelaufen. Bitte erneut anmelden.',
   flash_2fa_disable_failed: 'Falsches Passwort oder falscher Code.',
+  ov_peak_24h: 'Spitzenwert online 24h',
 });

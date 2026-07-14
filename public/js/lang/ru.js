@@ -417,7 +417,6 @@ window.__loadLang({
   ov_players_now: 'Игроков сейчас',
   ov_servers_online: 'Серверов онлайн',
   ov_uptime: 'Аптайм 30 дней',
-  ov_users: 'Пользователей',
   ov_all_servers: 'Все серверы',
   ov_chat_head: 'Чат — #general',
   ov_chat_empty: 'Сообщений пока нет — будь первым!',
@@ -494,4 +493,5 @@ window.__loadLang({
   flash_2fa_invalid_code: 'Неверный код. Попробуйте ещё раз.',
   flash_2fa_expired: 'Сессия истекла. Войдите заново.',
   flash_2fa_disable_failed: 'Неверный пароль или код.',
+  ov_peak_24h: 'Пик онлайна за 24ч',
 });

@@ -417,7 +417,6 @@ window.__loadLang({
   ov_players_now: 'Players now',
   ov_servers_online: 'Servers online',
   ov_uptime: 'Uptime 30d',
-  ov_users: 'Users',
   ov_all_servers: 'All servers',
   ov_chat_head: 'Chat — #general',
   ov_chat_empty: 'No messages yet — be the first!',
@@ -494,4 +493,5 @@ window.__loadLang({
   flash_2fa_invalid_code: 'Invalid code. Try again.',
   flash_2fa_expired: 'Session expired. Please log in again.',
   flash_2fa_disable_failed: 'Wrong password or code.',
+  ov_peak_24h: 'Peak online 24h',
 });
