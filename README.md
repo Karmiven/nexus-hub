@@ -1,34 +1,29 @@
 # ⚡ NexusHub
 
-> **🚧 Work In Progress** — Under active development. Some features may be incomplete.
+Self-hosted gaming server hub for managing, monitoring, and showcasing game servers. Built with Node.js + Express + SQLite, featuring real-time chat, Proxmox VM/LXC monitoring, DeepL-powered content translation, and 6 animated visual themes.
 
-Self-hosted gaming server hub for managing, monitoring, and showcasing game servers. Built with Node.js + Express + SQLite, featuring real-time chat, Proxmox VM/LXC monitoring, and 6 visual themes.
-
-![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js)
-![Express](https://img.shields.io/badge/Express-4.18-blue?logo=express)
+![Node.js](https://img.shields.io/badge/Node.js-20+-green?logo=node.js)
+![Express](https://img.shields.io/badge/Express-4-blue?logo=express)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-![Status](https://img.shields.io/badge/Status-WIP-orange)
+
+> Actively developed. The `main` branch is production-usable; the database schema upgrades itself in place on startup (additive, non-destructive migrations).
 
 ---
 
 ## Features
 
-- **Server Browser** — Live online/offline status (TCP ping), Minecraft player counts, redirect-to-launcher support
-- **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting
-- **News System** — Multilingual articles, image upload with 16:9 cropper, pinned posts
-- **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats, grouped by node
-- **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with unique visual effects
-- **i18n** — Dynamic language system with auto-discovery (EN/RU/RO out of the box), instant switching without page reload
-- **Admin Panel** — News/servers/users/settings CRUD, analytics dashboard with charts, audit log of admin actions, one-click DB backups
-- **Analytics** — Buffered page-view tracking with GeoIP, charts and time-series breakdown
-- **User Registration** — Self-service registration (admin-toggleable) with optional Cloudflare Turnstile, profile with avatar upload
-- **2FA (TOTP)** — Zero-dependency RFC 6238 one-time codes: enable in the profile, verified as a second login step
+- **Server Browser** — Live online/offline status (TCP ping), Minecraft player counts, redirect-to-launcher support, per-server uptime/players history chart (24h/7d)
+- **News System** — Multilingual articles (EN/RU/RO/DE), pinned posts, image upload with 16:9 cropper, search, pagination, permalinks, RSS & OpenGraph
+- **Auto-translation** — Write content in English once; Russian/Romanian/German are filled in automatically on save via the DeepL API (or on demand with a "Translate from EN" button). Optional — falls back to English when no key is set
+- **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting, and admin/GM moderation (delete messages, mute users)
+- **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats grouped by node, plus start/stop/reboot control
+- **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with a unique animated canvas background and a speed slider
+- **i18n** — Dynamic language system with auto-discovery (EN/RU/RO/DE out of the box), instant switching without page reload; also localizes flash messages and API responses
+- **Admin Panel** — News / servers / users / settings CRUD, analytics dashboard with charts, audit log of admin actions, one-click DB backups
+- **Analytics** — Buffered page-view tracking with GeoIP, charts and time-series breakdown, automatic 90-day retention
+- **Accounts** — Self-service registration (admin-toggleable) with optional Cloudflare Turnstile, avatar upload, and optional TOTP two-factor auth
 - **Discord Notifications** — Webhook alerts when a server goes up/down or a news article is published
-- **Chat Moderation** — Admin/GM can delete messages and mute users right from the chat
-- **Server History** — Canvas uptime/players chart (24h/7d) on every server page, built from the status log
-- **RSS & SEO** — /rss.xml, /sitemap.xml, per-article permalinks with OpenGraph tags, PWA manifest
-- **Bot Protection** — Scanner/bot blocking middleware with IP strike system
-- **Security** — Nonce-based CSP (no unsafe-inline), CSRF protection, bcrypt auth, 2FA, encrypted secrets, rate limiting, audit log
+- **Security & Ops** — Nonce-based CSP (no `unsafe-inline`), CSRF protection, bcrypt auth, encrypted secrets, rate limiting, bot/scanner blocking, PWA manifest, daily backups
 
 ---
 
@@ -39,16 +34,16 @@ NexusHub implements defence-in-depth:
 | Layer | Implementation |
 |---|---|
 | **XSS Prevention** | EJS auto-escaping, `textContent` instead of `innerHTML`, `encodeURIComponent` for data attributes |
-| **CSRF Protection** | Custom per-session tokens on all state-changing forms and AJAX calls (`x-csrf-token` header) |
-| **Authentication** | bcryptjs (cost factor 12), session-based auth with `httpOnly` + `sameSite: strict` cookies |
-| **Secrets Encryption** | Proxmox API tokens encrypted at rest with AES-256-GCM (key derived from `SESSION_SECRET` or `ENCRYPTION_KEY` env var) |
+| **CSRF Protection** | Per-session tokens on all state-changing forms and AJAX calls (`x-csrf-token` header or `_csrf` field) |
+| **Content Security Policy** | Helmet with per-request nonce, `'strict-dynamic'`, no `unsafe-inline` scripts, `script-src-attr 'none'`; all vendor JS/CSS self-hosted (no CDN) |
+| **Authentication** | bcryptjs (cost 12), session-based auth with `httpOnly` + `sameSite: strict` cookies; optional TOTP 2FA (RFC 6238, `node:crypto` only) |
+| **Secrets Encryption** | Proxmox API token and DeepL API key encrypted at rest with AES-256-GCM (key from `ENCRYPTION_KEY`, else derived from `SESSION_SECRET`) |
 | **Session Persistence** | Auto-generated session secret persisted to `data/.session-secret` (survives restarts) |
-| **HTTP Headers** | Helmet with nonce-based CSP (`'strict-dynamic'`, no `unsafe-inline` scripts, `script-src-attr 'none'`), `X-Frame-Options`, `X-Content-Type-Options` |
-| **Rate Limiting** | `express-rate-limit` on `/api`, `/auth`, `/setup`, and registration (5 attempts/hour) |
-| **Access Control** | Roles `user` / `gm` / `admin`; admin routes return 404 for non-admins, monitoring visible to staff (admin/GM) or public by setting, server IPs hidden unless enabled |
-| **2FA** | Optional TOTP second factor (RFC 6238, `node:crypto` only), rate-limited verification |
-| **Audit & Backups** | All admin/moderation actions recorded in `admin_log`; daily SQLite backups (last 7 kept) + 90-day analytics retention |
-| **Input Validation** | Server IP/hostname validation, news content size limits (50KB/field), image upload size limits (5MB) |
+| **Rate Limiting** | `express-rate-limit` on `/api` and `/auth`; registration and first-run setup have their own tighter limits |
+| **Access Control** | Roles `user` / `gm` / `admin`; admin routes return 404 for non-admins; monitoring is staff-only or public by setting; server IPs hidden unless enabled |
+| **Bot Protection** | Scanner/bot blocking middleware with an IP strike system, running before sessions and analytics |
+| **Audit & Backups** | All admin/moderation actions recorded in `admin_log`; daily SQLite backups (last 7 kept, downloadable) + 90-day analytics retention |
+| **Input Validation** | Server IP/hostname validation, news content size limits (50 KB/field), image upload size limit (5 MB) |
 
 ---
 
@@ -56,16 +51,17 @@ NexusHub implements defence-in-depth:
 
 | Layer | Technology |
 |---|---|
-| Runtime | Node.js v18+ |
-| Framework | Express.js 4 |
-| Database | SQLite via **better-sqlite3** (WAL mode) |
+| Runtime | Node.js 20+ |
+| Framework | Express 4 |
+| Database | SQLite via **better-sqlite3** 12 (WAL mode) |
 | Templates | EJS |
 | Real-time | Socket.io 4 |
-| Auth | bcryptjs + express-session |
+| Auth | bcryptjs + express-session (SQLite-backed store) |
 | Security | Helmet, express-rate-limit, custom CSRF middleware, AES-256-GCM encryption |
-| Uploads | Multer + Cropper.js |
-| Icons | Lucide (pinned v0.454.0) |
-| i18n | Dynamic language loader (`data-i18n` attributes, auto-discovered language files) |
+| Uploads | Multer + Cropper.js (16:9 crop) |
+| Translation | DeepL API (optional) |
+| Vendor assets | Self-hosted, no CDN — Lucide icons (v0.454.0), Chart.js, Cropper.js |
+| i18n | Dynamic language loader (`data-i18n` attributes, auto-discovered `public/js/lang/*.js`) |
 
 ---
 
@@ -80,9 +76,8 @@ PORT=3000
 SESSION_SECRET=your-random-secret-here    # auto-generated & persisted if omitted
 ENCRYPTION_KEY=64-hex-chars               # optional, derives from SESSION_SECRET if omitted
 
-# 3. (Optional) Seed sample data
+# 3. (Optional) Seed sample data — prints a generated admin password if none is given
 ADMIN_PASSWORD=your-secure-password npm run seed
-# If ADMIN_PASSWORD is omitted, a random password is generated and printed to stdout
 
 # 4. Start
 npm run dev    # development (nodemon)
@@ -91,54 +86,62 @@ npm start      # production
 
 Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` to create an admin account.
 
-> **Note:** The seed script no longer uses a default password. Set `ADMIN_PASSWORD` env var or a secure random password will be generated for you.
-
 ---
 
 ## Project Structure
 
 ```
-├── server.js              # App entry point, middleware chain, health check (THIN)
-├── config/database.js     # better-sqlite3 setup, schema, migrations, getCachedSettings()
+├── server.js              # App entry point, middleware chain, CSP, health check
+├── config/database.js     # better-sqlite3 setup, schema, in-place migrations, caches
 ├── middleware/
-│   ├── auth.js            # isAuthenticated, isAdmin, isGuest
+│   ├── auth.js            # isAuthenticated, isAdmin, isGuest, staff checks
 │   ├── csrf.js            # CSRF token generation & validation
 │   ├── botProtection.js   # Bot/scanner blocking, IP strike system
 │   └── analytics.js       # Buffered page-view tracking with GeoIP
 ├── routes/
-│   ├── home.js            # Homepage (hero, news, stats)
+│   ├── home.js            # Overview page, news feed, single article, RSS, sitemap
 │   ├── servers.js         # Server browser & detail pages
 │   ├── community.js       # Chat page
-│   ├── admin.js           # Admin CRUD (news/servers/users/settings/proxmox)
-│   ├── admin-analytics.js # Analytics page + analytics API endpoints
-│   ├── auth.js            # Login (with Turnstile), logout, register, profile
-│   ├── monitoring.js      # Proxmox monitoring dashboard & API (auth required)
-│   ├── api.js             # Public JSON API
+│   ├── admin.js           # Admin CRUD (news/servers/users/settings/proxmox/system) + live translate
+│   ├── admin-analytics.js # Analytics page + analytics API
+│   ├── auth.js            # Login (Turnstile + 2FA), logout, register, profile, avatar
+│   ├── monitoring.js      # Proxmox dashboard, stats, guest control (start/stop/reboot)
+│   ├── api.js             # Public JSON API (servers, status, history, news, languages)
 │   └── setup.js           # First-run setup wizard (rate-limited)
-├── sockets/chat.js        # Socket.io chat (typing, online users, rate limit)
+├── sockets/chat.js        # Socket.io chat (typing, online users, rate limit, moderation)
 ├── utils/
-│   ├── statusChecker.js   # TCP ping, Minecraft query, periodic checks (min 10s interval)
+│   ├── statusChecker.js   # TCP ping + Minecraft query, periodic status checks
 │   ├── proxmox.js         # Proxmox VE API client (token auth)
 │   ├── crypto.js          # AES-256-GCM encrypt/decrypt for secrets at rest
+│   ├── translate.js       # DeepL client + fill-missing-language helper
+│   ├── i18nContent.js     # Per-language DB field picker with fallback chain
+│   ├── discord.js         # Discord webhook notifications
+│   ├── maintenance.js     # Daily DB backups + analytics retention
+│   ├── adminLog.js        # Admin/moderation audit logging
+│   ├── totp.js            # TOTP (RFC 6238) generate/verify
 │   ├── imageUpload.js     # Shared multer config + resolveImage helper
 │   └── catchAsync.js      # Promise error wrapper for async route handlers
 ├── views/
-│   ├── partials/          # header.ejs, footer.ejs, admin-nav.ejs (shared layout)
-│   ├── admin/             # Admin panel pages (analytics, news, servers, users, settings, proxmox)
+│   ├── partials/          # header, footer, admin-nav (shared layout)
+│   ├── admin/             # Admin pages (dashboard, news, servers, users, settings, proxmox, system, analytics)
 │   ├── auth/              # Login, register, profile
 │   ├── monitoring/        # Proxmox dashboard
 │   └── errors/            # 404, 500
 ├── public/
 │   ├── css/
 │   │   ├── style.css      # Base styles + CSS variables
-│   │   ├── desktop.css    # Responsive breakpoints
-│   │   └── themes/        # 6 theme files (dark, light, cyberpunk-purple, ...)
+│   │   ├── layout.css     # Page/component layout
+│   │   ├── desktop.css / mobile.css   # Responsive breakpoints
+│   │   ├── themes/        # 6 theme files
+│   │   └── vendor/        # Self-hosted vendor CSS (Cropper.js)
 │   └── js/
-│       ├── main.js        # SPA nav, theme, i18n, polling
+│       ├── main.js        # SPA nav, theme, i18n bootstrap, polling
 │       ├── theme-effects.js # Canvas animations per theme
-│       └── lang/          # Auto-discovered language files (en.js, ru.js, ro.js)
+│       ├── translations.js  # i18n runtime (window.t, language switching)
+│       ├── lang/          # Auto-discovered language files (en, ru, ro, de)
+│       └── vendor/        # Self-hosted libs (lucide, chart.umd, cropper)
 ├── data/                  # nexushub.db + .session-secret (auto-created, gitignored)
-└── uploads/news/          # Uploaded images (news article images saved as files)
+└── uploads/               # avatars/, news/, servers/ (user uploads, gitignored)
 ```
 
 ---
@@ -149,12 +152,12 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/` | Overview screen (stats, server/news/chat widgets) |
-| `GET` | `/news` | News feed |
-| `GET` | `/servers` | Server browser |
-| `GET` | `/servers/:id` | Server detail page |
+| `GET` | `/` | Overview (stats, server/news/chat widgets) |
+| `GET` | `/news` · `/news/:id` | News feed & single article (permalink, OpenGraph) |
+| `GET` | `/servers` · `/servers/:id` | Server browser & detail page (with history chart) |
 | `GET` | `/community` | Community chat page |
-| `GET` | `/health` | Health check (returns `{ status, uptime }`) |
+| `GET` | `/rss.xml` · `/sitemap.xml` | RSS feed (`?lang=en|ru|ro|de`) & sitemap |
+| `GET` | `/health` | Health check (`{ status, uptime }`) |
 
 ### API
 
@@ -162,88 +165,90 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 |---|---|---|
 | `GET` | `/api/servers` | All servers with status (IP/port hidden for non-admins) |
 | `GET` | `/api/servers/:id/status` | Single server status with latency |
+| `GET` | `/api/servers/:id/history?range=24h|7d` | Uptime/players time-series for the history chart |
 | `GET` | `/api/news?limit=10` | Latest news articles (multilingual) |
-| `POST` | `/api/language` | Set language preference (any auto-discovered code, e.g. `en` / `ru` / `ro`) |
+| `GET` | `/api/languages` | Available language codes |
+| `POST` | `/api/language` | Set language preference |
 
 ### Auth
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/auth/login` | Login form (with Cloudflare Turnstile if configured) |
-| `POST` | `/auth/login` | Process login (Turnstile-verified) |
+| `GET/POST` | `/auth/login` | Login (Cloudflare Turnstile + optional TOTP second step) |
 | `POST` | `/auth/logout` | Logout (POST only, CSRF-protected) |
-| `GET` | `/auth/register` | Registration form (if enabled in admin settings) |
-| `POST` | `/auth/register` | Process registration (rate-limited: 5/hour) |
-| `GET` | `/auth/profile` | User profile page |
-| `POST` | `/auth/profile/notifications` | Update notification settings |
+| `GET/POST` | `/auth/register` | Registration (if enabled; rate-limited) |
+| `GET` | `/auth/profile` | Profile: notifications, avatar upload, 2FA setup |
 
-### Monitoring (auth required)
+### Monitoring (staff)
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/monitoring/dashboard` | Proxmox monitoring dashboard |
-| `GET` | `/monitoring/resources` | Proxmox guest stats JSON (CPU/RAM/disk) |
+| `GET` | `/monitoring/resources` | Guest stats JSON (CPU/RAM/disk/network) |
+| `POST` | `/monitoring/control/:vmid/:action` | Start / stop / reboot a guest (admin) |
 
-### Admin (admin role required)
+### Admin (admin role)
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/admin/dashboard` | Admin dashboard |
-| `GET/POST` | `/admin/servers/*` | Server CRUD |
-| `GET/POST` | `/admin/news/*` | News CRUD (bilingual) |
-| `GET/POST` | `/admin/users/*` | User management (delete, role change: user / gm / admin) |
-| `GET/POST` | `/admin/settings` | Site settings |
+| `GET/POST` | `/admin/servers/*` | Server CRUD (multilingual descriptions) |
+| `GET/POST` | `/admin/news/*` | News CRUD (EN/RU/RO/DE, auto-translated) |
+| `GET/POST` | `/admin/users/*` | User management (delete, role: user / gm / admin) |
+| `GET/POST` | `/admin/settings` | Site settings (branding, footer, Discord, DeepL key) |
 | `GET/POST` | `/admin/proxmox/*` | Proxmox connection & guest management |
-| `GET` | `/admin/analytics` | Analytics dashboard (charts, time-series) |
-| `GET` | `/admin/analytics/api/*` | Analytics JSON endpoints (page views, geo, etc.) |
+| `GET/POST` | `/admin/system` | Audit log + database backups |
+| `POST` | `/admin/translate` | Live DeepL translation (powers the "Translate from EN" button) |
+| `GET` | `/admin/analytics` · `/admin/analytics/api/*` | Analytics dashboard & JSON endpoints |
 
 ---
 
 ## Visual Themes
 
-NexusHub features 6 immersive visual themes, each with unique animated background effects and an interactive speed control slider (0.1x–3x) to adjust animation speed to your preference.
+Six immersive themes, each with a unique animated canvas background and a speed slider (0.1×–3×). The speed preference is saved to `localStorage`; effects reinitialize instantly on theme switch.
 
 | Theme | Effect | Palette |
 |---|---|---|
-| **Dark** | Floating glowing particles with smooth trails and pulse effects | Deep blues & cyans with glowing accents |
-| **Light** | Soft gradient blocks fading in/out for subtle elegance | Bright whites, pastels, and soft shadows |
-| **Cyberpunk Purple** | Neon grid lines with glitch effects and chromatic distortion | Electric purples, magentas, and neon pink |
-| **Matrix Green** | Classic falling digital rain with authentic Matrix-style glyph effect | Deep blacks with bright green text |
-| **Retro Vaporwave** | Rotating 3D-like colored cubes with nostalgic 90s vibes | Vibrant pinks, teals, and sunset gradients |
-| **Vampire** | Eerie animated swirling fog with blood-red accents | Dark reds, blacks, and crimson highlights |
-
-**Features:**
-- **Real-time speed control slider** — Adjust animation velocity on-the-fly (0.1x–3x)
-- **Persistent preferences** — Speed setting saved to browser localStorage
-- **Canvas-based performance** — GPU-accelerated rendering for smooth 60fps animations
-- **Seamless theme switching** — Effects reinitialize instantly when changing themes
+| **Dark** | Floating glowing particles with trails and pulses | Deep blues & cyans |
+| **Light** | Soft gradient blocks fading in and out | Bright whites & pastels |
+| **Cyberpunk Purple** | Neon grid with glitch & chromatic distortion | Electric purples & neon pink |
+| **Matrix Green** | Classic falling digital rain | Black with bright green |
+| **Retro Vaporwave** | Rotating 3D-like colored cubes | Pinks, teals & sunset gradients |
+| **Vampire** | Swirling fog with blood-red accents | Dark reds, blacks & crimson |
 
 ---
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `PORT` | No | `3000` | Server port |
-| `SESSION_SECRET` | No | Auto-generated | Session signing secret (persisted to `data/.session-secret`) |
-| `ENCRYPTION_KEY` | No | Derived from `SESSION_SECRET` | 64-char hex key for AES-256-GCM encryption |
-| `NODE_ENV` | No | `development` | Set to `production` for view caching + static asset caching |
-| `COOKIE_SECURE` | No | `false` | Set to `true` to mark session cookies `Secure` (requires HTTPS) |
-| `RATE_LIMIT_WINDOW_MS` | No | `900000` (15 min) | Rate limit window |
-| `RATE_LIMIT_MAX` | No | `100` | Max requests per window |
-| `DEEPL_API_KEY` | No | — | DeepL API key enabling auto-translation of news & server descriptions. When set, blank RU/RO/DE fields are filled from English on save (and via the "Translate from EN" button). Free-tier keys ending in `:fx` use the free API host automatically. Without a key, content simply falls back to English. **Can also be set in the admin panel** (Settings → Auto-translation), where it is stored encrypted (AES-256-GCM); the admin-panel key takes precedence over this env var. |
-| `ADMIN_USERNAME` | No | `Admin` | Seed script admin username |
-| `ADMIN_PASSWORD` | No | Random | Seed script admin password |
-| `PROXMOX_HOST` | No | — | Proxmox VE host (can also be set via admin panel) |
-| `PROXMOX_PORT` | No | `8006` | Proxmox API port |
-| `PROXMOX_TOKEN_ID` | No | — | Proxmox API token ID |
-| `PROXMOX_TOKEN_SECRET` | No | — | Proxmox API token secret |
-| `PROXMOX_NODE` | No | — | Proxmox node name |
-| `PROXMOX_VERIFY_SSL` | No | `false` | Set to `true` to verify the Proxmox API TLS certificate |
+All optional — NexusHub runs with sensible defaults and most integrations can also be configured from the admin panel.
+
+| Variable | Default | Description |
+|---|---|---|
+| `PORT` | `3000` | Server port |
+| `SESSION_SECRET` | Auto-generated | Session signing secret (persisted to `data/.session-secret`) |
+| `ENCRYPTION_KEY` | Derived from `SESSION_SECRET` | 64-char hex key for AES-256-GCM encryption |
+| `NODE_ENV` | `development` | Set to `production` for view caching + static asset caching |
+| `COOKIE_SECURE` | `false` | Set to `true` to mark session cookies `Secure` (requires HTTPS) |
+| `RATE_LIMIT_WINDOW_MS` | `900000` (15 min) | Rate limit window |
+| `RATE_LIMIT_MAX` | `100` | Max requests per window |
+| `DEEPL_API_KEY` | — | Enables auto-translation of news & server descriptions. Free-tier keys end with `:fx` and use the free API host automatically. **Preferably set in the admin panel** (Settings → Auto-translation), where it is stored encrypted; the admin-panel key takes precedence over this variable. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | `Admin` / random | Seed-script admin credentials |
+| `PROXMOX_HOST` / `PROXMOX_PORT` | — / `8006` | Proxmox VE host & API port (can also be set in admin panel) |
+| `PROXMOX_TOKEN_ID` / `PROXMOX_TOKEN_SECRET` | — | Proxmox API token (secret encrypted at rest) |
+| `PROXMOX_NODE` | — | Proxmox node name |
+| `PROXMOX_VERIFY_SSL` | `false` | Set to `true` to verify the Proxmox API TLS certificate |
 
 ---
 
 ## Deployment
+
+### Docker
+
+```bash
+docker compose up -d
+```
+
+A `Dockerfile` and `docker-compose.yml` are included; the `data/` and `uploads/` volumes persist the database and uploads across container rebuilds.
 
 ### PM2
 
@@ -252,7 +257,7 @@ pm2 start server.js --name nexushub
 pm2 startup && pm2 save
 ```
 
-### Nginx (for WebSocket support)
+### Nginx (WebSocket-aware reverse proxy)
 
 ```nginx
 server {
@@ -272,40 +277,29 @@ server {
 }
 ```
 
+Set `COOKIE_SECURE=true` (and terminate TLS at Nginx) when serving over HTTPS.
+
 ---
 
 ## Roadmap
 
-- [x] Real-time server status monitoring (TCP ping + Minecraft protocol)
-- [x] Community chat with Socket.io
-- [x] Multilingual news system (EN/RU/RO)
-- [x] 6 visual themes with special effects
-- [x] Proxmox monitoring (LXC/QEMU discovery, live stats)
-- [x] Admin panel with full CRUD
-- [x] Helmet CSP + rate limiting + session security
-- [x] First-run setup wizard
-- [x] CSRF protection on all forms and AJAX
-- [x] User registration with admin toggle
-- [x] Cloudflare Turnstile bot verification on login
-- [x] Bot/scanner blocking middleware with IP strike system
-- [x] Proxmox secrets encrypted at rest (AES-256-GCM)
-- [x] Session secret persistence across restarts
-- [x] Health check endpoint (`/health`)
+Shipped:
+
+- Real-time server status monitoring (TCP ping + Minecraft protocol) and uptime/players history charts
+- Community chat (Socket.io) with typing indicators, online users, and admin/GM moderation
+- Multilingual news (EN/RU/RO/DE) with search, pagination, permalinks, RSS, sitemap, OpenGraph
+- DeepL auto-translation of news & server descriptions, with an encrypted admin-managed API key
+- Dynamic i18n with auto-discovery (drop a new `public/js/lang/*.js` file), server-side too
+- 6 animated visual themes with a speed control
+- Proxmox monitoring (LXC/QEMU discovery, live stats) and VM/CT control (start/stop/reboot)
+- Full admin panel: CRUD, analytics (Chart.js), audit log, one-click backups
+- Security: nonce-based CSP, CSRF, rate limiting, bot/scanner blocking, TOTP 2FA, encrypted secrets
+- Accounts: registration with admin toggle, Cloudflare Turnstile, avatars
+- Discord webhook notifications, PWA manifest, health check, Docker support, daily automated backups
+
+Planned:
+
 - [ ] Telegram bot notifications for server status changes
-- [x] Two-factor authentication (TOTP)
-- [x] Chat moderation (delete/mute) for admin/GM
-- [x] User avatars
-- [x] Server uptime/players history charts
-- [x] News search, pagination, permalinks, RSS, sitemap, OpenGraph
-- [x] Admin audit log
-- [x] PWA manifest
-- [x] Discord webhook integration (server up/down + news publications)
-- [x] Server-side i18n (flash messages, API responses)
-- [x] Dynamic language system with auto-discovery (drop a new file in `public/js/lang/`)
-- [x] Dashboard charts and analytics (Chart.js)
-- [x] Docker support with docker-compose
-- [x] Automated database backups (daily, last 7 kept, downloadable from /admin/system)
-- [x] Proxmox VM/CT control (start/stop/restart)
 - [ ] HTTPS / Let's Encrypt automation
 - [ ] Email verification for registration
 
