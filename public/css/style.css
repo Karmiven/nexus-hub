@@ -1155,7 +1155,8 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .chart-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  /* TL/BR corners stay square so the .panel-corner accent isn't clipped by the rounded overflow mask */
+  border-radius: 0 var(--radius-sm) 0 var(--radius-sm);
   overflow: hidden;
   position: relative;
   animation: cardEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -1267,7 +1268,8 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .admin-table-wrapper {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  /* TL/BR corners stay square so the .panel-corner accent isn't clipped by the rounded overflow mask */
+  border-radius: 0 var(--radius-sm) 0 var(--radius-sm);
   overflow: hidden;
   position: relative;
   margin-bottom: 1.75rem;

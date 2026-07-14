@@ -167,6 +167,7 @@ body::before {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface);
+  position: relative;
 }
 .side-user-av {
   width: 30px;
