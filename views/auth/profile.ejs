@@ -1,14 +1,17 @@
 <%- include('../partials/header') %>
 
-<section class="page-header">
-  <div class="container">
-    <h1 class="page-title"><i data-lucide="user"></i> <span data-i18n="profile_title">Profile</span></h1>
+<div class="scr-head container">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="profile_eyebrow">account settings</span></div>
+    <h1 class="scr-title" data-i18n="profile_title">Profile</h1>
+    <p class="scr-sub" data-i18n="profile_desc">Manage your avatar, account details and security.</p>
   </div>
-</section>
+</div>
 
 <section class="section container">
   <div class="profile-grid">
-    <div class="profile-card">
+    <div class="panel profile-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <h2 data-i18n="profile_avatar">Avatar</h2>
       <div class="avatar-row">
         <% if (profile.avatar) { %>
@@ -32,7 +35,8 @@
       </div>
     </div>
 
-    <div class="profile-card">
+    <div class="panel profile-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <h2 data-i18n="account_info">Account Info</h2>
       <div class="detail-grid">
         <div class="detail-item">
@@ -54,7 +58,8 @@
       </div>
     </div>
 
-    <div class="profile-card">
+    <div class="panel profile-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <h2 data-i18n="profile_2fa">Two-Factor Authentication</h2>
       <% if (twofaEnabled) { %>
         <p class="twofa-status on"><span class="tick-dot ok"></span> <span data-i18n="twofa_status_on">2FA is enabled for this account.</span></p>

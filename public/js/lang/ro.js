@@ -56,6 +56,8 @@ window.__loadLang({
   have_account: 'Ai deja un cont?',
   no_account: 'Nu ai un cont?',
   register_now: 'Înregistrare',
+  profile_eyebrow: 'setări cont',
+  profile_desc: 'Gestionează avatarul, datele contului și securitatea.',
   profile_title: 'Profil',
   account_info: 'Informații Cont',
   email: 'Email',

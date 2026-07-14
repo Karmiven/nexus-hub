@@ -56,6 +56,8 @@ window.__loadLang({
   have_account: 'Already have an account?',
   no_account: 'Don\'t have an account?',
   register_now: 'Register',
+  profile_eyebrow: 'account settings',
+  profile_desc: 'Manage your avatar, account details and security.',
   profile_title: 'Profile',
   account_info: 'Account Info',
   email: 'Email',

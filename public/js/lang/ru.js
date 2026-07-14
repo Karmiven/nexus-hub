@@ -56,6 +56,8 @@ window.__loadLang({
   have_account: 'Уже есть аккаунт?',
   no_account: 'Нет аккаунта?',
   register_now: 'Зарегистрироваться',
+  profile_eyebrow: 'настройки аккаунта',
+  profile_desc: 'Управляйте аватаром, данными аккаунта и безопасностью.',
   profile_title: 'Профиль',
   account_info: 'Информация об аккаунте',
   email: 'Email',
