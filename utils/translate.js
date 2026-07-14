@@ -8,12 +8,23 @@
 // view-layer fallback (utils/i18nContent) shows the source language instead.
 
 const { LANGS } = require('./i18nContent');
+const db = require('../config/database');
+const { decrypt } = require('./crypto');
 
 // DeepL target codes (English → British by default); source uses base codes.
 const TARGET_CODE = { en: 'EN-GB', ru: 'RU', ro: 'RO', de: 'DE' };
 const SOURCE_CODE = { en: 'EN', ru: 'RU', ro: 'RO', de: 'DE' };
 
+// Resolve the DeepL key. The admin-managed key (encrypted in the settings
+// table) takes precedence; the DEEPL_API_KEY env var is a deployment fallback.
 function apiKey() {
+  try {
+    const s = db.getCachedSettings('deepl_api_key');
+    if (s && s.deepl_api_key) {
+      const dec = decrypt(s.deepl_api_key).trim();
+      if (dec) return dec;
+    }
+  } catch (e) { /* db not initialized yet — fall through to env */ }
   return (process.env.DEEPL_API_KEY || '').trim();
 }
 

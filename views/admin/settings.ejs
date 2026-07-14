@@ -195,6 +195,25 @@
               <span data-i18n="admin_settings_discord_news">Notify when a news article is published</span>
             </label>
           </div>
+
+          <h3 class="settings-subheading"><i data-lucide="languages"></i> <span data-i18n="admin_settings_translation">Auto-translation (DeepL)</span></h3>
+          <div class="form-group">
+            <label for="deepl_api_key" data-i18n="admin_settings_deepl_key">DeepL API key</label>
+            <input type="password" id="deepl_api_key" name="deepl_api_key" class="form-input" value="" autocomplete="off"
+                   spellcheck="false"
+                   placeholder="<%= settings.deepl_api_key ? '•••••••• — key saved' : 'Paste your DeepL API key' %>"
+                   data-i18n-placeholder="<%= settings.deepl_api_key ? 'admin_settings_deepl_saved' : 'admin_settings_deepl_enter' %>">
+            <small class="form-hint" data-i18n="admin_settings_deepl_hint">Stored encrypted (AES-256-GCM). News &amp; server descriptions written in English are auto-translated to RU/RO/DE on save. Free-tier keys end with “:fx”. Leave blank to keep the current key.</small>
+          </div>
+          <% if (settings.deepl_api_key) { %>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="hidden" name="deepl_api_key_clear" value="0">
+              <input type="checkbox" name="deepl_api_key_clear" value="1">
+              <span data-i18n="admin_settings_deepl_clear">Remove the saved key (disables auto-translation)</span>
+            </label>
+          </div>
+          <% } %>
         </fieldset>
       </div>
 

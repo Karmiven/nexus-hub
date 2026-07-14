@@ -231,7 +231,7 @@ NexusHub features 6 immersive visual themes, each with unique animated backgroun
 | `COOKIE_SECURE` | No | `false` | Set to `true` to mark session cookies `Secure` (requires HTTPS) |
 | `RATE_LIMIT_WINDOW_MS` | No | `900000` (15 min) | Rate limit window |
 | `RATE_LIMIT_MAX` | No | `100` | Max requests per window |
-| `DEEPL_API_KEY` | No | — | DeepL API key enabling auto-translation of news & server descriptions. When set, blank RU/RO/DE fields are filled from English on save (and via the "Translate from EN" button). Free-tier keys ending in `:fx` use the free API host automatically. Without a key, content simply falls back to English. |
+| `DEEPL_API_KEY` | No | — | DeepL API key enabling auto-translation of news & server descriptions. When set, blank RU/RO/DE fields are filled from English on save (and via the "Translate from EN" button). Free-tier keys ending in `:fx` use the free API host automatically. Without a key, content simply falls back to English. **Can also be set in the admin panel** (Settings → Auto-translation), where it is stored encrypted (AES-256-GCM); the admin-panel key takes precedence over this env var. |
 | `ADMIN_USERNAME` | No | `Admin` | Seed script admin username |
 | `ADMIN_PASSWORD` | No | Random | Seed script admin password |
 | `PROXMOX_HOST` | No | — | Proxmox VE host (can also be set via admin panel) |

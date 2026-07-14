@@ -340,6 +340,17 @@ router.post('/settings', (req, res) => {
     }
   }
 
+  // DeepL API key — stored encrypted at rest (AES-256-GCM), never echoed back
+  // to the form. Only overwrite when a new key is submitted; a dedicated
+  // checkbox removes it. This mirrors how the Proxmox token secret is handled.
+  if (String(req.body.deepl_api_key_clear) === '1') {
+    db.run("DELETE FROM settings WHERE key = 'deepl_api_key'");
+    logAdmin(req, 'settings.deepl_key', 'cleared');
+  } else if (req.body.deepl_api_key && String(req.body.deepl_api_key).trim()) {
+    db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', ['deepl_api_key', encrypt(String(req.body.deepl_api_key).trim())]);
+    logAdmin(req, 'settings.deepl_key', 'updated');
+  }
+
   // Invalidate cached settings so changes take effect immediately
   db.invalidateSettingsCache();
 
