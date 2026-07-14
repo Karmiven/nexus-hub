@@ -14,7 +14,7 @@ Self-hosted gaming server hub for managing, monitoring, and showcasing game serv
 
 - **Server Browser** — Live online/offline status (TCP ping), Minecraft player counts, redirect-to-launcher support, per-server uptime/players history chart (24h/7d)
 - **News System** — Multilingual articles (EN/RU/RO/DE), pinned posts, image upload with 16:9 cropper, search, pagination, permalinks, RSS & OpenGraph
-- **Auto-translation** — Write content in English once; Russian/Romanian/German are filled in automatically on save via the DeepL API (or on demand with a "Translate from EN" button). Optional — falls back to English when no key is set
+- **Auto-translation** — Write content in English once (news & server descriptions); Russian/Romanian/German are filled in automatically on save via the DeepL API, with a live 4-language preview in the news editor. Optional — falls back to English when no key is set
 - **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting, and admin/GM moderation (delete messages, mute users)
 - **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats grouped by node, plus start/stop/reboot control
 - **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with a unique animated canvas background
@@ -191,15 +191,15 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/admin/dashboard` | Admin dashboard |
+| `GET` | `/admin` | Admin dashboard |
 | `GET/POST` | `/admin/servers/*` | Server CRUD (multilingual descriptions) |
 | `GET/POST` | `/admin/news/*` | News CRUD (EN/RU/RO/DE, auto-translated) |
 | `GET/POST` | `/admin/users/*` | User management (delete, role: user / gm / admin) |
 | `GET/POST` | `/admin/settings` | Site settings (branding, footer, Discord, DeepL key) |
 | `GET/POST` | `/admin/proxmox/*` | Proxmox connection & guest management |
 | `GET/POST` | `/admin/system` | Audit log + database backups |
-| `POST` | `/admin/translate` | Live DeepL translation (powers the "Translate from EN" button) |
-| `GET` | `/admin/analytics` · `/admin/analytics/api/*` | Analytics dashboard & JSON endpoints |
+| `POST` | `/admin/translate` | Live DeepL translation (powers the news editor's 4-language preview) |
+| `GET` | `/admin/analytics` · `/admin/analytics/*` | Analytics dashboard & JSON endpoints |
 
 ---
 
