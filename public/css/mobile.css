@@ -26,9 +26,6 @@
 /* ── Mobile (≤768px) ── */
 @media (max-width: 768px) {
   /* Navigation */
-  .nav-toggle { display: flex; }
-
-
 
   .nav-link {
     padding: 0.65rem 0.85rem;
