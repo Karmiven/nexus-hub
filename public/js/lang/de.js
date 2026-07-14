@@ -181,6 +181,7 @@ window.__loadLang({
   admin_chart_views: 'Aufrufe',
   admin_chart_messages: 'Nachrichten',
   admin_chart_no_data: 'Keine Daten',
+  admin_chart_load_failed: 'Chart.js konnte nicht geladen werden',
   admin_chart_countries: 'Besucherländer',
   admin_chart_by_country: 'Nach Land',
   admin_chart_country: 'Land',

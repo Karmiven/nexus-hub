@@ -181,6 +181,7 @@ window.__loadLang({
   admin_chart_views: 'Vizualizări',
   admin_chart_messages: 'Mesaje',
   admin_chart_no_data: 'Fără date',
+  admin_chart_load_failed: 'Nu s-a putut încărca Chart.js',
   admin_chart_countries: 'Țările Vizitatorilor',
   admin_chart_by_country: 'Pe Țară',
   admin_chart_country: 'Țară',

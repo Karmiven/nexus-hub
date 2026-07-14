@@ -181,6 +181,7 @@ window.__loadLang({
   admin_chart_views: 'Просмотры',
   admin_chart_messages: 'Сообщения',
   admin_chart_no_data: 'Нет данных',
+  admin_chart_load_failed: 'Не удалось загрузить Chart.js',
   admin_chart_countries: 'Страны посетителей',
   admin_chart_by_country: 'По странам',
   admin_chart_country: 'Страна',

@@ -938,9 +938,10 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .form-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   padding: 1.75rem;
   max-width: 700px;
+  position: relative;
 }
 
 
@@ -1154,8 +1155,9 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .chart-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   overflow: hidden;
+  position: relative;
   animation: cardEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
@@ -1194,8 +1196,9 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .stat-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   padding: 1.25rem;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.85rem;
@@ -1264,8 +1267,9 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .admin-table-wrapper {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: var(--radius-sm);
   overflow: hidden;
+  position: relative;
   margin-bottom: 1.75rem;
 }
 

@@ -14,6 +14,7 @@
     </div>
   <% } else { %>
     <div class="admin-table-wrapper">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="admin-section-header">
         <h2 data-i18n="admin_all_servers">Все сервера</h2>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -44,7 +45,7 @@
                 <td class="mono"><%= srv.ip %>:<%= srv.port %></td>
                 <td>
                   <span class="status-badge badge-<%= srv.status %>">
-                    <%= srv.status === 'online' ? 'Online' : 'Offline' %>
+                    <span data-i18n="<%= srv.status === 'online' ? 'admin_dashboard_online' : 'admin_dashboard_offline' %>"><%= srv.status === 'online' ? 'Online' : 'Offline' %></span>
                   </span>
                 </td>
                 <td>

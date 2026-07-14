@@ -11,6 +11,7 @@
   <!-- Stats Cards 4x2 -->
   <div class="stats-grid stats-grid-4x2">
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="newspaper"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.newsCount %></span>
@@ -18,6 +19,7 @@
       </div>
     </div>
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="gamepad-2"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.totalServers %></span>
@@ -25,6 +27,7 @@
       </div>
     </div>
     <div class="stat-card stat-card-online">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon status-online"><i data-lucide="circle-check"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.onlineServers %></span>
@@ -32,6 +35,7 @@
       </div>
     </div>
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="users"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.userCount %></span>
@@ -39,6 +43,7 @@
       </div>
     </div>
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="eye"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.totalViews %></span>
@@ -46,6 +51,7 @@
       </div>
     </div>
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="trending-up"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.todayViews %></span>
@@ -53,6 +59,7 @@
       </div>
     </div>
     <div class="stat-card">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="message-square"></i></div>
       <div class="stat-info">
         <span class="stat-number"><%= stats.chatMessages %></span>
@@ -60,6 +67,7 @@
       </div>
     </div>
     <a class="stat-card stat-card-analytics-link" href="/admin/analytics">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="stat-icon"><i data-lucide="bar-chart-3"></i></div>
       <div class="stat-info">
         <span class="stat-number" style="font-size:1rem;">&rarr;</span>
@@ -70,6 +78,7 @@
 
   <!-- Server Status Table -->
   <div class="admin-table-wrapper">
+    <span class="panel-corner tl"></span><span class="panel-corner br"></span>
     <div class="admin-section-header">
       <h2 data-i18n="admin_server_monitor">Монитор статуса серверов</h2>
       <button type="button" id="refreshAllBtn" class="btn btn-sm btn-outline"><i data-lucide="refresh-cw"></i> <span data-i18n="admin_refresh_all">Обновить все</span></button>
@@ -126,7 +135,7 @@ async function refreshAllServers() {
     if (data.success) {
       location.reload();
     } else {
-      alert(data.message || 'Error');
+      alert(data.message || t('error'));
       btn.disabled = false;
       btn.querySelector('span').textContent = t('admin_refresh_all');
     }
