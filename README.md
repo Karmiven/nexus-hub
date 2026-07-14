@@ -17,7 +17,7 @@ Self-hosted gaming server hub for managing, monitoring, and showcasing game serv
 - **Auto-translation** — Write content in English once; Russian/Romanian/German are filled in automatically on save via the DeepL API (or on demand with a "Translate from EN" button). Optional — falls back to English when no key is set
 - **Community Chat** — Real-time Socket.io chat with typing indicators, online users, rate limiting, and admin/GM moderation (delete messages, mute users)
 - **Proxmox Monitoring** — Auto-discover LXC/QEMU guests, live CPU/RAM/disk/network stats grouped by node, plus start/stop/reboot control
-- **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with a unique animated canvas background and a speed slider
+- **6 Themes** — Dark, Light, Cyberpunk Purple, Matrix Green, Retro Vaporwave, Vampire — each with a unique animated canvas background
 - **i18n** — Dynamic language system with auto-discovery (EN/RU/RO/DE out of the box), instant switching without page reload; also localizes flash messages and API responses
 - **Admin Panel** — News / servers / users / settings CRUD, analytics dashboard with charts, audit log of admin actions, one-click DB backups
 - **Analytics** — Buffered page-view tracking with GeoIP, charts and time-series breakdown, automatic 90-day retention
@@ -205,7 +205,7 @@ Open `http://localhost:3000`. On first launch you'll be redirected to `/setup` t
 
 ## Visual Themes
 
-Six immersive themes, each with a unique animated canvas background and a speed slider (0.1×–3×). The speed preference is saved to `localStorage`; effects reinitialize instantly on theme switch.
+Six immersive themes, each with a unique animated canvas background. Effects reinitialize instantly on theme switch.
 
 | Theme | Effect | Palette |
 |---|---|---|
@@ -290,7 +290,7 @@ Shipped:
 - Multilingual news (EN/RU/RO/DE) with search, pagination, permalinks, RSS, sitemap, OpenGraph
 - DeepL auto-translation of news & server descriptions, with an encrypted admin-managed API key
 - Dynamic i18n with auto-discovery (drop a new `public/js/lang/*.js` file), server-side too
-- 6 animated visual themes with a speed control
+- 6 animated visual themes with per-theme canvas effects
 - Proxmox monitoring (LXC/QEMU discovery, live stats) and VM/CT control (start/stop/reboot)
 - Full admin panel: CRUD, analytics (Chart.js), audit log, one-click backups
 - Security: nonce-based CSP, CSRF, rate limiting, bot/scanner blocking, TOTP 2FA, encrypted secrets
