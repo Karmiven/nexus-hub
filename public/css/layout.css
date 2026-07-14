@@ -543,6 +543,19 @@ body::before {
 .cmsg .modact .cmsg-del:hover { color: var(--danger); border-color: var(--danger); }
 .cmsg .modact .cmsg-mute:hover { color: var(--warning); border-color: var(--warning); }
 
+/* ── Server detail page: full-width two-column layout ── */
+.srv-detail {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(420px, 1.25fr);
+  gap: 14px;
+  align-items: start;
+}
+.scr-title .mbadge {
+  vertical-align: 6px;
+  margin-left: 12px;
+  font-size: 0.7rem;
+}
+
 /* ── Server history chart ── */
 .hist-range { display: inline-flex; gap: 6px; }
 .hist-range .btn.on { color: var(--primary); border-color: var(--primary); }
@@ -756,6 +769,7 @@ body::before {
   .side-overlay.open { opacity: 1; pointer-events: auto; }
 
   .screen { margin-left: 0; padding: 0 14px; }
+  .srv-detail { grid-template-columns: 1fr; }
   .ov-grid { grid-template-columns: repeat(2, 1fr); }
   .ov-main, .chat-wrap2 { grid-template-columns: 1fr; }
   .news-item2 { grid-template-columns: 100px 1fr; }

@@ -3,13 +3,15 @@
 <div class="scr-head">
   <div class="grow">
     <div class="scr-eyebrow">// <a href="/servers" class="link-m" data-i18n="back_to_servers">Back to Servers</a></div>
-    <h1 class="scr-title"><%= server.name %></h1>
+    <h1 class="scr-title"><%= server.name %>
+      <span class="mbadge <%= server.status === 'online' ? 'ok' : 'bad' %>" data-i18n="<%= server.status === 'online' ? 'online' : 'offline' %>"><%= server.status === 'online' ? 'Online' : 'Offline' %></span>
+    </h1>
     <p class="scr-sub"><%= server.game %></p>
   </div>
-  <span class="mbadge <%= server.status === 'online' ? 'ok' : 'bad' %>" data-i18n="<%= server.status === 'online' ? 'online' : 'offline' %>"><%= server.status === 'online' ? 'Online' : 'Offline' %></span>
 </div>
 
-<div class="panel" style="max-width:760px;">
+<div class="srv-detail">
+<div class="panel">
   <span class="panel-corner tl"></span><span class="panel-corner br"></span>
   <% if (server.image) { %>
     <div class="news-thumb has-img" style="min-height:220px; background-image:url('<%= server.image %>'); border-bottom:1px solid var(--border);"></div>
@@ -46,7 +48,7 @@
   </div>
 </div>
 
-<div class="panel" style="max-width:760px; margin-top:14px;">
+<div class="panel">
   <span class="panel-corner tl"></span>
   <div class="panel-head">
     <span data-i18n="srv_history">History</span>
@@ -64,6 +66,7 @@
     </div>
   </div>
 </div>
+</div><!-- /.srv-detail -->
 
 <script nonce="<%= cspNonce %>">
 (function () {
@@ -104,7 +107,8 @@
 
   function draw(points, range) {
     var wrap = canvas.parentElement;
-    var W = wrap.clientWidth - 4;
+    var wcs = getComputedStyle(wrap);
+    var W = wrap.clientWidth - parseFloat(wcs.paddingLeft) - parseFloat(wcs.paddingRight);
     var H = 180;
     var dpr = window.devicePixelRatio || 1;
     canvas.width = W * dpr;
