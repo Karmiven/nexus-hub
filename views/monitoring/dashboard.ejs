@@ -64,15 +64,12 @@
 .guest-info-row span { display:inline-flex; align-items:center; gap:0.25rem; }
 .guest-controls { display:flex; gap:0.35rem; margin-top:0.7rem; padding-top:0.7rem; border-top:1px solid var(--border); }
 .guest-controls .btn-control {
-  flex:1; min-width:0; padding:0.3rem 0.4rem; font-size:0.75rem; font-weight:600; border:1px solid var(--border);
+  flex:1; min-width:0; padding:0.45rem; font-weight:600; border:1px solid var(--border);
   border-radius:var(--radius-xs,4px); background:var(--surface-2); color:var(--text-secondary);
-  cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:0.3rem;
+  cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
   transition:background 0.15s, border-color 0.15s, color 0.15s;
 }
-.guest-controls .btn-control .btn-label {
-  min-width:0; overflow-wrap:break-word; word-break:break-word; white-space:normal;
-  text-align:center; line-height:1.15;
-}
+.guest-controls .btn-control svg, .guest-controls .btn-control [data-lucide] { width:15px; height:15px; }
 .guest-controls .btn-control:hover:not(:disabled) { background:var(--surface-hover); color:var(--text-primary); }
 .guest-controls .btn-control:disabled { opacity:0.4; cursor:not-allowed; }
 .guest-controls .btn-control.btn-start { border-color:color-mix(in srgb, var(--success) 40%, transparent); color:var(--success); }
@@ -214,16 +211,19 @@ function renderGuests(guests) {
     if (_isAdmin) {
       html += '<div class="guest-controls">' +
         '<button class="btn-control btn-start" data-vmid="' + g.vmid + '" data-action="start" ' +
+          'title="' + escHtml(_t('mon_start')) + '" aria-label="' + escHtml(_t('mon_start')) + '" ' +
           (isRunning ? 'disabled' : '') + '>' +
-          '<i data-lucide="play" style="width:12px;height:12px;"></i><span class="btn-label">' + _t('mon_start') + '</span>' +
+          '<i data-lucide="play"></i>' +
         '</button>' +
         '<button class="btn-control btn-restart" data-vmid="' + g.vmid + '" data-action="reboot" ' +
+          'title="' + escHtml(_t('mon_restart')) + '" aria-label="' + escHtml(_t('mon_restart')) + '" ' +
           (!isRunning ? 'disabled' : '') + '>' +
-          '<i data-lucide="refresh-cw" style="width:12px;height:12px;"></i><span class="btn-label">' + _t('mon_restart') + '</span>' +
+          '<i data-lucide="refresh-cw"></i>' +
         '</button>' +
         '<button class="btn-control btn-stop" data-vmid="' + g.vmid + '" data-action="shutdown" ' +
+          'title="' + escHtml(_t('mon_shutdown')) + '" aria-label="' + escHtml(_t('mon_shutdown')) + '" ' +
           (!isRunning ? 'disabled' : '') + '>' +
-          '<i data-lucide="square" style="width:12px;height:12px;"></i><span class="btn-label">' + _t('mon_shutdown') + '</span>' +
+          '<i data-lucide="square"></i>' +
         '</button>' +
       '</div>';
     }
