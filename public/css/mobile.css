@@ -120,4 +120,10 @@
   .admin-header .container { padding: 0 0.75rem; }
   .section.container { padding-left: 0.75rem; padding-right: 0.75rem; }
   .container { padding: 0 0.75rem; }
+
+  /* Cloudflare Turnstile's "flexible" size has a 300px hard minimum —
+     narrow the surrounding chrome so the login card stays wide enough
+     to hold it without overflowing. */
+  .auth-section { padding: 2.5rem 0.4rem; }
+  .auth-card { padding: 1.25rem 0.4rem; }
 }
