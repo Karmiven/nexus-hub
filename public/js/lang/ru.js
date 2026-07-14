@@ -222,6 +222,8 @@ window.__loadLang({
   admin_server_desc_en: 'Описание (английский)',
   admin_server_desc_ru: 'Описание (русский)',
   admin_translate_from_en: 'Перевести с EN',
+  admin_translate_auto_desc: 'Русский, румынский и немецкий переводы генерируются автоматически с английского через DeepL при сохранении.',
+  admin_translate_write_manually: 'Написать вручную',
   admin_translate_note: 'Оставьте пустым — при сохранении текст переведётся с английского автоматически. Румынский и немецкий генерируются всегда.',
   admin_translate_empty: 'Сначала заполните текст на английском.',
   admin_translate_progress: 'Перевожу…',

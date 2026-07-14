@@ -52,10 +52,20 @@
               <i data-lucide="languages"></i> <span data-i18n="admin_translate_from_en">Translate from EN</span>
             </button>
           </div>
-          <textarea id="description_ru" name="description_ru" class="form-input form-textarea" rows="4"><%= server ? (server.description_ru || '') : '' %></textarea>
+          <% if (!server) { %>
+          <div id="ruDescAutoState" class="lang-auto-state">
+            <p class="lang-auto-note" style="margin-top:0;"><i data-lucide="sparkles"></i> <span data-i18n="admin_translate_auto_desc">Russian, Romanian &amp; German are generated automatically from English via DeepL when you save.</span></p>
+            <button type="button" class="btn btn-xs btn-outline" id="showRuDescManual">
+              <i data-lucide="pencil"></i> <span data-i18n="admin_translate_write_manually">Write manually</span>
+            </button>
+          </div>
+          <% } %>
+          <textarea id="description_ru" name="description_ru" class="form-input form-textarea" rows="4" style="<%= server ? '' : 'display:none;' %>"><%= server ? (server.description_ru || '') : '' %></textarea>
         </div>
       </div>
+      <% if (server) { %>
       <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
+      <% } %>
       <fieldset class="form-fieldset">
         <legend data-i18n="admin_redirect_settings">Настройки редиректа</legend>
         <div class="form-group">
@@ -121,6 +131,20 @@
     opacity: 0.85;
     line-height: 1.4;
   }
+  .lang-auto-state {
+    padding: 1rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .lang-auto-state .lang-auto-note { margin: 0 0 0.75rem; }
+  .lang-auto-state .lang-auto-note i {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    margin-right: 0.3rem;
+  }
 </style>
 
 <script nonce="<%= cspNonce %>">
@@ -133,10 +157,20 @@
   toggle.addEventListener('change', updateRedirectVisibility);
   updateRedirectVisibility();
 
+  // ── Reveal the manual RU description field (toggle or when translating) ──
+  function showRuDescManual() {
+    var autoState = document.getElementById('ruDescAutoState');
+    if (autoState) autoState.style.display = 'none';
+    document.getElementById('description_ru').style.display = 'block';
+  }
+  var showRuDescBtn = document.getElementById('showRuDescManual');
+  if (showRuDescBtn) showRuDescBtn.addEventListener('click', showRuDescManual);
+
   // ── Auto-translate the Russian description from English (DeepL) ──
   var translateBtn = document.getElementById('translateDescBtn');
   if (translateBtn) {
     translateBtn.addEventListener('click', async function () {
+      showRuDescManual();
       var src = (document.getElementById('description_en').value || '').trim();
       if (!src) { alert(t('admin_translate_empty')); return; }
       var original = translateBtn.innerHTML;

@@ -222,6 +222,8 @@ window.__loadLang({
   admin_server_desc_en: 'Description (English)',
   admin_server_desc_ru: 'Description (Russian)',
   admin_translate_from_en: 'Translate from EN',
+  admin_translate_auto_desc: 'Russian, Romanian & German are generated automatically from English via DeepL when you save.',
+  admin_translate_write_manually: 'Write manually',
   admin_translate_note: 'Leave blank to auto-translate from English on save. Romanian & German are always generated automatically.',
   admin_translate_empty: 'Fill in the English text first.',
   admin_translate_progress: 'Translating…',

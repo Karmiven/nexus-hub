@@ -102,21 +102,30 @@
           </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="title_ru" data-i18n="admin_news_heading_ru">Заголовок</label>
-          <input type="text" id="title_ru" name="title_ru" class="form-input">
+        <div id="ruAutoState" class="lang-auto-state">
+          <p class="lang-auto-note" style="margin-top:0;"><i data-lucide="sparkles"></i> <span data-i18n="admin_translate_auto_desc">Russian, Romanian &amp; German are generated automatically from English via DeepL when you save.</span></p>
+          <button type="button" class="btn btn-xs btn-outline" data-act="showManualRu">
+            <i data-lucide="pencil"></i> <span data-i18n="admin_translate_write_manually">Write manually</span>
+          </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label" for="content_short_ru" data-i18n="admin_news_short_ru">Краткое содержание (Главная)</label>
-          <textarea id="content_short_ru" name="content_short_ru" class="form-textarea"></textarea>
-        </div>
+        <div id="ruManualFields" class="ru-manual-fields" style="display:none;">
+          <div class="form-group">
+            <label class="form-label" for="title_ru" data-i18n="admin_news_heading_ru">Заголовок</label>
+            <input type="text" id="title_ru" name="title_ru" class="form-input">
+          </div>
 
-        <div class="form-group">
-          <label class="form-label" for="content_full_ru" data-i18n="admin_news_full_ru">Полное содержание (Статья)</label>
-          <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content"></textarea>
+          <div class="form-group">
+            <label class="form-label" for="content_short_ru" data-i18n="admin_news_short_ru">Краткое содержание (Главная)</label>
+            <textarea id="content_short_ru" name="content_short_ru" class="form-textarea"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="content_full_ru" data-i18n="admin_news_full_ru">Полное содержание (Статья)</label>
+            <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content"></textarea>
+          </div>
+          <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
         </div>
-        <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
       </div>
       
       <!-- Common Fields -->
@@ -496,6 +505,24 @@
     line-height: 1.4;
   }
 
+  .lang-auto-state {
+    padding: 1.25rem;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    text-align: center;
+  }
+
+  .lang-auto-state .lang-auto-note {
+    margin: 0 0 0.85rem;
+  }
+
+  .lang-auto-state .lang-auto-note i {
+    width: 14px;
+    height: 14px;
+    vertical-align: -2px;
+    margin-right: 0.3rem;
+  }
+
   .bilingual-form-unified .form-textarea {
     resize: none;
     min-height: 80px;
@@ -867,6 +894,8 @@
     document.getElementById('croppedImageData').value = '';
     document.getElementById('finalImagePreview').style.display = 'none';
     document.getElementById('imageUpload').style.display = 'flex';
+    document.getElementById('ruAutoState').style.display = 'block';
+    document.getElementById('ruManualFields').style.display = 'none';
     modalTitle.innerHTML = '<i data-lucide="plus-circle"></i> <span data-i18n="admin_news_modal_create">' + (t('admin_news_modal_create')) + '</span>';
     submitBtn.innerHTML = '<i data-lucide="sparkles"></i> <span data-i18n="create">' + (t('create')) + '</span>';
     if (typeof lucide !== 'undefined') lucide.createIcons();
@@ -913,6 +942,8 @@
         document.getElementById('content_full_en').value = data.content_full_en || '';
         document.getElementById('content_full_ru').value = data.content_full_ru || '';
         document.getElementById('pinned').checked = !!data.pinned;
+        document.getElementById('ruAutoState').style.display = 'none';
+        document.getElementById('ruManualFields').style.display = 'block';
         
         // Clear file input
         imageInput.value = '';
@@ -983,9 +1014,16 @@
       alert(t('admin_news_error_save') + ' ' + err.message);
     }
   });
+  // ── Reveal the manual RU fields (either explicit toggle or when translating) ──
+  function showManualRu() {
+    document.getElementById('ruAutoState').style.display = 'none';
+    document.getElementById('ruManualFields').style.display = 'block';
+  }
+
   // ── Auto-translate the Russian column from English (DeepL) ──
   async function translateNews(btn) {
     var target = btn.dataset.target || 'ru';
+    if (target === 'ru') showManualRu();
     var map = {
       title_en: 'title_' + target,
       content_short_en: 'content_short_' + target,
@@ -1045,6 +1083,7 @@ document.addEventListener('click', function (e) {
     case 'applyCrop': applyCrop(); break;
     case 'setPreviewLang': setPreviewLang(b.dataset.lang); break;
     case 'translateNews': translateNews(b); break;
+    case 'showManualRu': showManualRu(); break;
   }
 });
 </script>

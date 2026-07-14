@@ -222,6 +222,8 @@ window.__loadLang({
   admin_server_desc_en: 'Descriere (engleză)',
   admin_server_desc_ru: 'Descriere (rusă)',
   admin_translate_from_en: 'Traducere din EN',
+  admin_translate_auto_desc: 'Traducerile în rusă, română și germană sunt generate automat din engleză prin DeepL la salvare.',
+  admin_translate_write_manually: 'Scrieți manual',
   admin_translate_note: 'Lăsați gol pentru traducere automată din engleză la salvare. Româna și germana sunt generate întotdeauna automat.',
   admin_translate_empty: 'Completați mai întâi textul în engleză.',
   admin_translate_progress: 'Se traduce…',
