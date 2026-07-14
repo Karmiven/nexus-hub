@@ -1,11 +1,12 @@
 <%- include('../partials/header') %>
 
-<section class="page-header">
-  <div class="container">
-    <h1 class="page-title"><i data-lucide="activity"></i> <span data-i18n="mon_title">Monitoring</span></h1>
-    <p class="page-desc" data-i18n="mon_desc">Real-time load of containers and virtual machines</p>
+<div class="scr-head">
+  <div class="grow">
+    <div class="scr-eyebrow">// <span data-i18n="mon_eyebrow">system status</span></div>
+    <h1 class="scr-title" data-i18n="mon_title">Monitoring</h1>
+    <p class="scr-sub" data-i18n="mon_desc">Real-time load of containers and virtual machines</p>
   </div>
-</section>
+</div>
 
 <section class="section container">
 
@@ -48,7 +49,7 @@
 .resource-bar-fill.low { background:var(--success); }
 .resource-bar-fill.medium { background:var(--warning, #f59e0b); }
 .resource-bar-fill.high { background:var(--danger); }
-.resource-card { display:flex; flex-direction:column; min-height:180px; }
+.resource-card { display:flex; flex-direction:column; min-height:180px; position:relative; border-radius:var(--radius-sm); }
 .resource-card .resource-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.85rem; gap:0.5rem; }
 .resource-card .resource-title { font-size:1rem; font-weight:600; margin:0; display:flex; align-items:center; gap:0.4rem; overflow:hidden; min-width:0; }
 .resource-card .resource-title .guest-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -154,7 +155,7 @@ function renderGuests(guests) {
     var html = '<div class="resource-header">' +
       '<h3 class="resource-title"><i data-lucide="' + typeIcon + '"></i> <span class="guest-name">' + escHtml(label) + '</span>';
     if (_isAdmin) {
-      html += ' <button class="rename-btn" data-vmid="' + g.vmid + '" title="Rename"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button>';
+      html += ' <button class="rename-btn" data-vmid="' + g.vmid + '" title="' + escHtml(_t('mon_rename')) + '"><i data-lucide="pencil" style="width:12px;height:12px;"></i></button>';
     }
     html += '</h3>' +
       '<span class="resource-status ' + (isRunning ? 'status-online' : 'status-offline') + '">' +
@@ -223,7 +224,7 @@ function renderGuests(guests) {
       '</div>';
     }
 
-    card.innerHTML = html;
+    card.innerHTML = html + '<span class="panel-corner tl"></span><span class="panel-corner br"></span>';
     grid.appendChild(card);
   });
 }
@@ -280,7 +281,7 @@ async function renameGuest(vmid, btn) {
     if (newCsrf && csrfMeta) csrfMeta.setAttribute('content', newCsrf);
     var data = await res.json();
     if (data.success) fetchData();
-    else alert(data.error || 'Error');
+    else alert(data.error || _t('error'));
   } catch (err) { alert(err.message); }
 }
 
@@ -315,7 +316,7 @@ async function controlGuest(btn) {
       // Refresh data after a short delay to let Proxmox process the action
       setTimeout(fetchData, 2000);
     } else {
-      alert(_t('mon_control_error') + ': ' + (data.error || 'Unknown error'));
+      alert(_t('mon_control_error') + ': ' + (data.error || _t('error')));
     }
   } catch (err) {
     alert(_t('mon_control_error') + ': ' + err.message);
@@ -327,8 +328,17 @@ async function controlGuest(btn) {
   }
 }
 
-fetchData();
-refreshInterval = setInterval(fetchData, 15000);
+function startMonitoring() {
+  fetchData();
+  refreshInterval = setInterval(fetchData, 15000);
+}
+// Wait for translations to load first — this page renders guest cards entirely
+// client-side, so calling _t() before i18n is ready would show raw key names.
+if (typeof window.i18nReady === 'function') {
+  window.i18nReady(startMonitoring);
+} else {
+  startMonitoring();
+}
 window.addEventListener('beforeunload', function() { clearInterval(refreshInterval); });
 window.addEventListener('languageChanged', function() {
   if (_cachedGuests) {
