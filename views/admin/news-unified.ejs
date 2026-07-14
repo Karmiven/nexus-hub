@@ -605,7 +605,7 @@
     if (file) {
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File is too large. Max 5MB allowed.');
+        showToast(t('admin_file_too_large'), 'error');
         return;
       }
 
@@ -642,7 +642,7 @@
         openCropModal();
       };
       img.onerror = function() {
-        alert(t('admin_news_recrop_error'));
+        showToast(t('admin_news_recrop_error'), 'error');
       };
       img.src = finalImg.src;
     }
@@ -971,7 +971,7 @@
       })
       .catch(err => {
         console.error('Error loading article:', err);
-        alert(t('admin_news_error_load') + ' ' + err.message);
+        showToast(t('admin_news_error_load') + ' ' + err.message, 'error');
       });
   }
 
@@ -1002,11 +1002,11 @@
       } else {
         const text = await response.text();
         console.error('Response error:', text);
-        alert(t('admin_news_error_save') + ' ' + response.status);
+        showToast(t('admin_news_error_save') + ' ' + response.status, 'error');
       }
     } catch (err) {
       console.error('Error:', err);
-      alert(t('admin_news_error_save') + ' ' + err.message);
+      showToast(t('admin_news_error_save') + ' ' + err.message, 'error');
     }
   });
 // ── CSP-safe event delegation (replaces inline onclick attributes) ──

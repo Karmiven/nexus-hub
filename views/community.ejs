@@ -100,7 +100,7 @@
         chatForm.style.display = 'flex';
         chatInput.focus();
       } else {
-        alert(response.error || 'Failed to join chat');
+        showToast(response.error || (window.i18n ? window.i18n.t('chat_join_error') : 'Failed to join chat'), 'error');
         nicknameBtn.disabled = false;
         nicknameBtn.textContent = window.i18n ? window.i18n.t('join_chat') : 'Join Chat';
       }

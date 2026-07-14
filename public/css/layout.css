@@ -69,6 +69,12 @@ body::before {
 }
 .side-brand-mark svg, .side-brand-mark [data-lucide] { width: 17px; height: 17px; }
 
+.side-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 .side-brand-name {
   font-family: var(--font-display);
   font-weight: 800;
@@ -76,6 +82,9 @@ body::before {
   letter-spacing: 0.05em;
   line-height: 1.2;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .side-brand-sub {
   font-family: var(--mono);
@@ -83,6 +92,9 @@ body::before {
   color: var(--text-muted);
   letter-spacing: 0.18em;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .side-label {

@@ -520,6 +520,86 @@ function initFlashMessages() {
   });
 }
 
+/**
+ * Show a floating toast in the flash dock — the client-side counterpart to
+ * server-rendered flash messages. Use instead of alert() so errors/confirmations
+ * match the site's dark theme instead of a native browser popup.
+ */
+function showToast(message, type) {
+  var dock = document.getElementById('flashDock');
+  if (!dock) { window.alert(message); return; }
+  var el = document.createElement('div');
+  el.className = 'flash flash-' + (type === 'error' ? 'error' : 'success');
+  el.textContent = message;
+  dock.appendChild(el);
+  setTimeout(function () {
+    el.style.transition = 'opacity 0.5s, transform 0.5s';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-20px)';
+    setTimeout(function () { el.remove(); }, 500);
+  }, 5000);
+}
+
+/**
+ * Promise-based confirm dialog styled like the rest of the app — replaces
+ * native confirm(). Resolves true/false. Falls back to window.confirm if the
+ * page has no CSP nonce context to safely build the modal into (shouldn't happen).
+ */
+function showConfirm(message) {
+  return new Promise(function (resolve) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal confirm-modal';
+    overlay.style.display = 'flex';
+
+    var content = document.createElement('div');
+    content.className = 'modal-content confirm-modal-content';
+
+    var body = document.createElement('div');
+    body.className = 'modal-body';
+
+    var msg = document.createElement('p');
+    msg.className = 'confirm-modal-message';
+    msg.textContent = message;
+
+    var actions = document.createElement('div');
+    actions.className = 'confirm-modal-actions';
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'btn btn-outline';
+    cancelBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('cancel') : 'Cancel';
+
+    var okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.className = 'btn btn-danger';
+    okBtn.textContent = (window.i18n && window.i18n.t) ? window.i18n.t('confirm_ok') : 'Confirm';
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    body.appendChild(msg);
+    body.appendChild(actions);
+    content.appendChild(body);
+    overlay.appendChild(content);
+
+    function close(result) {
+      document.removeEventListener('keydown', onKey);
+      overlay.remove();
+      resolve(result);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(false);
+    }
+
+    overlay.addEventListener('click', function (e) { if (e.target === overlay) close(false); });
+    cancelBtn.addEventListener('click', function () { close(false); });
+    okBtn.addEventListener('click', function () { close(true); });
+    document.addEventListener('keydown', onKey);
+
+    document.body.appendChild(overlay);
+    okBtn.focus();
+  });
+}
+
 var _serverPollingInterval = null;
 
 function initServerPolling() {

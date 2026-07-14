@@ -285,8 +285,8 @@ async function renameGuest(vmid, btn) {
     if (newCsrf && csrfMeta) csrfMeta.setAttribute('content', newCsrf);
     var data = await res.json();
     if (data.success) fetchData();
-    else alert(data.error || _t('error'));
-  } catch (err) { alert(err.message); }
+    else showToast(data.error || _t('error'), 'error');
+  } catch (err) { showToast(err.message, 'error'); }
 }
 
 async function controlGuest(btn) {
@@ -296,7 +296,8 @@ async function controlGuest(btn) {
   var card = btn.closest('.resource-card');
   var guestName = card ? (card.querySelector('.guest-name')?.textContent || vmid) : vmid;
 
-  if (!confirm(_t('mon_confirm_action').replace('{action}', actionLabel).replace('{vmid}', guestName))) return;
+  var confirmed = await showConfirm(_t('mon_confirm_action').replace('{action}', actionLabel).replace('{vmid}', guestName));
+  if (!confirmed) return;
 
   btn.classList.add('loading');
   btn.disabled = true;
@@ -320,10 +321,10 @@ async function controlGuest(btn) {
       // Refresh data after a short delay to let Proxmox process the action
       setTimeout(fetchData, 2000);
     } else {
-      alert(_t('mon_control_error') + ': ' + (data.error || _t('error')));
+      showToast(_t('mon_control_error') + ': ' + (data.error || _t('error')), 'error');
     }
   } catch (err) {
-    alert(_t('mon_control_error') + ': ' + err.message);
+    showToast(_t('mon_control_error') + ': ' + err.message, 'error');
   } finally {
     btn.innerHTML = origHtml;
     btn.classList.remove('loading');

@@ -135,12 +135,12 @@ async function refreshAllServers() {
     if (data.success) {
       location.reload();
     } else {
-      alert(data.message || t('error'));
+      showToast(data.message || t('error'), 'error');
       btn.disabled = false;
       btn.querySelector('span').textContent = t('admin_refresh_all');
     }
   } catch(e) {
-    alert(t('admin_dashboard_refresh_fail'));
+    showToast(t('admin_dashboard_refresh_fail'), 'error');
     btn.disabled = false;
     btn.querySelector('span').textContent = t('admin_refresh_all');
   }
