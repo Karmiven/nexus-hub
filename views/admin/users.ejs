@@ -34,7 +34,7 @@
             <tr>
               <td><%= u.id %></td>
               <td><strong><%= u.username %></strong></td>
-              <td><%= u.email || '-' %></td>
+              <td><% if (u.email) { %><!--email_off--><%= u.email %><!--/email_off--><% } else { %>-<% } %></td>
               <td>
                 <% if (u.id === user.id) { %>
                   <span class="role-badge role-<%= u.role %>"><%= u.role %></span>

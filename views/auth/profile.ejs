@@ -45,7 +45,7 @@
         </div>
         <div class="detail-item">
           <span class="detail-label" data-i18n="email">Email</span>
-          <span class="detail-value"><% if (profile.email) { %><%= profile.email %><% } else { %><span data-i18n="not_set">Not set</span><% } %></span>
+          <span class="detail-value"><% if (profile.email) { %><!--email_off--><%= profile.email %><!--/email_off--><% } else { %><span data-i18n="not_set">Not set</span><% } %></span>
         </div>
         <div class="detail-item">
           <span class="detail-label" data-i18n="role">Role</span>
