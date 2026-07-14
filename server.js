@@ -123,6 +123,11 @@ app.use((req, res, next) => {
   res.locals.v = ASSET_VERSION;
   res.locals.currentPath = req.path;
 
+  // Localized-field picker for views (title/description columns per language,
+  // with graceful fallback). Usage in EJS: pickField(article, 'title')
+  const i18nContent = require('./utils/i18nContent');
+  res.locals.pickField = (obj, base) => i18nContent.pick(obj, base, req.session.language || 'en');
+
   // Cached site stats for the sidebar counters and status ticker
   try {
     res.locals.siteStats = db.getSiteStats();

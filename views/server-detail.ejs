@@ -32,8 +32,7 @@
 <% } %>
 
 <%
-  var srvDesc = (currentLang === 'ru' ? server.description_ru : server.description_en)
-             || server.description_en || server.description_ru || server.description || '';
+  var srvDesc = pickField(server, 'description');
 %>
 <div class="srv-detail">
 <div class="panel">

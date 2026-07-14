@@ -28,10 +28,16 @@
         data-id="<%= article.id %>"
         data-title-en="<%- encodeURIComponent(article.title_en) %>"
         data-title-ru="<%- encodeURIComponent(article.title_ru) %>"
+        data-title-ro="<%- encodeURIComponent(article.title_ro || '') %>"
+        data-title-de="<%- encodeURIComponent(article.title_de || '') %>"
         data-content-short-en="<%- encodeURIComponent(article.content_short_en) %>"
         data-content-short-ru="<%- encodeURIComponent(article.content_short_ru) %>"
+        data-content-short-ro="<%- encodeURIComponent(article.content_short_ro || '') %>"
+        data-content-short-de="<%- encodeURIComponent(article.content_short_de || '') %>"
         data-content-full-en="<%- encodeURIComponent(article.content_full_en) %>"
         data-content-full-ru="<%- encodeURIComponent(article.content_full_ru) %>"
+        data-content-full-ro="<%- encodeURIComponent(article.content_full_ro || '') %>"
+        data-content-full-de="<%- encodeURIComponent(article.content_full_de || '') %>"
         data-author="<%- encodeURIComponent(article.author) %>"
         data-date="<%= article.created_at %>">
         <div class="news-thumb<%= article.image ? ' has-img' : '' %>"<% if (article.image) { %> style="background-image:url('<%= article.image %>')"<% } %>></div>
@@ -40,8 +46,8 @@
             <% if (article.pinned) { %><span class="pin">◆ <span data-i18n="pinned">Pinned</span> · </span><% } %>
             <span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span> · <%= article.author %>
           </div>
-          <h3><%= currentLang === 'ru' ? article.title_ru : article.title_en %></h3>
-          <p><%= (currentLang === 'ru' ? article.content_short_ru : article.content_short_en) %></p>
+          <h3><%= pickField(article, 'title') %></h3>
+          <p><%= pickField(article, 'content_short') %></p>
         </div>
         <a href="/news/<%= article.id %>" class="news-perma" title="Permalink" aria-label="Permalink"><i data-lucide="link"></i></a>
       </article>

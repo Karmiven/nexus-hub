@@ -60,6 +60,21 @@ async function initDatabase() {
     if (!userCols.includes('totp_secret')) db.exec("ALTER TABLE users ADD COLUMN totp_secret TEXT DEFAULT ''");
   } catch (e) { /* columns already exist */ }
 
+  // News: Romanian & German columns (auto-translation targets). Additive and
+  // backfilled from English so existing rows never lose or duplicate content.
+  try {
+    const newsCols = db.pragma("table_info(news)").map(c => c.name);
+    for (const base of ['title', 'content_short', 'content_full']) {
+      for (const lang of ['ro', 'de']) {
+        const col = `${base}_${lang}`;
+        if (!newsCols.includes(col)) {
+          db.exec(`ALTER TABLE news ADD COLUMN ${col} TEXT DEFAULT ''`);
+          db.exec(`UPDATE news SET ${col} = ${base}_en WHERE (${col} IS NULL OR ${col} = '') AND ${base}_en <> ''`);
+        }
+      }
+    }
+  } catch (e) { /* columns already exist */ }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS servers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,6 +113,16 @@ async function initDatabase() {
     if (!serverCols.includes('description_ru')) {
       db.exec("ALTER TABLE servers ADD COLUMN description_ru TEXT DEFAULT ''");
       db.exec("UPDATE servers SET description_ru = description WHERE (description_ru IS NULL OR description_ru = '') AND description <> ''");
+    }
+    // Romanian & German descriptions (auto-translation targets), backfilled
+    // from the English column so upgrades are lossless.
+    if (!serverCols.includes('description_ro')) {
+      db.exec("ALTER TABLE servers ADD COLUMN description_ro TEXT DEFAULT ''");
+      db.exec("UPDATE servers SET description_ro = description_en WHERE (description_ro IS NULL OR description_ro = '') AND description_en <> ''");
+    }
+    if (!serverCols.includes('description_de')) {
+      db.exec("ALTER TABLE servers ADD COLUMN description_de TEXT DEFAULT ''");
+      db.exec("UPDATE servers SET description_de = description_en WHERE (description_de IS NULL OR description_de = '') AND description_en <> ''");
     }
   } catch (e) { /* column already exists */ }
 

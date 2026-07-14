@@ -40,7 +40,7 @@
               <div class="bar"><div class="fill" style="width:<%= (srv.status === 'online' && srv.max_players > 0) ? Math.round(srv.player_count / srv.max_players * 100) : 0 %>%"></div></div>
             </div>
           <% } %>
-          <% var cardDesc = (currentLang === 'ru' ? srv.description_ru : srv.description_en) || srv.description_en || srv.description_ru || srv.description || ''; %>
+          <% var cardDesc = pickField(srv, 'description'); %>
           <% if (cardDesc) { %>
             <p class="scr-sub" style="margin:0;"><%= cardDesc.substring(0, 120) %></p>
           <% } %>

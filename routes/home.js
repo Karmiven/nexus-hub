@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/database');
+const { pick } = require('../utils/i18nContent');
 
 // ── Overview (home) — compact summary of every section ──
 router.get('/', (req, res) => {
@@ -85,8 +86,8 @@ router.get('/news/:id(\\d+)', (req, res) => {
   }
   const lang = req.session.language || 'en';
   const origin = `${req.protocol}://${req.get('host')}`;
-  const title = lang === 'ru' ? article.title_ru : article.title_en;
-  const description = lang === 'ru' ? article.content_short_ru : article.content_short_en;
+  const title = pick(article, 'title', lang);
+  const description = pick(article, 'content_short', lang);
   res.render('news-article', {
     title,
     article,
@@ -104,16 +105,16 @@ router.get('/news/:id(\\d+)', (req, res) => {
 const escXml = s => String(s).replace(/[<>&'"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]));
 
 router.get('/rss.xml', (req, res) => {
-  const lang = req.query.lang === 'ru' ? 'ru' : 'en';
+  const lang = ['ru', 'ro', 'de'].includes(req.query.lang) ? req.query.lang : 'en';
   const s = db.getCachedSettings('site_name', 'site_description');
   const origin = `${req.protocol}://${req.get('host')}`;
-  const news = db.all('SELECT id, title_en, title_ru, content_short_en, content_short_ru, created_at FROM news ORDER BY created_at DESC LIMIT 20');
+  const news = db.all('SELECT * FROM news ORDER BY created_at DESC LIMIT 20');
 
   const items = news.map(n => `    <item>
-      <title>${escXml(lang === 'ru' ? n.title_ru : n.title_en)}</title>
+      <title>${escXml(pick(n, 'title', lang))}</title>
       <link>${origin}/news/${n.id}</link>
       <guid isPermaLink="true">${origin}/news/${n.id}</guid>
-      <description>${escXml(lang === 'ru' ? n.content_short_ru : n.content_short_en)}</description>
+      <description>${escXml(pick(n, 'content_short', lang))}</description>
       <pubDate>${new Date(n.created_at + 'Z').toUTCString()}</pubDate>
     </item>`).join('\n');
 

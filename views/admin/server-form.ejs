@@ -46,10 +46,16 @@
           <textarea id="description_en" name="description_en" class="form-input form-textarea" rows="4"><%= server ? (server.description_en || '') : '' %></textarea>
         </div>
         <div class="form-group">
-          <label for="description_ru" data-i18n="admin_server_desc_ru">Description (Russian)</label>
+          <div class="desc-ru-head">
+            <label for="description_ru" data-i18n="admin_server_desc_ru">Description (Russian)</label>
+            <button type="button" class="btn btn-xs btn-outline lang-translate-btn" id="translateDescBtn">
+              <i data-lucide="languages"></i> <span data-i18n="admin_translate_from_en">Translate from EN</span>
+            </button>
+          </div>
           <textarea id="description_ru" name="description_ru" class="form-input form-textarea" rows="4"><%= server ? (server.description_ru || '') : '' %></textarea>
         </div>
       </div>
+      <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
       <fieldset class="form-fieldset">
         <legend data-i18n="admin_redirect_settings">Настройки редиректа</legend>
         <div class="form-group">
@@ -92,6 +98,31 @@
   </div>
 </section>
 
+<style>
+  .desc-ru-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .desc-ru-head label { margin-bottom: 0; }
+  .lang-translate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+  .lang-translate-btn i { width: 14px; height: 14px; }
+  .lang-auto-note {
+    margin: -0.25rem 0 1rem;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    opacity: 0.85;
+    line-height: 1.4;
+  }
+</style>
+
 <script nonce="<%= cspNonce %>">
   // Redirect toggle — show the URL field only when redirect is enabled
   var toggle = document.getElementById('redirectToggle');
@@ -101,6 +132,40 @@
   }
   toggle.addEventListener('change', updateRedirectVisibility);
   updateRedirectVisibility();
+
+  // ── Auto-translate the Russian description from English (DeepL) ──
+  var translateBtn = document.getElementById('translateDescBtn');
+  if (translateBtn) {
+    translateBtn.addEventListener('click', async function () {
+      var src = (document.getElementById('description_en').value || '').trim();
+      if (!src) { alert(t('admin_translate_empty')); return; }
+      var original = translateBtn.innerHTML;
+      translateBtn.disabled = true;
+      translateBtn.textContent = t('admin_translate_progress');
+      try {
+        var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        var resp = await fetch('/admin/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+          body: JSON.stringify({ texts: [src], target: 'ru', source: 'en' }),
+          credentials: 'same-origin'
+        });
+        var newCsrf = resp.headers.get('X-CSRF-Token');
+        if (newCsrf) { var m = document.querySelector('meta[name="csrf-token"]'); if (m) m.setAttribute('content', newCsrf); }
+        var data = await resp.json();
+        if (!data.configured) { alert(t('admin_translate_unconfigured')); return; }
+        if (!data.success) { alert(t('admin_translate_failed')); return; }
+        if (data.translations[0] != null) document.getElementById('description_ru').value = data.translations[0];
+      } catch (err) {
+        console.error('translate error:', err);
+        alert(t('admin_translate_failed'));
+      } finally {
+        translateBtn.disabled = false;
+        translateBtn.innerHTML = original;
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      }
+    });
+  }
 </script>
 
 <%- include('../partials/footer') %>

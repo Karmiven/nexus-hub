@@ -97,22 +97,26 @@
         <div class="language-header">
           <span class="language-flag">RU</span>
           <span class="language-title">Русский</span>
+          <button type="button" class="btn btn-xs btn-outline lang-translate-btn" data-act="translateNews" data-target="ru" title="">
+            <i data-lucide="languages"></i> <span data-i18n="admin_translate_from_en">Translate from EN</span>
+          </button>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label" for="title_ru" data-i18n="admin_news_heading_ru">Заголовок</label>
-          <input type="text" id="title_ru" name="title_ru" class="form-input" required>
+          <input type="text" id="title_ru" name="title_ru" class="form-input">
         </div>
-        
+
         <div class="form-group">
           <label class="form-label" for="content_short_ru" data-i18n="admin_news_short_ru">Краткое содержание (Главная)</label>
-          <textarea id="content_short_ru" name="content_short_ru" class="form-textarea" required></textarea>
+          <textarea id="content_short_ru" name="content_short_ru" class="form-textarea"></textarea>
         </div>
-        
+
         <div class="form-group">
           <label class="form-label" for="content_full_ru" data-i18n="admin_news_full_ru">Полное содержание (Статья)</label>
-          <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content" required></textarea>
+          <textarea id="content_full_ru" name="content_full_ru" class="form-textarea full-content"></textarea>
         </div>
+        <p class="lang-auto-note" data-i18n="admin_translate_note">Leave blank to auto-translate from English on save. Romanian &amp; German are always generated automatically.</p>
       </div>
       
       <!-- Common Fields -->
@@ -469,6 +473,27 @@
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--text-primary);
+  }
+
+  .lang-translate-btn {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+  }
+
+  .lang-translate-btn i {
+    width: 14px;
+    height: 14px;
+  }
+
+  .lang-auto-note {
+    margin: 0.75rem 0 0;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    opacity: 0.85;
+    line-height: 1.4;
   }
 
   .bilingual-form-unified .form-textarea {
@@ -958,6 +983,51 @@
       alert(t('admin_news_error_save') + ' ' + err.message);
     }
   });
+  // ── Auto-translate the Russian column from English (DeepL) ──
+  async function translateNews(btn) {
+    var target = btn.dataset.target || 'ru';
+    var map = {
+      title_en: 'title_' + target,
+      content_short_en: 'content_short_' + target,
+      content_full_en: 'content_full_' + target
+    };
+    var sources = Object.keys(map);
+    var texts = sources.map(function (id) { return document.getElementById(id).value || ''; });
+    if (texts.every(function (t) { return !t.trim(); })) {
+      alert(t('admin_translate_empty'));
+      return;
+    }
+    var original = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = t('admin_translate_progress');
+    try {
+      var csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+              || document.querySelector('#newsForm [name="_csrf"]')?.value;
+      var resp = await fetch('/admin/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-csrf-token': csrf, 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ texts: texts, target: target, source: 'en' }),
+        credentials: 'same-origin'
+      });
+      var newCsrf = resp.headers.get('X-CSRF-Token');
+      if (newCsrf) { var m = document.querySelector('meta[name="csrf-token"]'); if (m) m.setAttribute('content', newCsrf); }
+      var data = await resp.json();
+      if (!data.configured) { alert(t('admin_translate_unconfigured')); return; }
+      if (!data.success) { alert(t('admin_translate_failed')); return; }
+      sources.forEach(function (id, i) {
+        var out = data.translations[i];
+        if (out != null) document.getElementById(map[id]).value = out;
+      });
+    } catch (err) {
+      console.error('translate error:', err);
+      alert(t('admin_translate_failed'));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = original;
+      if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+  }
+
 // ── CSP-safe event delegation (replaces inline onclick attributes) ──
 document.addEventListener('click', function (e) {
   var b = e.target.closest('[data-act]');
@@ -974,6 +1044,7 @@ document.addEventListener('click', function (e) {
     case 'closeCropModal': closeCropModal(); break;
     case 'applyCrop': applyCrop(); break;
     case 'setPreviewLang': setPreviewLang(b.dataset.lang); break;
+    case 'translateNews': translateNews(b); break;
   }
 });
 </script>

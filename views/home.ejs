@@ -81,7 +81,7 @@
       <% } else { %>
         <% news.forEach(function(article) { %>
           <a class="mini-news" href="/news">
-            <div class="t"><% if (article.pinned) { %><span class="pin">◆</span><% } %><%= currentLang === 'ru' ? article.title_ru : article.title_en %></div>
+            <div class="t"><% if (article.pinned) { %><span class="pin">◆</span><% } %><%= pickField(article, 'title') %></div>
             <div class="m"><span class="local-time" data-timestamp="<%= article.created_at %>" data-format="date"></span><% if (article.pinned) { %> · <span data-i18n="pinned">Pinned</span><% } %></div>
           </a>
         <% }); %>
