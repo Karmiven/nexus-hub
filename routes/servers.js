@@ -8,7 +8,8 @@ router.get('/', (req, res) => {
 
   res.render('servers', {
     title: 'Game Servers',
-    servers
+    servers,
+    currentLang: req.session.language || 'en'
   });
 });
 
@@ -78,7 +79,8 @@ router.get('/:id', (req, res) => {
     title: server.name,
     server,
     stats,
-    events
+    events,
+    currentLang: req.session.language || 'en'
   });
 });
 

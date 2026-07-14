@@ -180,7 +180,7 @@ router.post('/servers/refresh', async (req, res) => {
 });
 
 router.post('/servers', uploadServer.single('image'), (req, res) => {
-  const { name, game, ip, port, description, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
+  const { name, game, ip, port, description_en, description_ru, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
 
   const validationError = validateServerInput(req.body);
   if (validationError) {
@@ -189,12 +189,14 @@ router.post('/servers', uploadServer.single('image'), (req, res) => {
   }
   const portNum = parseInt(port);
   const image = resolveImage(croppedImageData, req.file, 'servers', 'server');
+  const descEn = description_en || '';
+  const descRu = description_ru || '';
 
   db.run(
-    `INSERT INTO servers (name, game, ip, port, description, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO servers (name, game, ip, port, description, description_en, description_ru, image, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [name, game, ip, portNum,
-    description || '', image,
+    descEn || descRu, descEn, descRu, image,
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0]
   );
@@ -214,7 +216,7 @@ router.get('/servers/:id/edit', (req, res) => {
 });
 
 router.post('/servers/:id', uploadServer.single('image'), (req, res) => {
-  const { name, game, ip, port, description, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
+  const { name, game, ip, port, description_en, description_ru, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
 
   const validationError = validateServerInput(req.body);
   if (validationError) {
@@ -224,12 +226,14 @@ router.post('/servers/:id', uploadServer.single('image'), (req, res) => {
   const portNum = parseInt(port);
   const existing = db.get('SELECT image FROM servers WHERE id = ?', [req.params.id]);
   const image = resolveImage(croppedImageData, req.file, 'servers', 'server', existing ? existing.image : '');
+  const descEn = description_en || '';
+  const descRu = description_ru || '';
 
   db.run(
-    `UPDATE servers SET name = ?, game = ?, ip = ?, port = ?, description = ?, image = ?,
+    `UPDATE servers SET name = ?, game = ?, ip = ?, port = ?, description = ?, description_en = ?, description_ru = ?, image = ?,
      redirect_enabled = ?, redirect_url = ?, show_player_count = ?, show_ip_address = ?, sort_order = ? WHERE id = ?`,
     [name, game, ip, portNum,
-    description || '', image,
+    descEn || descRu, descEn, descRu, image,
     redirect_enabled ? 1 : 0, redirect_url || '',
     show_player_count ? 1 : 0, show_ip_address ? 1 : 0, parseInt(sort_order) || 0,
     req.params.id]

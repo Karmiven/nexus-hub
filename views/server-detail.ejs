@@ -31,31 +31,42 @@
 </div>
 <% } %>
 
+<%
+  var srvDesc = (currentLang === 'ru' ? server.description_ru : server.description_en)
+             || server.description_en || server.description_ru || server.description || '';
+%>
 <div class="srv-detail">
 <div class="panel">
   <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+  <div class="panel-head"><span data-i18n="srv_info">Server info</span></div>
   <% if (server.image) { %>
-    <div class="news-thumb has-img" style="min-height:220px; background-image:url('<%= server.image %>'); border-bottom:1px solid var(--border);"></div>
+    <div class="news-thumb has-img" style="min-height:200px; background-image:url('<%= server.image %>'); border-bottom:1px solid var(--border);"></div>
   <% } %>
-  <div class="srv-body" style="padding:18px 20px;">
+  <div class="srv-body">
     <% if (server.show_ip_address) { %>
-      <div class="addr">
-        <code><%= server.ip %>:<%= server.port %></code>
-        <% if (user && user.role === 'admin') { %>
-          <button type="button" class="addr-copy" data-i18n="copy">copy</button>
-        <% } %>
+      <div class="srv-field">
+        <div class="scr-eyebrow" data-i18n="address">Address</div>
+        <div class="addr">
+          <code><%= server.ip %>:<%= server.port %></code>
+          <% if (user && user.role === 'admin') { %>
+            <button type="button" class="addr-copy" data-i18n="copy">copy</button>
+          <% } %>
+        </div>
       </div>
     <% } %>
     <% if (server.show_player_count && server.status === 'online') { %>
-      <div class="pbar">
-        <span><%= server.player_count %>/<%= server.max_players %></span>
-        <div class="bar"><div class="fill" style="width:<%= server.max_players > 0 ? Math.round(server.player_count / server.max_players * 100) : 0 %>%"></div></div>
+      <div class="srv-field">
+        <div class="scr-eyebrow" data-i18n="players_online">Players online</div>
+        <div class="pbar">
+          <span><%= server.player_count %>/<%= server.max_players %></span>
+          <div class="bar"><div class="fill" style="width:<%= server.max_players > 0 ? Math.round(server.player_count / server.max_players * 100) : 0 %>%"></div></div>
+        </div>
       </div>
     <% } %>
-    <% if (server.description) { %>
-      <div>
+    <% if (srvDesc) { %>
+      <div class="srv-field">
         <div class="scr-eyebrow" data-i18n="about_server">About this Server</div>
-        <p class="scr-sub" style="margin:0; max-width:none;"><%= server.description %></p>
+        <p class="scr-sub" style="margin:0; max-width:none;"><%= srvDesc %></p>
       </div>
     <% } %>
   </div>

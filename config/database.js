@@ -88,6 +88,17 @@ async function initDatabase() {
     if (!serverCols.includes('show_ip_address')) {
       db.exec("ALTER TABLE servers ADD COLUMN show_ip_address INTEGER DEFAULT 1");
     }
+    // Bilingual descriptions (like news title_en/title_ru). The legacy single
+    // `description` column stays as the ultimate fallback so no data is lost;
+    // existing content is backfilled into both languages until an admin edits it.
+    if (!serverCols.includes('description_en')) {
+      db.exec("ALTER TABLE servers ADD COLUMN description_en TEXT DEFAULT ''");
+      db.exec("UPDATE servers SET description_en = description WHERE (description_en IS NULL OR description_en = '') AND description <> ''");
+    }
+    if (!serverCols.includes('description_ru')) {
+      db.exec("ALTER TABLE servers ADD COLUMN description_ru TEXT DEFAULT ''");
+      db.exec("UPDATE servers SET description_ru = description WHERE (description_ru IS NULL OR description_ru = '') AND description <> ''");
+    }
   } catch (e) { /* column already exists */ }
 
   db.exec(`
