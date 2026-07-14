@@ -1,7 +1,4 @@
 <%- include('../partials/header') %>
-<!-- Cropper.js (self-hosted) -->
-<link rel="stylesheet" href="/css/vendor/cropper.min.css?v=<%= v %>">
-<script nonce="<%= cspNonce %>" src="/js/vendor/cropper.min.js?v=<%= v %>"></script>
 
 <section class="admin-header">
   <div class="container">
@@ -53,28 +50,6 @@
           <textarea id="description_ru" name="description_ru" class="form-input form-textarea" rows="4"><%= server ? (server.description_ru || '') : '' %></textarea>
         </div>
       </div>
-      <div class="form-group">
-        <label data-i18n="admin_server_image">Баннер сервера (необязательно)</label>
-        <div class="image-section">
-          <input type="file" id="imageFile" name="image" accept="image/*" style="display:none;">
-          <div class="image-upload" id="imageUpload" style="<%= server && server.image ? 'display:none' : '' %>">
-            <div class="upload-placeholder" style="padding:1.5rem;text-align:center;cursor:pointer;border:2px dashed var(--border);border-radius:var(--radius-sm);">
-              <p><i data-lucide="image"></i> <span data-i18n="admin_server_image_click">Нажмите для загрузки баннера</span></p>
-              <small style="color:var(--text-muted);" data-i18n="admin_image_hint_server">JPG, PNG, GIF, WebP (макс. 5MB) • 16:5</small>
-            </div>
-          </div>
-          <input type="hidden" id="croppedImageData" name="croppedImageData">
-          <div id="finalImagePreview" style="<%= server && server.image ? '' : 'display:none' %>">
-            <img id="finalImage" src="<%= server && server.image ? server.image : '' %>" style="width:100%;max-height:150px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border);">
-            <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-              <button type="button" class="btn btn-xs btn-outline" id="recropBtn"><i data-lucide="crop"></i> <span data-i18n="admin_btn_crop">Обрезать</span></button>
-              <button type="button" class="btn btn-xs btn-outline" id="replaceBtn"><i data-lucide="image-plus"></i> <span data-i18n="admin_btn_replace">Заменить</span></button>
-              <button type="button" class="btn btn-xs btn-outline" style="color:var(--danger);border-color:var(--danger);" id="removeBtn"><i data-lucide="trash-2"></i> <span data-i18n="admin_btn_remove">Удалить</span></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <fieldset class="form-fieldset">
         <legend data-i18n="admin_redirect_settings">Настройки редиректа</legend>
         <div class="form-group">
@@ -117,25 +92,8 @@
   </div>
 </section>
 
-<!-- Crop Modal -->
-<div id="cropModal" class="modal" style="display:none;z-index:2000;">
-  <div class="modal-content" style="max-width:600px;">
-    <div class="modal-header">
-      <h2><i data-lucide="crop"></i> <span data-i18n="admin_crop_banner_title">Обрезка баннера (16:5)</span></h2>
-      <button type="button" class="modal-close" data-act="closeCropModal">&times;</button>
-    </div>
-    <div style="max-height:400px;overflow:hidden;">
-      <img id="cropperImage" style="max-width:100%;">
-    </div>
-    <div style="display:flex;gap:1rem;margin-top:1.5rem;justify-content:flex-end;">
-      <button type="button" class="btn btn-secondary" data-act="closeCropModal" data-i18n="cancel">Отмена</button>
-      <button type="button" class="btn btn-primary" data-act="applyCrop"><i data-lucide="check"></i> <span data-i18n="admin_btn_apply">Применить</span></button>
-    </div>
-  </div>
-</div>
-
 <script nonce="<%= cspNonce %>">
-  // Redirect toggle
+  // Redirect toggle — show the URL field only when redirect is enabled
   var toggle = document.getElementById('redirectToggle');
   var urlGroup = document.getElementById('redirectUrlGroup');
   function updateRedirectVisibility() {
@@ -143,110 +101,6 @@
   }
   toggle.addEventListener('change', updateRedirectVisibility);
   updateRedirectVisibility();
-
-  // Image crop
-  var imageUpload = document.getElementById('imageUpload');
-  var imageFile = document.getElementById('imageFile');
-  var finalPreview = document.getElementById('finalImagePreview');
-  var finalImage = document.getElementById('finalImage');
-  var cropModal = document.getElementById('cropModal');
-  var cropper = null;
-  var originalImageData = null;
-
-  imageUpload.addEventListener('click', function(e) {
-    if (e.target === imageFile) return;
-    imageFile.click();
-  });
-
-  document.getElementById('replaceBtn').addEventListener('click', function() {
-    imageFile.value = '';
-    imageFile.click();
-  });
-
-  document.getElementById('recropBtn').addEventListener('click', function() {
-    if (originalImageData) {
-      openCropModal();
-    } else if (finalImage.src) {
-      var img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = function() {
-        var canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        canvas.getContext('2d').drawImage(img, 0, 0);
-        originalImageData = canvas.toDataURL('image/jpeg', 1.0);
-        openCropModal();
-      };
-      img.onerror = function() { alert(t('admin_image_load_error')); };
-      img.src = finalImage.src;
-    }
-  });
-
-  document.getElementById('removeBtn').addEventListener('click', function() {
-    finalPreview.style.display = 'none';
-    imageUpload.style.display = 'block';
-    document.getElementById('croppedImageData').value = 'REMOVE';
-    finalImage.src = '';
-    originalImageData = null;
-  });
-
-  imageFile.addEventListener('change', function(e) {
-    var file = e.target.files[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert(t('admin_file_too_large')); return; }
-    var reader = new FileReader();
-    reader.onload = function(ev) {
-      originalImageData = ev.target.result;
-      openCropModal();
-    };
-    reader.readAsDataURL(file);
-  });
-
-  function openCropModal() {
-    if (!originalImageData) return;
-    var img = document.getElementById('cropperImage');
-    img.src = originalImageData;
-    if (cropper) cropper.destroy();
-    cropper = new Cropper(img, {
-      aspectRatio: 16 / 5,
-      autoCropArea: 1,
-      responsive: true,
-      guides: true,
-      center: true,
-      highlight: true,
-      cropBoxMovable: true,
-      cropBoxResizable: true,
-    });
-    cropModal.style.display = 'flex';
-  }
-
-  function closeCropModal() { cropModal.style.display = 'none'; }
-
-  function applyCrop() {
-    if (!cropper) return;
-    var canvas = cropper.getCroppedCanvas({
-      maxWidth: 800,
-      maxHeight: 250,
-      fillColor: '#000',
-      imageSmoothingEnabled: true,
-      imageSmoothingQuality: 'high',
-    });
-    var croppedData = canvas.toDataURL('image/jpeg', 0.9);
-    document.getElementById('croppedImageData').value = croppedData;
-    finalImage.src = croppedData;
-    finalPreview.style.display = 'block';
-    imageUpload.style.display = 'none';
-    closeCropModal();
-    // Clear file input so form doesn't send raw file
-    imageFile.value = '';
-  }
-// ── CSP-safe event delegation ──
-document.addEventListener('click', function (e) {
-  var b = e.target.closest('[data-act]');
-  if (!b) return;
-  if (b.dataset.act === 'closeCropModal') closeCropModal();
-  else if (b.dataset.act === 'applyCrop') applyCrop();
-});
 </script>
 
 <%- include('../partials/footer') %>

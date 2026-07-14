@@ -39,9 +39,6 @@
 <div class="panel">
   <span class="panel-corner tl"></span><span class="panel-corner br"></span>
   <div class="panel-head"><span data-i18n="srv_info">Server info</span></div>
-  <% if (server.image) { %>
-    <div class="news-thumb has-img" style="min-height:200px; background-image:url('<%= server.image %>'); border-bottom:1px solid var(--border);"></div>
-  <% } %>
   <div class="srv-body">
     <% if (server.show_ip_address) { %>
       <div class="srv-field">

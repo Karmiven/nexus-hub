@@ -552,8 +552,8 @@ body::before {
   gap: 14px;
   align-items: stretch;
 }
-/* Both columns share the row height; the info body grows so its footer
-   drops to the bottom and the two panels line up horizontally. */
+/* Equal-height columns: the info body grows so its footer sits flush at
+   the bottom and both panels line up — no ragged gap between them. */
 .srv-detail > .panel { display: flex; flex-direction: column; }
 .srv-detail > .panel > .srv-body { flex: 1 1 auto; }
 .scr-title .mbadge {
