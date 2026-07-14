@@ -555,6 +555,38 @@ body::before {
   margin-left: 12px;
   font-size: 0.7rem;
 }
+.srv-kpi { margin-bottom: 14px; }
+
+/* ── Server events feed ── */
+.srv-events { margin-top: 14px; }
+.evt-list { list-style: none; margin: 0; padding: 6px 0; }
+.evt {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+.evt:first-child { border-top: none; }
+.evt-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  box-shadow: 0 0 8px currentColor;
+}
+.evt.up .evt-dot { background: var(--success); color: var(--success); }
+.evt.down .evt-dot { background: var(--danger); color: var(--danger); }
+.evt-txt { font-weight: 600; }
+.evt.up .evt-txt { color: var(--success); }
+.evt.down .evt-txt { color: var(--danger); }
+.evt-time {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+}
 
 /* ── Server history chart ── */
 .hist-range { display: inline-flex; gap: 6px; }

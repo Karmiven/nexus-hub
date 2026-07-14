@@ -10,6 +10,27 @@
   </div>
 </div>
 
+<% if (stats && stats.samples > 0) { %>
+<div class="ov-grid srv-kpi">
+  <div class="ov-stat hl">
+    <div class="k" data-i18n="srv_kpi_uptime24">Uptime 24h</div>
+    <div class="v"><% if (stats.up24h !== null && stats.up24h !== undefined) { %><%= stats.up24h %><em>%</em><% } else { %>—<% } %></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="srv_kpi_uptime7">Uptime 7d</div>
+    <div class="v"><% if (stats.up7d !== null && stats.up7d !== undefined) { %><%= stats.up7d %><em>%</em><% } else { %>—<% } %></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="srv_kpi_peak">Peak players 24h</div>
+    <div class="v"><%= (stats.peak24h !== null && stats.peak24h !== undefined) ? stats.peak24h : (stats.peak7d || 0) %></div>
+  </div>
+  <div class="ov-stat">
+    <div class="k" data-i18n="srv_kpi_ping">Avg ping</div>
+    <div class="v"><% if (stats.avgPing) { %><%= stats.avgPing %><em>ms</em><% } else { %>—<% } %></div>
+  </div>
+</div>
+<% } %>
+
 <div class="srv-detail">
 <div class="panel">
   <span class="panel-corner tl"></span><span class="panel-corner br"></span>
@@ -67,6 +88,22 @@
   </div>
 </div>
 </div><!-- /.srv-detail -->
+
+<% if (events && events.length > 0) { %>
+<div class="panel srv-events">
+  <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+  <div class="panel-head"><span data-i18n="srv_events">Recent events</span></div>
+  <ul class="evt-list">
+    <% events.forEach(function(ev) { %>
+      <li class="evt <%= ev.status === 'online' ? 'up' : 'down' %>">
+        <span class="evt-dot"></span>
+        <span class="evt-txt" data-i18n="<%= ev.status === 'online' ? 'srv_evt_up' : 'srv_evt_down' %>"><%= ev.status === 'online' ? 'Came online' : 'Went offline' %></span>
+        <span class="evt-time local-time" data-timestamp="<%= ev.created_at %>" data-format="datetime"></span>
+      </li>
+    <% }); %>
+  </ul>
+</div>
+<% } %>
 
 <script nonce="<%= cspNonce %>">
 (function () {
