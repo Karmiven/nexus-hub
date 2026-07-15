@@ -542,7 +542,6 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .server-card {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
   padding: 1.15rem;
   position: relative;
   overflow: hidden;
