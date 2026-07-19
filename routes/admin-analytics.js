@@ -167,6 +167,91 @@ router.get('/countries', (req, res) => {
   res.json(rows);
 });
 
+// KPI summary row (totals + trend vs the preceding period of equal length)
+router.get('/summary', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
+
+  const curAll = db.get(`
+    SELECT COUNT(*) as total_views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+  `, [days]);
+  const prevAll = db.get(`
+    SELECT COUNT(*) as total_views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND created_at < datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+  `, [days * 2, days]);
+
+  const curExt = db.get(`
+    SELECT COUNT(DISTINCT ip) as unique_visitors
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+  `, [days]);
+  const prevExt = db.get(`
+    SELECT COUNT(DISTINCT ip) as unique_visitors
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND created_at < datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+  `, [days * 2, days]);
+
+  const chat = db.get(`
+    SELECT COUNT(*) as chat_messages
+    FROM chat_messages
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+  `, [days]);
+
+  const uptime = db.get(`
+    SELECT SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online_checks, COUNT(*) as total_checks
+    FROM server_status_log
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+  `, [days]);
+
+  const topCountry = db.get(`
+    SELECT COALESCE(NULLIF(country, ''), 'Unknown') as country, COUNT(DISTINCT ip) as visitors
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+      ${LOCAL_IP_FILTER}
+    GROUP BY country
+    ORDER BY visitors DESC
+    LIMIT 1
+  `, [days]);
+
+  const peakHour = db.get(`
+    SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as views
+    FROM page_views
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND path NOT LIKE '/admin%'
+    GROUP BY hour
+    ORDER BY views DESC
+    LIMIT 1
+  `, [days]);
+
+  // null = no prior-period data to compare against ("new" rather than +/-100%)
+  function pctDelta(cur, prev) {
+    if (!prev) return cur > 0 ? null : 0;
+    return Math.round(((cur - prev) / prev) * 100);
+  }
+
+  res.json({
+    totalViews: curAll.total_views,
+    totalViewsDelta: pctDelta(curAll.total_views, prevAll.total_views),
+    uniqueVisitors: curExt.unique_visitors,
+    uniqueVisitorsDelta: pctDelta(curExt.unique_visitors, prevExt.unique_visitors),
+    chatMessages: chat.chat_messages,
+    avgUptime: uptime.total_checks > 0 ? Math.round((uptime.online_checks / uptime.total_checks) * 100) : null,
+    topCountry: topCountry ? { country: topCountry.country, visitors: topCountry.visitors } : null,
+    peakHour: peakHour ? { hour: peakHour.hour, views: peakHour.views } : null
+  });
+});
+
 // Visitor log (detailed table with pagination + sorting)
 router.get('/visitors', (req, res) => {
   const days = Math.min(parseInt(req.query.days) || 14, 90);

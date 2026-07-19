@@ -23,13 +23,67 @@
     </div>
   </div>
 
+  <!-- KPI Summary -->
+  <div class="stats-grid stats-grid-kpi" id="kpiRow">
+    <div class="stat-card kpi-card" data-accent="accent">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="eye"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiViews">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_views">Просмотров</span>
+        <span class="kpi-trend" id="kpiViewsTrend"></span>
+      </div>
+    </div>
+    <div class="stat-card kpi-card" data-accent="info">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="users"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiVisitors">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_visitors">Посетителей</span>
+        <span class="kpi-trend" id="kpiVisitorsTrend"></span>
+      </div>
+    </div>
+    <div class="stat-card kpi-card" data-accent="info">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="message-square"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiChat">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_chat">Сообщений в чате</span>
+      </div>
+    </div>
+    <div class="stat-card kpi-card" data-accent="success">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="server-cog"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiUptime">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_uptime">Средний аптайм</span>
+      </div>
+    </div>
+    <div class="stat-card kpi-card" data-accent="accent">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="globe"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiTopCountry">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_top_country">Топ страна</span>
+      </div>
+    </div>
+    <div class="stat-card kpi-card" data-accent="warning">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="stat-icon"><i data-lucide="clock"></i></div>
+      <div class="stat-info">
+        <span class="stat-number" id="kpiPeakHour">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_peak_hour">Пиковый час</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Charts Grid -->
   <div class="charts-grid">
     <!-- Page Views (Line) -->
-    <div class="chart-card chart-card-wide">
+    <div class="chart-card chart-card-wide" data-accent="accent">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_pageviews">Просмотры страниц</h3>
+        <h3><i data-lucide="eye"></i> <span data-i18n="admin_chart_pageviews">Просмотры страниц</span></h3>
       </div>
       <div class="chart-body" id="wrapPageViews">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -38,10 +92,10 @@
     </div>
 
     <!-- Hourly Traffic (Bar) -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="info">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_hourly">Трафик по часам</h3>
+        <h3><i data-lucide="clock"></i> <span data-i18n="admin_chart_hourly">Трафик по часам</span></h3>
       </div>
       <div class="chart-body" id="wrapHourly">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -50,10 +104,10 @@
     </div>
 
     <!-- Popular Pages (Horizontal Bar) -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="warning">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_popular">Популярные страницы</h3>
+        <h3><i data-lucide="file-text"></i> <span data-i18n="admin_chart_popular">Популярные страницы</span></h3>
       </div>
       <div class="chart-body" id="wrapPopular">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -62,10 +116,10 @@
     </div>
 
     <!-- Server Uptime (Bar) -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="success">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_uptime">Аптайм серверов</h3>
+        <h3><i data-lucide="server-cog"></i> <span data-i18n="admin_chart_uptime">Аптайм серверов</span></h3>
       </div>
       <div class="chart-body" id="wrapUptime">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -74,10 +128,10 @@
     </div>
 
     <!-- Chat Activity (Bar) -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="info">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_chat">Активность чата</h3>
+        <h3><i data-lucide="message-square"></i> <span data-i18n="admin_chart_chat">Активность чата</span></h3>
       </div>
       <div class="chart-body" id="wrapChat">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -86,10 +140,10 @@
     </div>
 
     <!-- Server Status Timeline (Stacked Area) -->
-    <div class="chart-card chart-card-wide">
+    <div class="chart-card chart-card-wide" data-accent="success">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
-        <h3 data-i18n="admin_chart_timeline">Статус серверов</h3>
+        <h3><i data-lucide="server"></i> <span data-i18n="admin_chart_timeline">Статус серверов</span></h3>
       </div>
       <div class="chart-body" id="wrapTimeline">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
@@ -98,7 +152,7 @@
     </div>
 
     <!-- Countries (Doughnut) -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="accent">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
         <h3><i data-lucide="globe"></i> <span data-i18n="admin_chart_countries">Страны посетителей</span></h3>
@@ -110,7 +164,7 @@
     </div>
 
     <!-- Country Stats Table -->
-    <div class="chart-card">
+    <div class="chart-card" data-accent="accent">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
       <div class="chart-header">
         <h3><i data-lucide="flag"></i> <span data-i18n="admin_chart_by_country">По странам</span></h3>
@@ -545,7 +599,13 @@
         hideLoading('wrapCountries');
         var ctx = document.getElementById('chartCountries');
         if (!ctx) return;
-        if (!data || data.length === 0) { showNoData('wrapCountries'); return; }
+        if (!data || data.length === 0) {
+          showNoData('wrapCountries');
+          showNoData('wrapCountryTable');
+          var tbl = document.getElementById('countryTable');
+          if (tbl) tbl.style.display = 'none';
+          return;
+        }
         chartInstances.countries = new Chart(ctx, {
           type: 'doughnut',
           data: {
@@ -578,10 +638,49 @@
                    '<td>' + pct + '%<span class="country-bar" style="width:' + barW + 'px"></span></td></tr>';
           }).join('');
           table.style.display = '';
-          var ld = document.getElementById('wrapCountryTable');
-          if (ld) { var l = ld.querySelector('.chart-loading'); if (l) l.remove(); }
+          hideLoading('wrapCountryTable');
         }
-      }).catch(function(e) { showError('wrapCountries', e.message); });
+      }).catch(function(e) { showError('wrapCountries', e.message); showError('wrapCountryTable', e.message); });
+    }
+
+    // ── KPI Summary ──
+    function formatCompact(n) {
+      if (n === null || n === undefined) return '—';
+      return Number(n).toLocaleString(document.documentElement.lang || 'en');
+    }
+
+    function renderTrend(elId, delta) {
+      var el = document.getElementById(elId);
+      if (!el) return;
+      if (delta === null || delta === undefined) { el.textContent = ''; el.removeAttribute('title'); el.className = 'kpi-trend'; return; }
+      var dir = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
+      var arrow = dir === 'up' ? '▲' : (dir === 'down' ? '▼' : '–');
+      el.className = 'kpi-trend ' + dir;
+      el.textContent = arrow + ' ' + Math.abs(delta) + '%';
+      el.title = t('admin_kpi_vs_prev');
+    }
+
+    function loadSummary() {
+      return fetchData('summary').then(function(data) {
+        var elViews = document.getElementById('kpiViews');
+        var elVisitors = document.getElementById('kpiVisitors');
+        var elChat = document.getElementById('kpiChat');
+        var elUptime = document.getElementById('kpiUptime');
+        var elTopCountry = document.getElementById('kpiTopCountry');
+        var elPeakHour = document.getElementById('kpiPeakHour');
+        if (elViews) elViews.textContent = formatCompact(data.totalViews);
+        if (elVisitors) elVisitors.textContent = formatCompact(data.uniqueVisitors);
+        if (elChat) elChat.textContent = formatCompact(data.chatMessages);
+        if (elUptime) elUptime.textContent = data.avgUptime !== null ? data.avgUptime + '%' : '—';
+        if (elTopCountry) {
+          elTopCountry.textContent = data.topCountry ? (countryFlag(data.topCountry.country) + ' ' + data.topCountry.country) : '—';
+        }
+        if (elPeakHour) {
+          elPeakHour.textContent = data.peakHour ? (String(data.peakHour.hour).padStart(2, '0') + ':00') : '—';
+        }
+        renderTrend('kpiViewsTrend', data.totalViewsDelta);
+        renderTrend('kpiVisitorsTrend', data.uniqueVisitorsDelta);
+      }).catch(function() {});
     }
 
     // ── Visitor Log ──
@@ -694,6 +793,7 @@
       });
 
       Promise.all([
+        loadSummary(),
         loadPageViewsChart(),
         loadHourlyChart(),
         loadPopularChart(),

@@ -806,12 +806,22 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 .chart-card {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-top: 2px solid var(--border);
   /* TL/BR corners stay square so the .panel-corner accent isn't clipped by the rounded overflow mask */
   border-radius: 0 var(--radius-sm) 0 var(--radius-sm);
   overflow: hidden;
   position: relative;
   animation: cardEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  transition: border-color var(--transition), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+.chart-card:hover { transform: translateY(-1px); }
+
+.chart-card[data-accent="accent"] { border-top-color: var(--accent); }
+.chart-card[data-accent="info"] { border-top-color: var(--primary); }
+.chart-card[data-accent="success"] { border-top-color: var(--success); }
+.chart-card[data-accent="warning"] { border-top-color: var(--warning); }
+.chart-card[data-accent="danger"] { border-top-color: var(--danger); }
 
 .chart-card-wide {
   grid-column: 1 / -1;
@@ -829,7 +839,12 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   font-weight: 600;
   color: var(--text);
   font-family: var(--font-display);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
+.chart-header h3 i { width: 15px; height: 15px; flex-shrink: 0; color: var(--text-muted); }
 
 .chart-body {
   padding: 1rem;
@@ -900,6 +915,31 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
   background: color-mix(in srgb, var(--accent) 12%, var(--surface));
   border-color: var(--accent);
 }
+
+.stats-grid-kpi {
+  grid-template-columns: repeat(6, 1fr);
+  margin-bottom: 1.5rem;
+}
+
+.kpi-card[data-accent="accent"] .stat-icon { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
+.kpi-card[data-accent="info"] .stat-icon { color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
+.kpi-card[data-accent="success"] .stat-icon { color: var(--success); background: color-mix(in srgb, var(--success) 14%, var(--surface-2)); }
+.kpi-card[data-accent="warning"] .stat-icon { color: var(--warning); background: color-mix(in srgb, var(--warning) 14%, var(--surface-2)); }
+
+.kpi-card .stat-info .stat-number { font-size: 1.5rem; }
+
+.kpi-trend {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 0.15rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.kpi-trend.up { color: var(--success); }
+.kpi-trend.down { color: var(--danger); }
+.kpi-trend.flat { color: var(--text-muted); }
 
 
 /* ═══════════════════════════════════════════════════════════════
