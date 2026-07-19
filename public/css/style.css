@@ -917,9 +917,23 @@ legend svg { width: 1em; height: 1em; vertical-align: -0.12em; color: var(--acce
 }
 
 .stats-grid-kpi {
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
   margin-bottom: 1.5rem;
 }
+
+.kpi-card {
+  padding: 1.35rem 1.5rem;
+}
+
+.kpi-card .stat-icon {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+
+.kpi-card .stat-icon i { width: 1.5rem; height: 1.5rem; }
+
+.kpi-card .stat-info .stat-number { font-size: 1.85rem; }
 
 .kpi-card[data-accent="accent"] .stat-icon { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--surface-2)); }
 .kpi-card[data-accent="info"] .stat-icon { color: var(--primary); background: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
