@@ -264,17 +264,26 @@ function executeInlineScripts(scriptElements) {
  */
 // ── Global delegated handlers (replace inline on* attributes, CSP-safe) ──
 
-// Forms with data-confirm ask before submitting (capture phase so the
-// SPA fade-out handler sees defaultPrevented)
+// Forms with data-confirm ask before submitting, via the styled confirm
+// modal instead of the native dialog. Always prevented here; a confirmed
+// submit is replayed with form.submit(), which bypasses this same listener
+// (and the fade-out handler below) since it doesn't re-fire 'submit' — so
+// the fade-out classes are toggled by hand to match.
 document.addEventListener('submit', function (e) {
   var form = e.target;
   if (!form.matches || !form.matches('form[data-confirm]')) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
   var key = form.getAttribute('data-confirm');
   var msg = (window.t ? window.t(key) : key) + (form.dataset.confirmArg ? ' ' + form.dataset.confirmArg : '');
-  if (!confirm(msg)) {
-    e.preventDefault();
-    e.stopImmediatePropagation();
-  }
+  showConfirm(msg).then(function (ok) {
+    if (!ok) return;
+    var main = document.querySelector('.main-content');
+    var footer = document.querySelector('.footer');
+    if (main) main.classList.remove('content-ready');
+    if (footer) footer.classList.remove('content-ready');
+    form.submit();
+  });
 }, true);
 
 // Selects with .autosubmit submit their form on change
@@ -712,17 +721,15 @@ function updateServerCards(servers) {
       const card = link.closest('.server-card');
       if (!card) return;
 
-      // Update status indicator
-      const indicator = card.querySelector('.server-status-indicator');
-      if (indicator) {
-        indicator.className = `server-status-indicator status-${srv.status}`;
-      }
-
-      // Update badge
+      // Update badge (keep its other classes — e.g. "mbadge" — intact, and translate the label).
+      // The server-rendered markup carries both the current ("ok"/"bad") and legacy
+      // ("badge-online"/"badge-offline") color classes on the same element — keep both in sync.
       const badge = card.querySelector('.status-badge');
       if (badge) {
-        badge.className = `status-badge badge-${srv.status}`;
-        badge.textContent = srv.status === 'online' ? 'Online' : 'Offline';
+        badge.classList.remove('ok', 'bad', 'badge-online', 'badge-offline');
+        badge.classList.add(...(srv.status === 'online' ? ['ok', 'badge-online'] : ['bad', 'badge-offline']));
+        const key = srv.status === 'online' ? 'online' : 'offline';
+        badge.textContent = window.i18n ? window.i18n.t(key) : (srv.status === 'online' ? 'Online' : 'Offline');
       }
     });
   });

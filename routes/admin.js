@@ -10,6 +10,7 @@ const { logAdmin } = require('../utils/adminLog');
 const { createBackup, listBackups, backupPath, cleanupAnalytics } = require('../utils/maintenance');
 const { isValidWebhookUrl, notifyNews } = require('../utils/discord');
 const translate = require('../utils/translate');
+const catchAsync = require('../utils/catchAsync');
 
 const upload = createUploader('news');
 const uploadServer = createUploader('servers');
@@ -102,7 +103,7 @@ router.get('/news/:id/data', (req, res) => {
 
 const NEWS_BASES = ['title', 'content_short', 'content_full'];
 
-router.post('/news/create', upload.single('image'), async (req, res) => {
+router.post('/news/create', upload.single('image'), catchAsync(async (req, res) => {
   const { pinned, croppedImageData } = req.body;
 
   const validationError = validateNewsInput(req.body);
@@ -134,7 +135,7 @@ router.post('/news/create', upload.single('image'), async (req, res) => {
   logAdmin(req, 'news.create', fields.title_en);
   req.flash('success', 'flash_news_created');
   res.redirect('/admin/news');
-});
+}));
 
 // Gather the per-language news columns from a submitted form into one record.
 // Empty ru/ro/de start blank so translate.fillMissingFields() can fill them.
@@ -148,7 +149,7 @@ function collectNewsFields(body) {
   return rec;
 }
 
-router.post('/news/:id', upload.single('image'), async (req, res) => {
+router.post('/news/:id', upload.single('image'), catchAsync(async (req, res) => {
   const { pinned, croppedImageData } = req.body;
 
   const article = db.get('SELECT * FROM news WHERE id = ?', [req.params.id]);
@@ -185,7 +186,7 @@ router.post('/news/:id', upload.single('image'), async (req, res) => {
   logAdmin(req, 'news.update', `#${req.params.id} ${fields.title_en}`);
   req.flash('success', 'flash_news_updated');
   res.redirect('/admin/news');
-});
+}));
 
 router.post('/news/:id/delete', (req, res) => {
   const article = db.get('SELECT title_en FROM news WHERE id = ?', [req.params.id]);
@@ -223,7 +224,7 @@ router.post('/servers/refresh', async (req, res) => {
   res.redirect('/admin/servers');
 });
 
-router.post('/servers', uploadServer.single('image'), async (req, res) => {
+router.post('/servers', uploadServer.single('image'), catchAsync(async (req, res) => {
   const { name, game, ip, port, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
 
   const validationError = validateServerInput(req.body);
@@ -248,7 +249,7 @@ router.post('/servers', uploadServer.single('image'), async (req, res) => {
   logAdmin(req, 'server.create', `${name} (${ip}:${portNum})`);
   req.flash('success', 'flash_server_added');
   res.redirect('/admin/servers');
-});
+}));
 
 // Gather per-language server descriptions from the form. English is the source;
 // blank ru/ro/de are auto-translated on save.
@@ -269,7 +270,7 @@ router.get('/servers/:id/edit', (req, res) => {
   res.render('admin/server-form', { title: 'Edit Server', server });
 });
 
-router.post('/servers/:id', uploadServer.single('image'), async (req, res) => {
+router.post('/servers/:id', uploadServer.single('image'), catchAsync(async (req, res) => {
   const { name, game, ip, port, croppedImageData, redirect_enabled, redirect_url, show_player_count, show_ip_address, sort_order } = req.body;
 
   const validationError = validateServerInput(req.body);
@@ -296,7 +297,7 @@ router.post('/servers/:id', uploadServer.single('image'), async (req, res) => {
   logAdmin(req, 'server.update', `#${req.params.id} ${name} (${ip}:${portNum})`);
   req.flash('success', 'flash_server_updated');
   res.redirect('/admin/servers');
-});
+}));
 
 router.post('/servers/:id/delete', (req, res) => {
   const srv = db.get('SELECT name FROM servers WHERE id = ?', [req.params.id]);
@@ -329,16 +330,19 @@ router.post('/settings', (req, res) => {
     return res.redirect('/admin/settings');
   }
 
-  for (const key of keys) {
-    if (req.body[key] !== undefined) {
-      let value = req.body[key];
-      // If checkbox and hidden input both send values, it becomes an array. Take the last one.
-      if (Array.isArray(value)) {
-        value = value[value.length - 1];
-      }
+  const saveSettings = db.transaction((rows) => {
+    for (const [key, value] of rows) {
       db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
     }
-  }
+  });
+  saveSettings(keys.filter(key => req.body[key] !== undefined).map(key => {
+    let value = req.body[key];
+    // If checkbox and hidden input both send values, it becomes an array. Take the last one.
+    if (Array.isArray(value)) {
+      value = value[value.length - 1];
+    }
+    return [key, value];
+  }));
 
   // DeepL API key — stored encrypted at rest (AES-256-GCM), never echoed back
   // to the form. Only overwrite when a new key is submitted; a dedicated
@@ -461,9 +465,12 @@ router.post('/proxmox/save-connection', (req, res) => {
   if (tokenSecret) {
     keys.proxmox_token_secret = encrypt(tokenSecret);
   }
-  for (const [key, value] of Object.entries(keys)) {
-    db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
-  }
+  const saveKeys = db.transaction((rows) => {
+    for (const [key, value] of rows) {
+      db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    }
+  });
+  saveKeys(Object.entries(keys));
   db.invalidateSettingsCache();
   logAdmin(req, 'proxmox.connection', host || '');
   res.json({ success: true });

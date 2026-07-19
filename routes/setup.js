@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const db = require('../config/database');
 const rateLimit = require('express-rate-limit');
 const catchAsync = require('../utils/catchAsync');
+const { sanitizeUsername, isValidEmail } = require('../utils/validators');
 
 const setupLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 min
@@ -39,15 +40,14 @@ router.post('/', setupLimiter, catchAsync(async (req, res) => {
   }
 
   // Sanitize username
-  const cleanUsername = String(admin_username).replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 30);
+  const cleanUsername = sanitizeUsername(admin_username).slice(0, 30);
   if (cleanUsername.length < 2) {
     req.flash('error', 'flash_username_short');
     return res.redirect('/setup');
   }
 
   // Validate email format
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(admin_email)) {
+  if (!isValidEmail(admin_email)) {
     req.flash('error', 'flash_email_invalid');
     return res.redirect('/setup');
   }

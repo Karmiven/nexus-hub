@@ -19,10 +19,12 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
+const crypto = require('crypto');
 const db = require('./config/database');
 const { initDatabase } = db;
 const { startStatusChecker } = require('./utils/statusChecker');
 const { startMaintenance } = require('./utils/maintenance');
+const i18nContent = require('./utils/i18nContent');
 
 
 const app = express();
@@ -38,7 +40,7 @@ app.set('trust proxy', 1);
 // 'strict-dynamic' lets nonce-approved scripts create further scripts
 // (SPA swaps, Turnstile); the host allowlist stays as a CSP2 fallback.
 app.use((req, res, next) => {
-  res.locals.cspNonce = require('crypto').randomBytes(16).toString('base64');
+  res.locals.cspNonce = crypto.randomBytes(16).toString('base64');
   next();
 });
 
@@ -91,7 +93,7 @@ function getSessionSecret() {
   try {
     return fs.readFileSync(secretPath, 'utf8').trim();
   } catch {
-    const secret = require('crypto').randomBytes(32).toString('hex');
+    const secret = crypto.randomBytes(32).toString('hex');
     fs.mkdirSync(path.dirname(secretPath), { recursive: true });
     fs.writeFileSync(secretPath, secret, { mode: 0o600 });
     return secret;
@@ -125,7 +127,6 @@ app.use((req, res, next) => {
 
   // Localized-field picker for views (title/description columns per language,
   // with graceful fallback). Usage in EJS: pickField(article, 'title')
-  const i18nContent = require('./utils/i18nContent');
   res.locals.pickField = (obj, base) => i18nContent.pick(obj, base, req.session.language || 'en');
 
   // Cached site stats for the sidebar counters and status ticker

@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const { clampChatLimit } = require('../utils/validators');
 
 // Store active users in memory
 const activeUsers = new Map(); // socket.id -> username
@@ -175,8 +176,7 @@ module.exports = function(io) {
       // We'll do it roughly every 20 messages to save DB performance
       if (result.lastInsertRowid % 20 === 0) {
         const s = db.getCachedSettings('max_chat_messages');
-        // Clamp: a value of 0 would otherwise wipe the entire history below
-        const maxMessages = Math.min(Math.max(parseInt(s.max_chat_messages) || 200, 10), 1000);
+        const maxMessages = clampChatLimit(s.max_chat_messages);
         // Use OFFSET-based delete instead of NOT IN subquery for better performance
         const oldest = db.get(
           `SELECT id FROM chat_messages WHERE channel = 'general' ORDER BY created_at DESC LIMIT 1 OFFSET ?`,

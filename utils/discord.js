@@ -64,4 +64,4 @@ function notifyNews(title, shortText, url) {
   });
 }
 
-module.exports = { isValidWebhookUrl, sendDiscordEmbed, notifyServerStatus, notifyNews };
+module.exports = { isValidWebhookUrl, notifyServerStatus, notifyNews };

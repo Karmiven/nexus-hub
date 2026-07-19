@@ -7,6 +7,7 @@ const db = require('../config/database');
 const { isGuest, isAuthenticated } = require('../middleware/auth');
 const { createUploader, resolveImage } = require('../utils/imageUpload');
 const catchAsync = require('../utils/catchAsync');
+const { sanitizeUsername, isValidEmail } = require('../utils/validators');
 const rateLimit = require('express-rate-limit');
 
 const uploadAvatar = createUploader('avatars');
@@ -110,7 +111,7 @@ router.post('/login', isGuest, loginLimiter, catchAsync(async (req, res) => {
   }
 
   // Sanitize username - allow alphanumeric, underscore, and Unicode letters
-  username = String(username).replace(/[^\p{L}\p{N}_]/gu, '');
+  username = sanitizeUsername(username);
   
   if (username.length < 2 || username.length > 30) {
     req.flash('error', 'flash_invalid_username');
@@ -240,19 +241,16 @@ router.post('/register', isGuest, registerLimiter, catchAsync(async (req, res) =
   }
 
   // Sanitize username
-  const cleanUsername = String(username).replace(/[^\p{L}\p{N}_]/gu, '').slice(0, 30);
+  const cleanUsername = sanitizeUsername(username).slice(0, 30);
   if (cleanUsername.length < 2) {
     req.flash('error', 'flash_username_short');
     return res.redirect('/auth/register');
   }
 
   // Validate email if provided
-  if (email) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      req.flash('error', 'flash_email_invalid');
-      return res.redirect('/auth/register');
-    }
+  if (email && !isValidEmail(email)) {
+    req.flash('error', 'flash_email_invalid');
+    return res.redirect('/auth/register');
   }
 
   if (password !== password2) {
