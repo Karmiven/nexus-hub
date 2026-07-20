@@ -61,10 +61,11 @@
     </div>
     <div class="stat-card kpi-card" data-accent="accent">
       <span class="panel-corner tl"></span><span class="panel-corner br"></span>
-      <div class="stat-icon"><i data-lucide="globe"></i></div>
+      <div class="stat-icon"><i data-lucide="user-plus"></i></div>
       <div class="stat-info">
-        <span class="stat-number" id="kpiTopCountry">&mdash;</span>
-        <span class="stat-label" data-i18n="admin_kpi_top_country">Топ страна</span>
+        <span class="stat-number" id="kpiRegistrations">&mdash;</span>
+        <span class="stat-label" data-i18n="admin_kpi_registrations">Новых регистраций</span>
+        <span class="kpi-trend" id="kpiRegistrationsTrend"></span>
       </div>
     </div>
     <div class="stat-card kpi-card" data-accent="warning">
@@ -88,6 +89,30 @@
       <div class="chart-body" id="wrapPageViews">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
         <canvas id="chartPageViews"></canvas>
+      </div>
+    </div>
+
+    <!-- Players Online (Line) -->
+    <div class="chart-card chart-card-wide" data-accent="success">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="chart-header">
+        <h3><i data-lucide="gamepad-2"></i> <span data-i18n="admin_chart_players">Игроков онлайн</span></h3>
+      </div>
+      <div class="chart-body" id="wrapPlayers">
+        <div class="chart-loading" data-i18n="loading">Loading...</div>
+        <canvas id="chartPlayers"></canvas>
+      </div>
+    </div>
+
+    <!-- New Registrations (Bar) -->
+    <div class="chart-card" data-accent="accent">
+      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
+      <div class="chart-header">
+        <h3><i data-lucide="user-plus"></i> <span data-i18n="admin_chart_registrations">Новые регистрации</span></h3>
+      </div>
+      <div class="chart-body" id="wrapRegistrations">
+        <div class="chart-loading" data-i18n="loading">Loading...</div>
+        <canvas id="chartRegistrations"></canvas>
       </div>
     </div>
 
@@ -136,30 +161,6 @@
       <div class="chart-body" id="wrapChat">
         <div class="chart-loading" data-i18n="loading">Loading...</div>
         <canvas id="chartChat"></canvas>
-      </div>
-    </div>
-
-    <!-- Server Status Timeline (Stacked Area) -->
-    <div class="chart-card chart-card-wide" data-accent="success">
-      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
-      <div class="chart-header">
-        <h3><i data-lucide="server"></i> <span data-i18n="admin_chart_timeline">Статус серверов</span></h3>
-      </div>
-      <div class="chart-body" id="wrapTimeline">
-        <div class="chart-loading" data-i18n="loading">Loading...</div>
-        <canvas id="chartTimeline"></canvas>
-      </div>
-    </div>
-
-    <!-- Countries (Doughnut) -->
-    <div class="chart-card" data-accent="accent">
-      <span class="panel-corner tl"></span><span class="panel-corner br"></span>
-      <div class="chart-header">
-        <h3><i data-lucide="globe"></i> <span data-i18n="admin_chart_countries">Страны посетителей</span></h3>
-      </div>
-      <div class="chart-body" id="wrapCountries">
-        <div class="chart-loading" data-i18n="loading">Loading...</div>
-        <canvas id="chartCountries"></canvas>
       </div>
     </div>
 
@@ -544,44 +545,76 @@
       }).catch(function(e) { showError('wrapChat', e.message); });
     }
 
-    // ── Server Timeline ──
-    function loadTimelineChart() {
-      return fetchData('server-timeline').then(function(data) {
-        destroyChart('timeline');
-        hideLoading('wrapTimeline');
-        var ctx = document.getElementById('chartTimeline');
+    // ── Players Online (concurrent, avg + peak per day) ──
+    function loadPlayersOnlineChart() {
+      return fetchData('players-online').then(function(data) {
+        destroyChart('players');
+        hideLoading('wrapPlayers');
+        var ctx = document.getElementById('chartPlayers');
         if (!ctx) return;
-        if (!data || data.length === 0) { showNoData('wrapTimeline'); return; }
-        chartInstances.timeline = new Chart(ctx, {
+        var hasData = data && data.some(function(d) { return d.peak_players > 0; });
+        if (!hasData) { showNoData('wrapPlayers'); return; }
+        chartInstances.players = new Chart(ctx, {
           type: 'line',
           data: {
             labels: data.map(function(d) { return formatDate(d.day); }),
             datasets: [
               {
-                label: t('admin_dashboard_online'),
-                data: data.map(function(d) { return d.online; }),
+                label: t('admin_chart_peak_players'),
+                data: data.map(function(d) { return d.peak_players; }),
                 borderColor: chartColors.success,
-                backgroundColor: chartColors.success + '25',
+                backgroundColor: chartColors.success + '20',
                 borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
               },
               {
-                label: t('admin_dashboard_offline'),
-                data: data.map(function(d) { return d.offline; }),
-                borderColor: chartColors.danger,
-                backgroundColor: chartColors.danger + '25',
-                borderWidth: 2, fill: true, tension: 0.3, pointRadius: 2
+                label: t('admin_chart_avg_players'),
+                data: data.map(function(d) { return d.avg_players; }),
+                borderColor: chartColors.accent,
+                backgroundColor: 'transparent',
+                borderWidth: 2, borderDash: [5, 4], fill: false, tension: 0.3, pointRadius: 2
               }
             ]
           },
           options: {
             plugins: { legend: { position: 'top', labels: { color: chartColors.text } } },
             scales: {
-              y: { beginAtZero: true, stacked: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
               x: { grid: { display: false } }
             }
           }
         });
-      }).catch(function(e) { showError('wrapTimeline', e.message); });
+      }).catch(function(e) { showError('wrapPlayers', e.message); });
+    }
+
+    // ── New Registrations ──
+    function loadRegistrationsChart() {
+      return fetchData('registrations').then(function(data) {
+        destroyChart('registrations');
+        hideLoading('wrapRegistrations');
+        var ctx = document.getElementById('chartRegistrations');
+        if (!ctx) return;
+        if (!data || data.length === 0) { showNoData('wrapRegistrations'); return; }
+        chartInstances.registrations = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.map(function(d) { return formatDate(d.day); }),
+            datasets: [{
+              label: t('admin_chart_registrations_count'),
+              data: data.map(function(d) { return d.count; }),
+              backgroundColor: chartColors.accent + '70',
+              borderColor: chartColors.accent,
+              borderWidth: 1, borderRadius: 4
+            }]
+          },
+          options: {
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: chartColors.border + '40' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }).catch(function(e) { showError('wrapRegistrations', e.message); });
     }
 
     // ── Country code → flag emoji ──
@@ -592,42 +625,16 @@
       return chars.join('');
     }
 
-    // ── Countries Doughnut ──
-    function loadCountriesChart() {
+    // ── By Country table ──
+    function loadCountryTable() {
       return fetchData('countries').then(function(data) {
-        destroyChart('countries');
-        hideLoading('wrapCountries');
-        var ctx = document.getElementById('chartCountries');
-        if (!ctx) return;
-        if (!data || data.length === 0) {
-          showNoData('wrapCountries');
-          showNoData('wrapCountryTable');
-          var tbl = document.getElementById('countryTable');
-          if (tbl) tbl.style.display = 'none';
-          return;
-        }
-        chartInstances.countries = new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: data.map(function(d) { return countryFlag(d.country) + ' ' + d.country; }),
-            datasets: [{
-              data: data.map(function(d) { return d.visitors; }),
-              backgroundColor: data.map(function(_, i) { return chartColors.palette[i % chartColors.palette.length] + 'CC'; }),
-              borderColor: 'transparent',
-              borderWidth: 2
-            }]
-          },
-          options: {
-            cutout: '55%',
-            plugins: {
-              legend: { position: 'right', labels: { color: chartColors.text, font: { size: 11 }, padding: 8, boxWidth: 14 } }
-            }
-          }
-        });
-
-        // Also fill country table
         var table = document.getElementById('countryTable');
         var tbody = table ? table.querySelector('tbody') : null;
+        if (!data || data.length === 0) {
+          showNoData('wrapCountryTable');
+          if (table) table.style.display = 'none';
+          return;
+        }
         if (tbody) {
           var total = data.reduce(function(s, d) { return s + d.visitors; }, 0);
           tbody.innerHTML = data.map(function(d) {
@@ -640,7 +647,7 @@
           table.style.display = '';
           hideLoading('wrapCountryTable');
         }
-      }).catch(function(e) { showError('wrapCountries', e.message); showError('wrapCountryTable', e.message); });
+      }).catch(function(e) { showError('wrapCountryTable', e.message); });
     }
 
     // ── KPI Summary ──
@@ -666,20 +673,19 @@
         var elVisitors = document.getElementById('kpiVisitors');
         var elChat = document.getElementById('kpiChat');
         var elUptime = document.getElementById('kpiUptime');
-        var elTopCountry = document.getElementById('kpiTopCountry');
+        var elRegistrations = document.getElementById('kpiRegistrations');
         var elPeakHour = document.getElementById('kpiPeakHour');
         if (elViews) elViews.textContent = formatCompact(data.totalViews);
         if (elVisitors) elVisitors.textContent = formatCompact(data.uniqueVisitors);
         if (elChat) elChat.textContent = formatCompact(data.chatMessages);
         if (elUptime) elUptime.textContent = data.avgUptime !== null ? data.avgUptime + '%' : '—';
-        if (elTopCountry) {
-          elTopCountry.textContent = data.topCountry ? (countryFlag(data.topCountry.country) + ' ' + data.topCountry.country) : '—';
-        }
+        if (elRegistrations) elRegistrations.textContent = formatCompact(data.newRegistrations);
         if (elPeakHour) {
           elPeakHour.textContent = data.peakHour ? (String(data.peakHour.hour).padStart(2, '0') + ':00') : '—';
         }
         renderTrend('kpiViewsTrend', data.totalViewsDelta);
         renderTrend('kpiVisitorsTrend', data.uniqueVisitorsDelta);
+        renderTrend('kpiRegistrationsTrend', data.newRegistrationsDelta);
       }).catch(function() {});
     }
 
@@ -795,12 +801,13 @@
       Promise.all([
         loadSummary(),
         loadPageViewsChart(),
+        loadPlayersOnlineChart(),
+        loadRegistrationsChart(),
         loadHourlyChart(),
         loadPopularChart(),
         loadUptimeChart(),
         loadChatChart(),
-        loadTimelineChart(),
-        loadCountriesChart()
+        loadCountryTable()
       ]).then(function() {
         loadVisitorLog(1);
         if (btn) btn.disabled = false;

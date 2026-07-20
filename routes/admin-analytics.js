@@ -103,16 +103,22 @@ router.get('/server-uptime', (req, res) => {
   res.json(result);
 });
 
-// Server status timeline (area chart)
-router.get('/server-timeline', (req, res) => {
-  const days = Math.min(parseInt(req.query.days) || 7, 30);
+// Concurrent players online per day (area chart) — status checks for every
+// server land within the same minute, so bucketing by minute before summing
+// approximates "total players across all servers at that moment", then
+// avg/max of those buckets gives a meaningful daily trend.
+router.get('/players-online', (req, res) => {
+  const days = Math.min(parseInt(req.query.days) || 14, 90);
   const rows = db.all(`
-    SELECT date(created_at) as day,
-           SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online,
-           SUM(CASE WHEN status = 'offline' THEN 1 ELSE 0 END) as offline
-    FROM server_status_log
-    WHERE created_at >= datetime('now', '-' || ? || ' days')
-    GROUP BY date(created_at)
+    SELECT day, ROUND(AVG(bucket_total)) as avg_players, MAX(bucket_total) as peak_players
+    FROM (
+      SELECT date(created_at) as day, SUM(player_count) as bucket_total
+      FROM server_status_log
+      WHERE created_at >= datetime('now', '-' || ? || ' days')
+        AND status = 'online'
+      GROUP BY day, strftime('%Y-%m-%d %H:%M', created_at)
+    )
+    GROUP BY day
     ORDER BY day ASC
   `, [days]);
   res.json(rows);
@@ -213,16 +219,17 @@ router.get('/summary', (req, res) => {
     WHERE created_at >= datetime('now', '-' || ? || ' days')
   `, [days]);
 
-  const topCountry = db.get(`
-    SELECT COALESCE(NULLIF(country, ''), 'Unknown') as country, COUNT(DISTINCT ip) as visitors
-    FROM page_views
+  const curReg = db.get(`
+    SELECT COUNT(*) as new_registrations
+    FROM users
     WHERE created_at >= datetime('now', '-' || ? || ' days')
-      AND path NOT LIKE '/admin%'
-      ${LOCAL_IP_FILTER}
-    GROUP BY country
-    ORDER BY visitors DESC
-    LIMIT 1
   `, [days]);
+  const prevReg = db.get(`
+    SELECT COUNT(*) as new_registrations
+    FROM users
+    WHERE created_at >= datetime('now', '-' || ? || ' days')
+      AND created_at < datetime('now', '-' || ? || ' days')
+  `, [days * 2, days]);
 
   const peakHour = db.get(`
     SELECT CAST(strftime('%H', created_at) AS INTEGER) as hour, COUNT(*) as views
@@ -247,7 +254,8 @@ router.get('/summary', (req, res) => {
     uniqueVisitorsDelta: pctDelta(curExt.unique_visitors, prevExt.unique_visitors),
     chatMessages: chat.chat_messages,
     avgUptime: uptime.total_checks > 0 ? Math.round((uptime.online_checks / uptime.total_checks) * 100) : null,
-    topCountry: topCountry ? { country: topCountry.country, visitors: topCountry.visitors } : null,
+    newRegistrations: curReg.new_registrations,
+    newRegistrationsDelta: pctDelta(curReg.new_registrations, prevReg.new_registrations),
     peakHour: peakHour ? { hour: peakHour.hour, views: peakHour.views } : null
   });
 });
